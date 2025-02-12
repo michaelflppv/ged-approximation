@@ -158,7 +158,7 @@ def main():
                         help="Output collection XML file (default: data/AIDS/results/collection.xml)")
     args = parser.parse_args()
 
-    input_dir = os.path.join("data", "AIDS")
+    input_dir = os.path.join("../data", "AIDS")
 
     # Construct file names using the prefix "AIDS" (or override via command-line)
     file_A = os.path.join(input_dir, f"{args.prefix}_A.txt")
