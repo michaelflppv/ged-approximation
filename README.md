@@ -11,18 +11,30 @@ This repository contains all code used for the **experimental work** in my Bache
 ---
 
 ## **📂 Directory Structure**
-📦 ged-approximation-experiments
+📦 ged-approximation
+
 ├── 📜 README.md # Documentation (this file) 
+
 ├── 📜 requirements.txt # Required dependencies 
+
 ├── 📂 data/ # Dataset storage 
+
 │ ├── datasets/ # Graph dataset (e.g., GREC) 
+
 │ ├── collections/ # Collection XML files 
+
 ├── 📂 scripts/ # Experiment scripts 
+
 │ ├── gedlib-parser.py # Runs GEDLIB and logs results 
+
 │ ├── analyze_results.py # Generates evaluation metrics 
+
 │ ├── visualize_results.py # Plots runtime and accuracy 
+
 ├── 📂 results/ # Stores output files 
+
 │ ├── ged_results.xlsx # Main output file 
+
 └── 📂 gedlib/ # Cloned GEDLIB repository
 
 ---
