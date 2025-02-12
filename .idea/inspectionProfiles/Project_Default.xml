@@ -1,13 +1,12 @@
 <component name="InspectionProjectProfileManager">
   <profile version="1.0">
     <option name="myName" value="Project Default" />
-    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="ignoredPackages">
+    <inspection_tool class="PyCompatibilityInspection" enabled="true" level="WARNING" enabled_by_default="true" editorAttributes="WARNING_ATTRIBUTES">
+      <option name="ourVersions">
         <value>
-          <list size="3">
-            <item index="0" class="java.lang.String" itemvalue="scikit-learn" />
-            <item index="1" class="java.lang.String" itemvalue="numpy" />
-            <item index="2" class="java.lang.String" itemvalue="networkx" />
+          <list size="2">
+            <item index="0" class="java.lang.String" itemvalue="3.13" />
+            <item index="1" class="java.lang.String" itemvalue="3.8" />
           </list>
         </value>
       </option>

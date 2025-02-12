@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ged-approximation.iml" filepath="$PROJECT_DIR$/.idea/ged-approximation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/GEDProfiler.iml" filepath="$PROJECT_DIR$/.idea/GEDProfiler.iml" />
     </modules>
   </component>
 </project>
