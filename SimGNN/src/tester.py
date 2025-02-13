@@ -8,58 +8,44 @@ from utils import process_pair
 
 
 def main():
-    # Parse command-line arguments for SimGNN settings.
     args = parameter_parser()
-
-    # Initialize the trainer and set up the model.
     trainer = SimGNNTrainer(args)
     trainer.setup_model()
-    trainer.model.eval()  # set to evaluation mode
+    trainer.model.eval()
 
-    # Directory containing your 1000 JSON files.
-    test_dir = "data/PROTEINS/json"  # adjust if necessary
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    test_dir = os.path.join(BASE_DIR, 'data', 'AIDS', 'json')
+    perf_dir = os.path.join(BASE_DIR, 'data', 'AIDS', 'performance')
+    os.makedirs(perf_dir, exist_ok=True)
+    output_file = os.path.join(perf_dir, "SimGNN_results.xlsx")
+
     json_files = glob.glob(os.path.join(test_dir, "*.json"))
-
     if not json_files:
-        print("No JSON files found in the test directory.")
+        print("No JSON files found in:", test_dir)
         return
 
     results = []
     for json_file in json_files:
         try:
-            # Process the JSON file into the internal format.
             data = process_pair(json_file)
         except Exception as e:
             print(f"Error processing {json_file}: {e}")
             continue
 
-        # Transfer data to torch tensors.
         copy_data = trainer.transfer_to_torch(data)
-
-        # Predict the GED value with the model.
         with torch.no_grad():
             score = trainer.model(copy_data)
-        # Assume the model output is the predicted GED value.
         predicted_ged = score.item()
-
-        # Optionally, read the groundtruth GED from the JSON (if desired).
         ground_truth = data.get("ged", None)
-
         results.append({
             "file": os.path.basename(json_file),
             "predicted_ged": predicted_ged,
             "ground_truth": ground_truth
         })
+        print(f"Processed {os.path.basename(json_file)}: Predicted GED = {predicted_ged:.2f}")
 
-        print(
-            f"Processed {os.path.basename(json_file)}: predicted GED = {predicted_ged:.2f}, ground truth = {ground_truth}")
-
-    # Save all results into an Excel file.
-    output_file = os.path.join("data", "SimGNN_results.xlsx")
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
     df = pd.DataFrame(results)
     df.to_excel(output_file, index=False, engine='openpyxl')
-
     print(f"All predictions completed. Results saved to {output_file}")
 
 
