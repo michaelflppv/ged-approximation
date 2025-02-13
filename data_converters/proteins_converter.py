@@ -85,20 +85,21 @@ def create_gxl_for_graph_proteins(g_id, node_ids, local_ids, graph_edges,
     Parameters:
       - g_id: Graph id (an integer)
       - node_ids: Sorted list of global node IDs (1-indexed) for this graph.
-      - local_ids: Mapping from global node id to a local id string (e.g., "n1", "n2", ...)
+      - local_ids: Mapping from global node id to a local id string (e.g. "_1", "_2", ...)
       - graph_edges: List of edges (tuples (u, v)) for this graph.
       - node_labels: List of node labels (for all nodes; index = node_id - 1)
       - graph_label: The graph label as a string.
-      - node_attributes: Optional list of attribute vectors (index = node_id - 1). If provided,
-                         each node element will also include its attribute values.
+      - node_attributes: Optional list of attribute vectors (index = node_id - 1).
+                        If provided, each node element will also include its attribute values.
+
+    Note: To satisfy GEDLIB, we do not include any graph-level <attr> element.
     """
+    # Create the root <gxl> element.
     gxl = ET.Element("gxl")
+    # Create the <graph> element.
     graph_elem = ET.SubElement(gxl, "graph", id=f"G{g_id}", edgeids="true", edgemode="undirected")
 
-    # Add graph label attribute.
-    attr_elem = ET.SubElement(graph_elem, "attr", name="graph_label")
-    string_elem = ET.SubElement(attr_elem, "string")
-    string_elem.text = graph_label
+    # NOTE: We remove any graph-level <attr> element (such as a graph_label) because GEDLIB rejects it.
 
     # Add nodes.
     for global_id in node_ids:
@@ -108,13 +109,11 @@ def create_gxl_for_graph_proteins(g_id, node_ids, local_ids, graph_edges,
         attr_label = ET.SubElement(node_elem, "attr", name="label")
         string_label = ET.SubElement(attr_label, "string")
         string_label.text = label_val
-
         # Optionally add node attributes.
         if node_attributes is not None:
             attr_list = node_attributes[global_id - 1]
             for i, val in enumerate(attr_list, start=1):
                 attr_node = ET.SubElement(node_elem, "attr", name=f"attr{i}")
-                # Attempt to output as a float if possible.
                 try:
                     float_val = float(val)
                     float_elem = ET.SubElement(attr_node, "float")
@@ -130,6 +129,17 @@ def create_gxl_for_graph_proteins(g_id, node_ids, local_ids, graph_edges,
             edge_elem.attrib["from"] = local_ids[u]
 
     return gxl
+
+
+def write_xml_with_doctype(root, file_path, doctype):
+    """
+    Write the XML tree to file with an XML declaration and the given DOCTYPE.
+    """
+    xml_str = ET.tostring(root, encoding="unicode")
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write('<?xml version="1.0"?>\n')
+        f.write(doctype + "\n")
+        f.write(xml_str)
 
 
 def main():
@@ -161,7 +171,7 @@ def main():
     graph_labels_list = read_graph_labels(file_graph_labels)
     node_labels = read_node_labels(file_node_labels)
 
-    # Read optional node attributes (if available).
+    # Read optional node attributes.
     if os.path.exists(file_node_attributes):
         node_attributes = read_node_attributes(file_node_attributes)
     else:
@@ -190,15 +200,14 @@ def main():
             continue
         graph_edges.setdefault(g_u, []).append((u, v))
 
-    # Create the output directory.
     os.makedirs(args.output_dir, exist_ok=True)
-    collection_graphs = []
+    collection_entries = []
 
     # Process each graph.
     for g_id, nodes in graphs.items():
         nodes_sorted = sorted(nodes)
-        # Create a mapping from global node id to local id (e.g., "n1", "n2", …).
-        local_ids = {global_id: f"n{local_index}" for local_index, global_id in enumerate(nodes_sorted, start=1)}
+        # Create mapping from global node id to a local id using an underscore (e.g., "_1", "_2", …)
+        local_ids = {global_id: f"_{i}" for i, global_id in enumerate(nodes_sorted, start=1)}
 
         # Get the graph label.
         if g_id <= len(graph_labels_list):
@@ -206,28 +215,30 @@ def main():
         else:
             gl = "unknown"
 
-        # Retrieve edges for this graph.
         edges_for_graph = graph_edges.get(g_id, None)
-
-        # Create the GXL element.
         gxl_tree = create_gxl_for_graph_proteins(g_id, nodes_sorted, local_ids,
                                                  edges_for_graph, node_labels, gl,
                                                  node_attributes)
 
-        # Write the GXL file.
+        # Generate filename (e.g. "graph_1.gxl").
         graph_filename = f"graph_{g_id}.gxl"
         graph_filepath = os.path.join(args.output_dir, graph_filename)
-        ET.ElementTree(gxl_tree).write(graph_filepath, encoding="utf-8", xml_declaration=True)
-        collection_graphs.append(graph_filepath)
+        doctype_gxl = '<!DOCTYPE gxl SYSTEM "http://www.gupro.de/GXL/gxl-1.0.dtd">'
+        write_xml_with_doctype(gxl_tree, graph_filepath, doctype_gxl)
 
-    # Create the collection XML file.
-    collection_root = ET.Element("graphcollection")
-    for gfile in collection_graphs:
-        ET.SubElement(collection_root, "graph", file=gfile)
-    ET.ElementTree(collection_root).write(args.collection_file, encoding="utf-8", xml_declaration=True)
+        # Record the relative file name and graph label for the collection.
+        collection_entries.append((graph_filename, gl))
 
-    print(f"Conversion complete. {len(collection_graphs)} graphs written to '{args.output_dir}'.")
-    print(f"Collection file created: '{args.collection_file}'.")
+    # Create the collection XML.
+    collection_root = ET.Element("GraphCollection")
+    for file_name, class_label in collection_entries:
+        ET.SubElement(collection_root, "graph", file=file_name, **{"class": class_label})
+    collection_filepath = args.collection_file
+    doctype_collection = '<!DOCTYPE GraphCollection SYSTEM "http://www.inf.unibz.it/~blumenthal/dtd/GraphCollection.dtd">'
+    write_xml_with_doctype(collection_root, collection_filepath, doctype_collection)
+
+    print(f"Conversion complete. {len(collection_entries)} graphs written to '{args.output_dir}'.")
+    print(f"Collection file created: '{collection_filepath}'.")
 
 
 if __name__ == "__main__":
