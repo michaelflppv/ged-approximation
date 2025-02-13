@@ -6346,12 +6346,12 @@
     &quot;assignee&quot;: &quot;michaelflppv&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/michaelflppv/ged-approximation.git",
-    "accountId": "f9fd85b6-78bd-40bd-9341-206c659376d2"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/michaelflppv/ged-approximation.git&quot;,
+    &quot;accountId&quot;: &quot;f9fd85b6-78bd-40bd-9341-206c659376d2&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0
 }</component>
@@ -6363,28 +6363,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.aids_converter.executor": "Run",
-    "Python.converter.executor": "Run",
-    "Python.gedlib_parser.executor": "Run",
-    "Python.imdb_binary_converter.executor": "Run",
-    "Python.mutag_converter.executor": "Run",
-    "Python.proteins_converter.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/Users/mikef/PycharmProjects/ged-approximation/data",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.aids_converter.executor&quot;: &quot;Run&quot;,
+    &quot;Python.converter.executor&quot;: &quot;Run&quot;,
+    &quot;Python.gedlib_parser.executor&quot;: &quot;Run&quot;,
+    &quot;Python.imdb_binary_converter.executor&quot;: &quot;Run&quot;,
+    &quot;Python.mutag_converter.executor&quot;: &quot;Run&quot;,
+    &quot;Python.proteins_converter.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/mikef/PycharmProjects/ged-approximation/data&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\mikef\PycharmProjects\ged-approximation\data" />
@@ -6553,10 +6553,10 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.aids_converter" />
         <item itemvalue="Python.proteins_converter" />
         <item itemvalue="Python.mutag_converter" />
         <item itemvalue="Python.imdb_binary_converter" />
-        <item itemvalue="Python.aids_converter" />
       </list>
     </recent_temporary>
   </component>
