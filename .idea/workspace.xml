@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15cb556e-3a88-4c7e-854d-eb5a85e56b0d" name="Changes" comment="Uploaded data conversion in GXL and XML formats">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_converters/proteins_converter.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_converters/proteins_converter.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gedlib_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/gedlib_parser.py" afterDir="false" />
-    </list>
+    <list default="true" id="15cb556e-3a88-4c7e-854d-eb5a85e56b0d" name="Changes" comment="Updated data conversion in GXL and XML formats" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -296,7 +292,7 @@
       <workItem from="1739438091169" duration="753000" />
       <workItem from="1739445288653" duration="5273000" />
       <workItem from="1739451123594" duration="1038000" />
-      <workItem from="1739453263609" duration="2059000" />
+      <workItem from="1739453263609" duration="2777000" />
     </task>
     <task id="LOCAL-00001" summary="Resolve missing code">
       <option name="closed" value="true" />
@@ -410,7 +406,23 @@
       <option name="project" value="LOCAL" />
       <updated>1739451250514</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Added new performance metrics for Algortihms' Evaluation">
+      <option name="closed" value="true" />
+      <created>1739455357356</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1739455357356</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Updated data conversion in GXL and XML formats">
+      <option name="closed" value="true" />
+      <created>1739455416811</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1739455416811</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -438,7 +450,9 @@
     <MESSAGE value="Uploaded data in GXL and XML formats" />
     <MESSAGE value="Updated unresolved files" />
     <MESSAGE value="Uploaded data conversion in GXL and XML formats" />
-    <option name="LAST_COMMIT_MESSAGE" value="Uploaded data conversion in GXL and XML formats" />
+    <MESSAGE value="Added new performance metrics for Algortihms' Evaluation" />
+    <MESSAGE value="Updated data conversion in GXL and XML formats" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated data conversion in GXL and XML formats" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/ged_approximation$imdb_binary_converter.coverage" NAME="imdb_binary_converter Coverage Results" MODIFIED="1739450871598" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_converters" />
