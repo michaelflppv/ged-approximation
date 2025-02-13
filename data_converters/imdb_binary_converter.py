@@ -100,7 +100,7 @@ def main():
     args = parser.parse_args()
 
     # Define input directory.
-    input_dir = os.path.join("data", "IMDB-BINARY")
+    input_dir = os.path.join("../data", "IMDB-BINARY")
     file_A = os.path.join(input_dir, f"{args.prefix}_A.txt")
     file_graph_indicator = os.path.join(input_dir, f"{args.prefix}_graph_indicator.txt")
     file_graph_labels = os.path.join(input_dir, f"{args.prefix}_graph_labels.txt")

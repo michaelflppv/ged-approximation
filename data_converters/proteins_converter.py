@@ -146,7 +146,7 @@ def main():
     args = parser.parse_args()
 
     # Input directory.
-    input_dir = os.path.join("data", "PROTEINS")
+    input_dir = os.path.join("../data", "PROTEINS")
 
     # Construct file paths.
     file_A = os.path.join(input_dir, f"{args.prefix}_A.txt")
