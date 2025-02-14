@@ -69,10 +69,8 @@ This repository contains all code used for the **experimental work** in my Bache
 │   ├── 📜 training_process.png               # Training visualization
 │   ├── 📂 src/                               # Source code
 │   │   ├── 📂 dataset/                       # Stores json data needed for training
-│   │   │   ├── AIDS/
-│   │   │   ├── IMDB-BINARY/
-│   │   │   ├── PROTEINS/
-│   │   │   ├── MUTAG/
+│   │   │   ├── train/
+│   │   │   ├── test/
 │   │   ├── 📂 models/                        # Stores trained models
 │   │   │   ├── simgnn_model_aids.pth
 │   │   │   ├── simgnn_model_imdb.pth
