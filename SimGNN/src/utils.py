@@ -32,10 +32,9 @@ def calculate_loss(prediction, target):
     :param target: Factual log transofmed GED.
     :return score: Squared error.
     """
-    eps = 1e-8
-    pred_val = -math.log(max(prediction, eps))
-    target_val = -math.log(max(target, eps))
-    score = (pred_val - target_val) ** 2
+    prediction = -math.log(prediction)
+    target = -math.log(target)
+    score = (prediction - target) ** 2
     return score
 
 def calculate_normalized_ged(data):

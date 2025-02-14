@@ -52,12 +52,12 @@ class SimGNN(torch.nn.Module):
         Calculate histogram from similarity matrix.
         :param abstract_features_1: Feature matrix for graph 1.
         :param abstract_features_2: Feature matrix for graph 2.
-        :return hist: Histsogram of similarity scores.
+        :return hist: Histogram of similarity scores.
         """
         scores = torch.mm(abstract_features_1, abstract_features_2).detach()
         scores = scores.view(-1, 1)
         hist = torch.histc(scores, bins=self.args.bins)
-        hist = hist/torch.sum(hist)
+        hist = hist / torch.sum(hist)
         hist = hist.view(1, -1)
         return hist
 
@@ -66,7 +66,7 @@ class SimGNN(torch.nn.Module):
         Making convolutional pass.
         :param edge_index: Edge indices.
         :param features: Feature matrix.
-        :return features: Absstract feature matrix.
+        :return features: Abstract feature matrix.
         """
         features = self.convolution_1(features, edge_index)
         features = torch.nn.functional.relu(features)
@@ -86,7 +86,7 @@ class SimGNN(torch.nn.Module):
     def forward(self, data):
         """
         Forward pass with graphs.
-        :param data: Data dictiyonary.
+        :param data: Data dictionary.
         :return score: Similarity score.
         """
         edge_index_1 = data["edge_index_1"]
@@ -115,7 +115,7 @@ class SimGNN(torch.nn.Module):
 
 class SimGNNTrainer(object):
     """
-    SimGNN models trainer.
+    SimGNN model trainer.
     """
     def __init__(self, args):
         """
@@ -133,19 +133,23 @@ class SimGNNTrainer(object):
 
     def initial_label_enumeration(self):
         """
-        Collecting the unique node idsentifiers.
+        Collecting the unique node identifiers.
         """
         print("\nEnumerating unique labels.\n")
-        self.training_graphs = glob.glob(self.args.training_graphs + "*.AIDS")
-        self.testing_graphs = glob.glob(self.args.testing_graphs + "*.AIDS")
+        self.training_graphs = glob.glob(self.args.training_graphs + "*.json")
+        self.testing_graphs = glob.glob(self.args.testing_graphs + "*.json")
         graph_pairs = self.training_graphs + self.testing_graphs
         self.global_labels = set()
         for graph_pair in tqdm(graph_pairs):
             data = process_pair(graph_pair)
-            self.global_labels = self.global_labels.union(set(data["labels_1"]))
-            self.global_labels = self.global_labels.union(set(data["labels_2"]))
-        self.global_labels = sorted(self.global_labels)
-        self.global_labels = {val:index  for index, val in enumerate(self.global_labels)}
+            # Convert labels to strings to ensure consistent comparison and sorting
+            labels_1 = {str(label) for label in data["labels_1"]}
+            labels_2 = {str(label) for label in data["labels_2"]}
+            self.global_labels = self.global_labels.union(labels_1)
+            self.global_labels = self.global_labels.union(labels_2)
+        # Sorting based on the string representation
+        self.global_labels = sorted(self.global_labels, key=lambda x: x)
+        self.global_labels = {val: index for index, val in enumerate(self.global_labels)}
         self.number_of_labels = len(self.global_labels)
 
     def create_batches(self):
@@ -155,8 +159,8 @@ class SimGNNTrainer(object):
         """
         random.shuffle(self.training_graphs)
         batches = []
-        for graph in range(0, len(self.training_graphs), self.args.batch_size):
-            batches.append(self.training_graphs[graph:graph+self.args.batch_size])
+        for i in range(0, len(self.training_graphs), self.args.batch_size):
+            batches.append(self.training_graphs[i:i+self.args.batch_size])
         return batches
 
     def transfer_to_torch(self, data):
@@ -167,8 +171,8 @@ class SimGNNTrainer(object):
         :return new_data: Dictionary of Torch Tensors.
         """
         new_data = dict()
+        # Create undirected edges by adding the reverse edge.
         edges_1 = data["graph_1"] + [[y, x] for x, y in data["graph_1"]]
-
         edges_2 = data["graph_2"] + [[y, x] for x, y in data["graph_2"]]
 
         edges_1 = torch.from_numpy(np.array(edges_1, dtype=np.int64).T).type(torch.long)
@@ -176,23 +180,26 @@ class SimGNNTrainer(object):
 
         features_1, features_2 = [], []
 
+        # In order to ensure consistency, convert each label to string when doing lookups.
         for n in data["labels_1"]:
-            features_1.append([1.0 if self.global_labels[n] == i else 0.0 for i in self.global_labels.values()])
+            n_str = str(n)
+            features_1.append([1.0 if self.global_labels[n_str] == i else 0.0
+                               for i in self.global_labels.values()])
 
         for n in data["labels_2"]:
-            features_2.append([1.0 if self.global_labels[n] == i else 0.0 for i in self.global_labels.values()])
+            n_str = str(n)
+            features_2.append([1.0 if self.global_labels[n_str] == i else 0.0
+                               for i in self.global_labels.values()])
 
         features_1 = torch.FloatTensor(np.array(features_1))
         features_2 = torch.FloatTensor(np.array(features_2))
 
         new_data["edge_index_1"] = edges_1
         new_data["edge_index_2"] = edges_2
-
         new_data["features_1"] = features_1
         new_data["features_2"] = features_2
 
-        norm_ged = data["ged"]/(0.5*(len(data["labels_1"])+len(data["labels_2"])))
-
+        norm_ged = data["ged"] / (0.5 * (len(data["labels_1"]) + len(data["labels_2"])))
         new_data["target"] = torch.from_numpy(np.exp(-norm_ged).reshape(1, 1)).view(-1).float()
         return new_data
 
@@ -209,7 +216,7 @@ class SimGNNTrainer(object):
             data = self.transfer_to_torch(data)
             target = data["target"]
             prediction = self.model(data)
-            losses = losses + torch.nn.functional.mse_loss(data["target"], prediction)
+            losses = losses + torch.nn.functional.mse_loss(target, prediction)
         losses.backward(retain_graph=True)
         self.optimizer.step()
         loss = losses.item()
@@ -217,14 +224,12 @@ class SimGNNTrainer(object):
 
     def fit(self):
         """
-        Fitting a models.
+        Fitting a model.
         """
         print("\nModel training.\n")
-
         self.optimizer = torch.optim.Adam(self.model.parameters(),
                                           lr=self.args.learning_rate,
                                           weight_decay=self.args.weight_decay)
-
         self.model.train()
         epochs = trange(self.args.epochs, leave=True, desc="Epoch")
         for epoch in epochs:
@@ -233,9 +238,9 @@ class SimGNNTrainer(object):
             main_index = 0
             for index, batch in tqdm(enumerate(batches), total=len(batches), desc="Batches"):
                 loss_score = self.process_batch(batch)
-                main_index = main_index + len(batch)
-                self.loss_sum = self.loss_sum + loss_score * len(batch)
-                loss = self.loss_sum/main_index
+                main_index += len(batch)
+                self.loss_sum += loss_score * len(batch)
+                loss = self.loss_sum / main_index
                 epochs.set_description("Epoch (Loss=%g)" % round(loss, 5))
 
     def score(self):
@@ -260,10 +265,10 @@ class SimGNNTrainer(object):
         Printing the error rates.
         """
         norm_ged_mean = np.mean(self.ground_truth)
-        base_error = np.mean([(n-norm_ged_mean)**2 for n in self.ground_truth])
+        base_error = np.mean([(n - norm_ged_mean) ** 2 for n in self.ground_truth])
         model_error = np.mean(self.scores)
-        print("\nBaseline error: " +str(round(base_error, 5))+".")
-        print("\nModel test error: " +str(round(model_error, 5))+".")
+        print("\nBaseline error: " + str(round(base_error, 5)) + ".")
+        print("\nModel test error: " + str(round(model_error, 5)) + ".")
 
     def save(self):
         torch.save(self.model.state_dict(), self.args.save_path)

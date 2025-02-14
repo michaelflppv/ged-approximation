@@ -10,7 +10,7 @@ import resource
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Define paths
-GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"  # Path to compiled C++ binary (Don't modify)
+GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"  # Path to compiled C++ binary
 DATASET_PATH = os.path.join(script_dir, "..", "..", "processed_data", "gxl", "AIDS")  # Path to AIDS dataset directory
 COLLECTION_XML = os.path.join(script_dir, "..", "..", "processed_data", "xml", "AIDS.xml")  # Path to AIDS collection XML file
 RESULTS_DIR = os.path.join(script_dir, "..", "..", "results", "gedlib")  # Directory to save GEDLIB results
