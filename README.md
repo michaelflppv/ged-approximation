@@ -94,7 +94,7 @@ pip install -r requirements.txt
 ```
 
 ### **2️⃣ Clone & Compile GEDLIB**
-This repository relies on GEDLIB for exact GED computation:
+This repository partially relies on GEDLIB for GED computation:
 ```bash
 git clone https://github.com/dbblumenthal/gedlib.git
 cd gedlib
@@ -102,7 +102,7 @@ mkdir build && cd build
 cmake ..
 make
 ```
-Modify `GED_EXECUTABLE` in `scripts/gedlib_parser.py` to point to the compiled binary.
+Modify `GED_EXECUTABLE` in `scripts/gedlib_parser.py` to point to the compiled binary. See [GEDLIB](https://github.com/dbblumenthal/gedlib) for more information.
 
 ---
 
@@ -173,8 +173,3 @@ For GEDLIB, refer to the [official repository](https://github.com/dbblumenthal/g
 
 ## **📬 Contact**
 For questions, create an issue or reach out via email.
-
----
-
-This README provides everything needed to **reproduce experiments**, **benchmark algorithms**, and **train SimGNN models**. Let me know if you need any refinements! 🚀
-```
