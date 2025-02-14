@@ -82,22 +82,17 @@ def read_node_labels(filename):
 
 
 def create_gxl_for_graph(g_id, node_ids, local_ids, graph_edges, node_labels, node_attributes, graph_label):
-    # Create root <gxl> element.
     gxl = ET.Element("gxl")
-    # Create the graph element with id "molid<g_id>".
     graph_elem = ET.SubElement(gxl, "graph", id=f"molid{g_id}", edgeids="false", edgemode="undirected")
 
-    # Process nodes.
     for global_id in node_ids:
-        local_id = local_ids[global_id]  # e.g. "_1", "_2", etc.
+        local_id = local_ids[global_id]
         node_elem = ET.SubElement(graph_elem, "node", id=local_id)
-        # Add the node label as attribute "symbol"
         symbol = node_label_map.get(node_labels[global_id - 1], str(node_labels[global_id - 1]))
         attr_symbol = ET.SubElement(node_elem, "attr", name="symbol")
         string_symbol = ET.SubElement(attr_symbol, "string")
         string_symbol.text = symbol
 
-        # Node attributes in order: chem, charge, x, y.
         attr_names = ["chem", "charge", "x", "y"]
         values = node_attributes[global_id - 1]
         for attr_name, value in zip(attr_names, values):
@@ -115,7 +110,6 @@ def create_gxl_for_graph(g_id, node_ids, local_ids, graph_edges, node_labels, no
                 except Exception:
                     float_elem.text = value
 
-    # Process edges.
     if graph_edges is not None:
         for (u, v, e_lbl) in graph_edges:
             edge_elem = ET.SubElement(graph_elem, "edge", to=local_ids[v])
@@ -126,11 +120,11 @@ def create_gxl_for_graph(g_id, node_ids, local_ids, graph_edges, node_labels, no
                 int_edge.text = str(int(e_lbl))
             except Exception:
                 int_edge.text = str(e_lbl)
+
     return gxl
 
 
 def write_xml_with_doctype(root, file_path, doctype):
-    # Convert the XML tree to a string.
     xml_str = ET.tostring(root, encoding="unicode")
     with open(file_path, "w", encoding="utf-8") as f:
         f.write('<?xml version="1.0"?>\n')
@@ -140,18 +134,18 @@ def write_xml_with_doctype(root, file_path, doctype):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Convert dataset text files into GXL graph files and a collection XML file."
-    )
-    # Files are named with prefix "AIDS_re" by default.
-    parser.add_argument("prefix", nargs="?", default="AIDS_re",
-                        help="Prefix for the dataset files (default: 'AIDS_re')")
-    parser.add_argument("--output_dir", default="data/AIDS_re/AIDS",
-                        help="Output directory for GXL files (default: data/AIDS_re/AIDS)")
-    parser.add_argument("--collection_file", default="data/AIDS_re/AIDS/AIDS_re.xml",
-                        help="Output collection XML file (default: data/AIDS_re/AIDS/AIDS_re.xml)")
+        description="Convert dataset text files into GXL graph files and a collection XML file.")
+    parser.add_argument("prefix", nargs="?", default="AIDS",
+                        help="Prefix for the dataset files (default: 'AIDS')")
     args = parser.parse_args()
 
-    input_dir = os.path.join("../../data", "AIDS_re")
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    input_dir = os.path.join(base_dir, "data", args.prefix)
+    output_dir = os.path.join(base_dir, "processed_data", "gxl", args.prefix)
+    collection_file = os.path.join(base_dir, "processed_data", "xml", f"{args.prefix}.xml")
+
+    os.makedirs(output_dir, exist_ok=True)
+
     file_A = os.path.join(input_dir, f"{args.prefix}_A.txt")
     file_edge_labels = os.path.join(input_dir, f"{args.prefix}_edge_labels.txt")
     file_graph_indicator = os.path.join(input_dir, f"{args.prefix}_graph_indicator.txt")
@@ -166,17 +160,10 @@ def main():
     node_attributes = read_node_attributes(file_node_attributes)
     node_labels = read_node_labels(file_node_labels)
 
-    n_nodes = len(graph_indicator)
-    if not (len(node_attributes) == n_nodes and len(node_labels) == n_nodes):
-        print("Error: Mismatch in the number of nodes across the input files.")
-        return
-
-    # Group nodes by graph.
     graphs = {}
     for i, g in enumerate(graph_indicator, start=1):
         graphs.setdefault(g, []).append(i)
 
-    # Group edges by graph.
     graph_edges = {}
     for (u, v), lbl in zip(edges, edge_labels):
         g_u = graph_indicator[u - 1]
@@ -186,39 +173,31 @@ def main():
             continue
         graph_edges.setdefault(g_u, []).append((u, v, lbl))
 
-    os.makedirs(args.output_dir, exist_ok=True)
     collection_entries = []
-
     for g_id, nodes in graphs.items():
         nodes_sorted = sorted(nodes)
-        # Build local node IDs as "_1", "_2", ….
         local_ids = {global_id: f"_{i}" for i, global_id in enumerate(nodes_sorted, start=1)}
-        # Determine the graph's class (label).
-        if g_id <= len(graph_labels_list):
-            gl_int = graph_labels_list[g_id - 1]
-            gl_str = graph_label_map.get(gl_int, str(gl_int))
-        else:
-            gl_str = "unknown"
+        gl_int = graph_labels_list[g_id - 1]
+        gl_str = graph_label_map.get(gl_int, str(gl_int))
         edges_for_graph = graph_edges.get(g_id, None)
-        gxl_tree = create_gxl_for_graph(g_id, nodes_sorted, local_ids, edges_for_graph,
-                                        node_labels, node_attributes, gl_str)
-        # Generate a file name (here we simply use the graph id).
+        gxl_tree = create_gxl_for_graph(g_id, nodes_sorted, local_ids, edges_for_graph, node_labels, node_attributes,
+                                        gl_str)
+
         graph_filename = f"{g_id}.gxl"
-        graph_filepath = os.path.join(args.output_dir, graph_filename)
+        graph_filepath = os.path.join(output_dir, graph_filename)
         doctype_gxl = '<!DOCTYPE gxl SYSTEM "http://www.gupro.de/GXL/gxl-1.0.dtd">'
         write_xml_with_doctype(gxl_tree, graph_filepath, doctype_gxl)
         collection_entries.append((graph_filename, gl_str))
 
-    # Create the collection XML.
     collection_root = ET.Element("GraphCollection")
     for file_name, class_label in collection_entries:
         ET.SubElement(collection_root, "graph", file=file_name, **{"class": class_label})
-    collection_filepath = args.collection_file
-    doctype_collection = '<!DOCTYPE GraphCollection SYSTEM "http://www.inf.unibz.it/~blumenthal/dtd/GraphCollection.dtd">'
-    write_xml_with_doctype(collection_root, collection_filepath, doctype_collection)
 
-    print(f"Conversion complete. {len(collection_entries)} graphs written to '{args.output_dir}'.")
-    print(f"Collection file created: '{collection_filepath}'.")
+    doctype_collection = '<!DOCTYPE GraphCollection SYSTEM "http://www.inf.unibz.it/~blumenthal/dtd/GraphCollection.dtd">'
+    write_xml_with_doctype(collection_root, collection_file, doctype_collection)
+
+    print(f"Conversion complete. {len(collection_entries)} graphs written to '{output_dir}'.")
+    print(f"Collection file created: '{collection_file}'.")
 
 
 if __name__ == "__main__":

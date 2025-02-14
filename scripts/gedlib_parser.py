@@ -6,12 +6,15 @@ import tempfile
 import xml.etree.ElementTree as ET
 import resource
 
+# Define relative paths
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 # Define paths
-GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"  # Path to compiled C++ binary (Modify if needed)
-DATASET_PATH = "/home/mfilippov/PycharmProjects/ged-approximation/scripts/data/PROTEINS_re/AIDS"  # Path to dataset directory (Modify if needed)
-COLLECTION_XML = "/home/mfilippov/PycharmProjects/ged-approximation/scripts/data/PROTEINS_re/collections/AIDS_re.xml"
-RESULTS_DIR = "../data/PROTEINS/performance"  # Directory to save AIDS (Modify if needed)
-RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS_results.xlsx")  # Path to save AIDS (Modify if needed)
+GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"  # Path to compiled C++ binary (Don't modify)
+DATASET_PATH = os.path.join(script_dir, "..", "..", "processed_data", "gxl", "AIDS")  # Path to AIDS dataset directory
+COLLECTION_XML = os.path.join(script_dir, "..", "..", "processed_data", "xml", "AIDS.xml")  # Path to AIDS collection XML file
+RESULTS_DIR = os.path.join(script_dir, "..", "..", "results", "gedlib")  # Directory to save GEDLIB results
+RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS_results.xlsx")  # Path to save results
 
 METHOD_NAMES = {
     20: "STAR (Exact)",
