@@ -6,7 +6,7 @@ SimGNN
  
 A **PyTorch** implementation of *SimGNN: A Neural Network Approach to Fast Graph Similarity Computation (WSDM 2019)*. 
 <p align="center">
-  <img width="800" src="simgnn.jpg">
+  <img width="800" src="assets/simgnn.jpggnn.jpg">
 </p>
 	
 ### Abstract
@@ -88,7 +88,7 @@ The following commands learn a neural network and score on the test set. Trainin
 python src/main.py
 ```
 <p align="center">
-<img style="float: center;" src="simgnn_run.jpg">
+<img style="float: center;" src="assets/simgnn_run.jpgrun.jpg">
 </p>
 
 Training a SimGNN model for a 100 epochs with a batch size of 512.

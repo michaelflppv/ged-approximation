@@ -5,19 +5,19 @@ import argparse
 def parameter_parser():
     """
     A method to parse up command line parameters.
-    The default hyperparameters give a high performance model without grid search.
+    The default hyperparameters give a high performance models without grid search.
     """
     parser = argparse.ArgumentParser(description="Run SimGNN.")
 
     parser.add_argument("--training-graphs",
                         nargs="?",
-                        default="./dataset/train/",
-	                help="Folder with training graph pair jsons.")
+                        default="C:\\Users\\mikef\\PycharmProjects\\ged-approximation\\SimGNN\\src\\dataset\\train\\",
+                        help="Folder with training graph pair jsons.")
 
     parser.add_argument("--testing-graphs",
                         nargs="?",
-                        default="./dataset/test/",
-	                help="Folder with testing graph pair jsons.")
+                        default="C:\\Users\\mikef\\PycharmProjects\\ged-approximation\\data\\PROTEINS\\json\\",
+                        help="Folder with testing graph pair jsons.")
 
     parser.add_argument("--epochs",
                         type=int,
@@ -83,11 +83,11 @@ def parameter_parser():
     parser.add_argument("--save-path",
                         type=str,
                         default=None,
-                        help="Where to save the trained model")
+                        help="Where to save the trained models")
 
     parser.add_argument("--load-path",
                         type=str,
                         default=None,
-                        help="Load a pretrained model")
+                        help="Load a pretrained models")
 
     return parser.parse_args()

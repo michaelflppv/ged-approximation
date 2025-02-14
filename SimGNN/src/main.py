@@ -7,7 +7,7 @@ from param_parser import parameter_parser
 def main():
     """
     Parsing command line parameters, reading data.
-    Fitting and scoring a SimGNN model.
+    Fitting and scoring a SimGNN models.
     """
     args = parameter_parser()
     tab_printer(args)

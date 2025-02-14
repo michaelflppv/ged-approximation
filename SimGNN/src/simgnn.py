@@ -115,7 +115,7 @@ class SimGNN(torch.nn.Module):
 
 class SimGNNTrainer(object):
     """
-    SimGNN model trainer.
+    SimGNN models trainer.
     """
     def __init__(self, args):
         """
@@ -136,8 +136,8 @@ class SimGNNTrainer(object):
         Collecting the unique node idsentifiers.
         """
         print("\nEnumerating unique labels.\n")
-        self.training_graphs = glob.glob(self.args.training_graphs + "*.json")
-        self.testing_graphs = glob.glob(self.args.testing_graphs + "*.json")
+        self.training_graphs = glob.glob(self.args.training_graphs + "*.AIDS")
+        self.testing_graphs = glob.glob(self.args.testing_graphs + "*.AIDS")
         graph_pairs = self.training_graphs + self.testing_graphs
         self.global_labels = set()
         for graph_pair in tqdm(graph_pairs):
@@ -217,7 +217,7 @@ class SimGNNTrainer(object):
 
     def fit(self):
         """
-        Fitting a model.
+        Fitting a models.
         """
         print("\nModel training.\n")
 
