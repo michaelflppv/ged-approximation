@@ -1,19 +1,19 @@
+import os
 import subprocess
 import re
 import pandas as pd
-import os
 import tempfile
 import xml.etree.ElementTree as ET
-import resource
+import platform
 
 # Define relative paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Define paths
-GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"  # Path to compiled C++ binary
-DATASET_PATH = os.path.join(script_dir, "..", "..", "processed_data", "gxl", "AIDS")  # Path to AIDS dataset directory
-COLLECTION_XML = os.path.join(script_dir, "..", "..", "processed_data", "xml", "AIDS.xml")  # Path to AIDS collection XML file
-RESULTS_DIR = os.path.join(script_dir, "..", "..", "results", "gedlib")  # Directory to save GEDLIB results
+GED_EXECUTABLE = "C:\\Users\\mikef\\PycharmProjects\\ged-approximation\\gedlib\\build\\main_exec"  # Path to compiled C++ binary
+DATASET_PATH = "C:\\Users\\mikef\\PycharmProjects\\ged-approximation\\processed_data\\gxl\\AIDS"  # Path to AIDS dataset directory
+COLLECTION_XML = "C:\\Users\\mikef\\PycharmProjects\\ged-approximation\\processed_data\\xml\\AIDS.xml"  # Path to AIDS collection XML file
+RESULTS_DIR = "C:\\Users\\mikef\\PycharmProjects\\ged-approximation\\results\\gedlib"  # Directory to save GEDLIB results
 RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS_results.xlsx")  # Path to save results
 
 METHOD_NAMES = {
@@ -24,6 +24,9 @@ METHOD_NAMES = {
     # Add additional method mappings if needed.
 }
 
+# Conditional import for resource module
+if platform.system() != "Windows":
+    import resource
 
 def preprocess_xml_file(xml_path):
     """Remove DOCTYPE declarations from the XML file and return path to a temporary file."""
@@ -34,7 +37,6 @@ def preprocess_xml_file(xml_path):
     with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
         f.writelines(filtered_lines)
     return temp_path
-
 
 def get_graph_properties(gxl_file):
     """
@@ -62,7 +64,6 @@ def get_graph_properties(gxl_file):
     p = (2 * e) / (n * (n - 1)) if n > 1 else 0
     return n, e, p
 
-
 def get_first_two_graph_properties(dataset_path, collection_xml):
     """
     Parse the collection XML (after removing DOCTYPE) to get the first two graph file names,
@@ -88,7 +89,6 @@ def get_first_two_graph_properties(dataset_path, collection_xml):
     props2 = get_graph_properties(path2)
     return props1, props2
 
-
 def run_ged(dataset_path, collection_xml):
     """Run the GEDLIB executable and parse its output, while collecting additional metrics."""
     # Preprocess collection XML to remove DOCTYPE lines.
@@ -102,8 +102,13 @@ def run_ged(dataset_path, collection_xml):
         output_lines = result.stdout.strip().split("\n")
 
         # Measure memory usage (in kilobytes) for child processes.
-        rusage = resource.getrusage(resource.RUSAGE_CHILDREN)
-        mem_usage_kb = rusage.ru_maxrss  # (on Linux, ru_maxrss is in kilobytes)
+        if platform.system() != "Windows":
+            rusage = resource.getrusage(resource.RUSAGE_CHILDREN)
+            mem_usage_kb = rusage.ru_maxrss  # (on Linux, ru_maxrss is in kilobytes)
+        else:
+            import psutil
+            process = psutil.Process()
+            mem_usage_kb = process.memory_info().rss // 1024  # Resident Set Size in kilobytes
 
         # Get properties for the first two graphs.
         props = get_first_two_graph_properties(dataset_path, collection_xml)
@@ -165,13 +170,11 @@ def run_ged(dataset_path, collection_xml):
     except Exception as e:
         return [{"error": str(e)}]
 
-
 def log_results(results):
     """Log AIDS into an Excel file."""
     df = pd.DataFrame(results)
     os.makedirs(RESULTS_DIR, exist_ok=True)
     df.to_excel(RESULTS_FILE, index=False, engine='openpyxl')
-
 
 results = run_ged(DATASET_PATH, COLLECTION_XML)
 log_results(results)
