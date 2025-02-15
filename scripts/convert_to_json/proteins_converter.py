@@ -19,7 +19,8 @@ with the following structure:
     "graph_1": [[0, 1], [1, 2], ...],
     "graph_2": [[0, 1], [1, 2], ...],
     "labels_1": [label0, label1, ...],
-    "labels_2": [label0, label1, ...]
+    "labels_2": [label0, label1, ...],
+    "ged": <integer value>
 }
 where the edges are expressed with local node indices (starting from 0) and the
 node label lists are ordered by the node’s local index.
@@ -29,30 +30,46 @@ import os
 import sys
 import json
 from collections import defaultdict
-
+import pandas as pd
 
 def main():
-    # Determine the directory of this script
+    # Determine the directory of this script.
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Build the relative paths
+    # Build the relative paths.
     dataset_dir = os.path.join(script_dir, "..", "..", "data", "PROTEINS")
     output_dir = os.path.join(script_dir, "..", "..", "processed_data", "json_pairs", "PROTEINS")
+    # Relative path to the GEDLIB results Excel file.
+    ged_excel_path = os.path.join(script_dir, "..", "..", "results", "gedlib", "PROTEINS_results.xlsx")
 
-    # Check if the input dataset folder exists
+    # Read the GED value from the Excel file.
+    star_ged_value = 0
+    if os.path.exists(ged_excel_path):
+        try:
+            ged_df = pd.read_excel(ged_excel_path)
+            # Assume the first row corresponds to STAR (Exact) and that the column is named "ged".
+            star_row = ged_df.iloc[0]
+            star_ged_value = int(star_row["ged"])
+        except Exception as e:
+            print(f"Error reading GED value from Excel: {e}")
+            star_ged_value = 0
+    else:
+        print(f"Warning: GED Excel file '{ged_excel_path}' not found. Defaulting GED values to 0.")
+
+    # Check if the input dataset folder exists.
     if not os.path.exists(dataset_dir):
         print(f"Error: Input folder '{dataset_dir}' does not exist.")
         sys.exit(1)
 
-    # Create the output directory if it does not exist
+    # Create the output directory if it does not exist.
     os.makedirs(output_dir, exist_ok=True)
 
-    # Define the required file paths
+    # Define the required file paths.
     file_A = os.path.join(dataset_dir, "PROTEINS_A.txt")
     file_graph_indicator = os.path.join(dataset_dir, "PROTEINS_graph_indicator.txt")
     file_node_labels = os.path.join(dataset_dir, "PROTEINS_node_labels.txt")
 
-    # Verify that the essential input files exist
+    # Verify that the essential input files exist.
     for file_path in [file_A, file_graph_indicator, file_node_labels]:
         if not os.path.exists(file_path):
             print(f"Error: Required file '{file_path}' does not exist.")
@@ -75,7 +92,7 @@ def main():
             global_indicator.append(graph_id)
             graph_nodes[graph_id].append(global_node_id)
 
-    # Build a mapping for each graph: global node id -> local node id (0-indexed)
+    # Build a mapping for each graph: global node id -> local node id (0-indexed).
     graph_node_mapping = {graph_id: {global_id: idx for idx, global_id in enumerate(nodes)}
                           for graph_id, nodes in graph_nodes.items()}
 
@@ -113,7 +130,7 @@ def main():
             except ValueError:
                 continue
 
-            # Retrieve the graph_id for both nodes
+            # Retrieve the graph_id for both nodes.
             if u - 1 >= len(global_indicator) or v - 1 >= len(global_indicator):
                 continue
             graph_id_u = global_indicator[u - 1]
@@ -121,7 +138,7 @@ def main():
             if graph_id_u != graph_id_v:
                 continue
             graph_id = graph_id_u
-            # Convert global node ids to local indices
+            # Convert global node ids to local indices.
             local_u = graph_node_mapping[graph_id][u]
             local_v = graph_node_mapping[graph_id][v]
             graph_edges[graph_id].append([local_u, local_v])
@@ -139,7 +156,7 @@ def main():
     for i in range(len(sorted_graph_ids)):
         for j in range(i + 1, len(sorted_graph_ids)):
             if pair_count >= 2000:
-                print(f"Reached the limit of 2000 JSON files. Stopping.")
+                print("Reached the limit of 2000 JSON files. Stopping.")
                 break
             g1 = sorted_graph_ids[i]
             g2 = sorted_graph_ids[j]
@@ -149,6 +166,14 @@ def main():
                 "labels_1": graph_local_node_labels[g1],
                 "labels_2": graph_local_node_labels[g2],
             }
+            # Add the "ged" key.
+            # For the pair corresponding to the first two graphs (i.e. i==0 and j==1), use the GED value from Excel.
+            # For all other pairs, use 0.
+            if i == 0 and j == 1:
+                json_data["ged"] = star_ged_value
+            else:
+                json_data["ged"] = 0
+
             # Name the JSON file according to the pair of graph ids.
             json_filename = f"pair_{g1}_{g2}.json"
             json_filepath = os.path.join(output_dir, json_filename)
@@ -163,7 +188,6 @@ def main():
             break
 
     print(f"Finished processing {pair_count} graph pairs.")
-
 
 if __name__ == '__main__':
     main()
