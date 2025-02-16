@@ -80,10 +80,9 @@ def main():
                         help="Prefix for the dataset files (default: 'IMDB-BINARY')")
     args = parser.parse_args()
 
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    input_dir = os.path.join(base_dir, "data", args.prefix)
-    output_dir = os.path.join(base_dir, "processed_data", "gxl", args.prefix)
-    collection_file = os.path.join(base_dir, "processed_data", "xml", f"{args.prefix}.xml")
+    input_dir = "../../data/IMDB-BINARY/"
+    output_dir = "../../processed_data/gxl/IMDB-BINARY/"
+    collection_file = "../../processed_data/xml/IMDB-BINARY.xml"
 
     os.makedirs(output_dir, exist_ok=True)
 

@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<!DOCTYPE gxl SYSTEM "http://www.gupro.de/GXL/gxl-1.0.dtd">
+<gxl><graph id="molid63" edgeids="false" edgemode="undirected"><node id="_1"><attr name="symbol"><string>Cl</string></attr><attr name="chem"><int>7</int></attr><attr name="charge"><int>0</int></attr><attr name="x"><float>2.0</float></attr><attr name="y"><float>0.0</float></attr></node><node id="_2"><attr name="symbol"><string>Li</string></attr><attr name="chem"><int>23</int></attr><attr name="charge"><int>0</int></attr><attr name="x"><float>3.0</float></attr><attr name="y"><float>0.0</float></attr></node><edge to="_2" from="_1"><attr name="valence"><int>0</int></attr></edge><edge to="_1" from="_2"><attr name="valence"><int>0</int></attr></edge></graph></gxl>

@@ -5,18 +5,18 @@ import pandas as pd
 import tempfile
 import xml.etree.ElementTree as ET
 import platform
-import time
 
 # Define relative paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Define paths
+# Define paths (adjust these relative paths as needed)
 GED_EXECUTABLE = "../gedlib/build/main_exec"  # Path to compiled C++ binary
-DATASET_PATH = "../processed_data/gxl/PROTEINS"  # Path to AIDS dataset directory
-COLLECTION_XML = "../processed_data/xml/PROTEINS.xml"  # Path to AIDS collection XML file
+DATASET_PATH = "../processed_data/gxl/PROTEINS"  # Path to PROTEINS dataset directory
+COLLECTION_XML = "../processed_data/xml/PROTEINS.xml"  # Path to PROTEINS collection XML file
 RESULTS_DIR = "../results/gedlib"  # Directory to save GEDLIB results
 RESULTS_FILE = os.path.join(RESULTS_DIR, "PROTEINS_results.xlsx")  # Path to save results
 
+# Update method mapping according to new C++ enum values (assumed to be 0,1,2,3)
 METHOD_NAMES = {
     20: "STAR (Exact)",
     10: "IPFP",
@@ -97,20 +97,19 @@ def run_ged(dataset_path, collection_xml):
     command = [GED_EXECUTABLE, dataset_path, preprocessed_xml]
     try:
         # Run GEDLIB and capture output.
-        result = subprocess.run(command, capture_output=True, text=True)
-
+        result = subprocess.run(command, capture_output=True, text=True, timeout=600)
         if result.stderr:
             print("GEDLIB stderr:", result.stderr)
         output_lines = result.stdout.strip().split("\n")
 
-        # Measure memory usage (in kilobytes) for child processes.
+        # Also measure memory usage (if needed) from child processes.
         if platform.system() != "Windows":
             rusage = resource.getrusage(resource.RUSAGE_CHILDREN)
             mem_usage_kb = rusage.ru_maxrss  # (on Linux, ru_maxrss is in kilobytes)
         else:
             import psutil
             process = psutil.Process()
-            mem_usage_kb = process.memory_info().rss // 1024  # Resident Set Size in kilobytes
+            mem_usage_kb = process.memory_info().rss // 1024  # in kilobytes
 
         # Get properties for the first two graphs.
         props = get_first_two_graph_properties(dataset_path, collection_xml)
@@ -124,46 +123,53 @@ def run_ged(dataset_path, collection_xml):
             p1 = p2 = avg_p = None
 
         results = []
-        # First, collect all method outputs.
+        # Updated regex to capture the new output format:
+        # Expected output format from C++:
+        # METHOD=<method_id> GRAPH1=<graph1> GRAPH2=<graph2> PREDGED=<predged> GTGED=N/A RUNTIME=<runtime> MEM=<mem_usage>
+        regex = re.compile(
+            r"METHOD=(\d+).*?GRAPH1=(\d+).*?GRAPH2=(\d+).*?PREDGED=([\d.]+).*?RUNTIME=([\d.]+).*?MEM=([\d.]+)"
+        )
         for line in output_lines:
-            match = re.search(r"METHOD=(\d+) DIST=([\d.]+) TIME=([\d.]+)", line)
+            match = regex.search(line)
             if match:
                 method_id = int(match.group(1))
-                distance = float(match.group(2))
-                runtime = float(match.group(3))
+                graph1 = int(match.group(2))
+                graph2 = int(match.group(3))
+                pred_ged = float(match.group(4))
+                runtime = float(match.group(5))
+                mem_usage = float(match.group(6))  # This is in MB as printed by the executable
                 method_name = METHOD_NAMES.get(method_id, f"Unknown Method {method_id}")
                 results.append({
                     "method": method_name,
-                    "ged": distance,
+                    "ged": pred_ged,
                     "runtime": runtime,
+                    "graph1": graph1,
+                    "graph2": graph2,
+                    "memory_usage_mb": mem_usage,
                     "graph1_n": n1 if n1 is not None else "N/A",
                     "graph1_density": round(p1, 4) if p1 is not None else "N/A",
                     "graph2_n": n2 if n2 is not None else "N/A",
                     "graph2_density": round(p2, 4) if p2 is not None else "N/A",
                     "average_n": avg_n if avg_n is not None else "N/A",
                     "average_density": round(avg_p, 4) if avg_p is not None else "N/A",
-                    "memory_usage_kb": mem_usage_kb,
-                    # Placeholders; will update below.
                     "scalability": scalability if scalability is not None else "N/A",
-                    "accuracy": None,
+                    "accuracy": "N/A",  # As before, since no ground truth GED is provided.
                     "precision": "N/A",
                     "rank_correlation": "N/A"
                 })
         os.remove(preprocessed_xml)
 
-        # Determine groundtruth GED from STAR (Exact).
+        # Optionally, if you want to determine a ground truth GED (e.g., from STAR method), you can do so:
         groundtruth = None
         for res in results:
             if res["method"] == "STAR (Exact)":
                 groundtruth = res["ged"]
                 break
-        # If STAR method was not found, we cannot compute relative accuracy.
         for res in results:
             if groundtruth is not None:
                 if res["method"] == "STAR (Exact)":
                     res["accuracy"] = 100.0
                 else:
-                    # Assume approximate GED values are >= groundtruth.
                     res["accuracy"] = round((groundtruth / res["ged"]) * 100, 2)
             else:
                 res["accuracy"] = "N/A"
@@ -172,12 +178,15 @@ def run_ged(dataset_path, collection_xml):
     except Exception as e:
         return [{"error": str(e)}]
 
+
 def log_results(results):
     """Log results into an Excel file."""
     df = pd.DataFrame(results)
     os.makedirs(RESULTS_DIR, exist_ok=True)
     df.to_excel(RESULTS_FILE, index=False, engine='openpyxl')
 
-results = run_ged(DATASET_PATH, COLLECTION_XML)
-log_results(results)
-print("Experiments completed. Results saved in", RESULTS_FILE)
+
+if __name__ == "__main__":
+    results = run_ged(DATASET_PATH, COLLECTION_XML)
+    log_results(results)
+    print("Experiments completed. Results saved in", RESULTS_FILE)
