@@ -42,19 +42,30 @@ def main():
     # Relative path to the GEDLIB results Excel file.
     ged_excel_path = os.path.join(script_dir, "..", "..", "results", "gedlib", "PROTEINS_results.xlsx")
 
-    # Read the GED value from the Excel file.
-    star_ged_value = 0
+    # --- Read GED values from the Excel file ---
+    ged_dict = {}
     if os.path.exists(ged_excel_path):
         try:
             ged_df = pd.read_excel(ged_excel_path)
-            # Assume the first row corresponds to STAR (Exact) and that the column is named "ged".
-            star_row = ged_df.iloc[0]
-            star_ged_value = int(star_row["ged"])
+            # Filter rows where the method is "STAR (Exact)".
+            if "method" in ged_df.columns:
+                ged_df = ged_df[ged_df["method"] == "STAR (Exact)"]
+            # Build a dictionary with key: (graph1, graph2) and value: ged.
+            for _, row in ged_df.iterrows():
+                try:
+                    g1 = int(row["graph1"])
+                    g2 = int(row["graph2"])
+                    ged_val = int(row["ged"])
+                    ged_dict[(g1, g2)] = ged_val
+                except Exception as e:
+                    # Skip rows with missing or malformed values.
+                    continue
         except Exception as e:
-            print(f"Error reading GED value from Excel: {e}")
-            star_ged_value = 0
+            print(f"Error reading GED values from Excel: {e}")
+            ged_dict = {}
     else:
         print(f"Warning: GED Excel file '{ged_excel_path}' not found. Defaulting GED values to 0.")
+        ged_dict = {}
 
     # Check if the input dataset folder exists.
     if not os.path.exists(dataset_dir):
@@ -166,13 +177,9 @@ def main():
                 "labels_1": graph_local_node_labels[g1],
                 "labels_2": graph_local_node_labels[g2],
             }
-            # Add the "ged" key.
-            # For the pair corresponding to the first two graphs (i.e. i==0 and j==1), use the GED value from Excel.
-            # For all other pairs, use 0.
-            if i == 0 and j == 1:
-                json_data["ged"] = star_ged_value
-            else:
-                json_data["ged"] = 0
+            # Look up the GED value for this pair (assume g1 and g2 are in sorted order).
+            ged_value = ged_dict.get((g1, g2), 0)
+            json_data["ged"] = ged_value
 
             # Name the JSON file according to the pair of graph ids.
             json_filename = f"pair_{g1}_{g2}.json"
