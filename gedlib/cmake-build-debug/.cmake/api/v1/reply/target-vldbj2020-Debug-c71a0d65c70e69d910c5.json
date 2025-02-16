@@ -1,0 +1,87 @@
+{
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_custom_target"
+		],
+		"files" : 
+		[
+			"tests/vldbj2020/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 28,
+				"parent" : 0
+			}
+		]
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "vldbj_train_ml::@367bc7670796c9ba676e"
+		},
+		{
+			"id" : "vldbj_test_best_methods::@367bc7670796c9ba676e"
+		},
+		{
+			"id" : "vldbj_train_walks::@367bc7670796c9ba676e"
+		},
+		{
+			"id" : "vldbj_train_ring::@367bc7670796c9ba676e"
+		},
+		{
+			"id" : "vldbj_train_subgraph::@367bc7670796c9ba676e"
+		},
+		{
+			"id" : "vldbj_test_lsape_based_methods::@367bc7670796c9ba676e"
+		}
+	],
+	"id" : "vldbj2020::@367bc7670796c9ba676e",
+	"name" : "vldbj2020",
+	"paths" : 
+	{
+		"build" : "tests/vldbj2020",
+		"source" : "tests/vldbj2020"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "CMake Rules",
+			"sourceIndexes" : 
+			[
+				1
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/tests/vldbj2020/CMakeFiles/vldbj2020",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/tests/vldbj2020/CMakeFiles/vldbj2020.rule",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "UTILITY"
+}

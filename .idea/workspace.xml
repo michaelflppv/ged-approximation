@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15cb556e-3a88-4c7e-854d-eb5a85e56b0d" name="Changes" comment="Updated Path Usage">
-      <change beforePath="$PROJECT_DIR$/gedlib" beforeDir="false" afterPath="$PROJECT_DIR$/gedlib" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gedlib/tests/unit_tests/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/gedlib/tests/unit_tests/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gedlib/tests/unit_tests/src/catch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/gedlib/tests/unit_tests/src/catch.cpp" afterDir="false" />
-    </list>
+    <list default="true" id="15cb556e-3a88-4c7e-854d-eb5a85e56b0d" name="Changes" comment="Updated Path Usage" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -25,7 +21,7 @@
     <option name="BRANCH" value="origin/master" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/gedlib" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -44,7 +40,7 @@
   &quot;associatedIndex&quot;: 0
 }</component>
   <component name="ProjectId" id="2swkKvIFZwwnrphCH5oyFmeOtBk" />
-  <component name="ProjectLevelVcsManager">
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectViewState">
@@ -70,14 +66,14 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "main",
     "last_opened_file_path": "C:/Users/mikef/PycharmProjects/ged-approximation/gedlib",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -97,7 +93,7 @@
       <recent name="C:\Users\mikef\PycharmProjects\ged-approximation\results\gedlib" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.aids_converter">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="ged-approximation" />
       <option name="ENV_FILES" value="" />
@@ -322,6 +318,7 @@
       <workItem from="1739652829255" duration="1626000" />
       <workItem from="1739703504263" duration="7940000" />
       <workItem from="1739714722063" duration="1258000" />
+      <workItem from="1739727167415" duration="54000" />
     </task>
     <task id="LOCAL-00001" summary="Resolve missing code">
       <option name="closed" value="true" />
@@ -645,6 +642,9 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/gedlib" />
+    </ignored-roots>
     <MESSAGE value="Uploading datasets" />
     <MESSAGE value="Updated Conversion of datasets" />
     <MESSAGE value="Updated Dataset Converters" />

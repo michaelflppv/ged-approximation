@@ -1,0 +1,590 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						8
+					],
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						8,
+						18
+					]
+				},
+				{
+					"build" : "src",
+					"jsonFile" : "directory-src-Debug-c94b7c2814d5a21df52c.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src",
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"build" : "tests",
+					"childIndexes" : 
+					[
+						3,
+						4,
+						5,
+						6,
+						7
+					],
+					"jsonFile" : "directory-tests-Debug-70e4927a02b591d5c1f8.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "tests",
+					"targetIndexes" : 
+					[
+						28
+					]
+				},
+				{
+					"build" : "tests/unit_tests",
+					"jsonFile" : "directory-tests.unit_tests-Debug-04aaa32fe40c84e912c5.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 2,
+					"projectIndex" : 0,
+					"source" : "tests/unit_tests",
+					"targetIndexes" : 
+					[
+						9,
+						17,
+						34
+					]
+				},
+				{
+					"build" : "tests/sspr2018",
+					"jsonFile" : "directory-tests.sspr2018-Debug-04a25ffa7587ea7b7c84.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 2,
+					"projectIndex" : 0,
+					"source" : "tests/sspr2018",
+					"targetIndexes" : 
+					[
+						14,
+						15,
+						16,
+						25,
+						26
+					]
+				},
+				{
+					"build" : "tests/ijprai2020",
+					"jsonFile" : "directory-tests.ijprai2020-Debug-7f90d6eefd90e369dbde.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 2,
+					"projectIndex" : 0,
+					"source" : "tests/ijprai2020",
+					"targetIndexes" : 
+					[
+						12,
+						23,
+						24,
+						30,
+						31,
+						32,
+						33
+					]
+				},
+				{
+					"build" : "tests/vldbj2020",
+					"jsonFile" : "directory-tests.vldbj2020-Debug-615de9288d9af3a17f89.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 2,
+					"projectIndex" : 0,
+					"source" : "tests/vldbj2020",
+					"targetIndexes" : 
+					[
+						35,
+						36,
+						37,
+						38,
+						39,
+						40,
+						41,
+						42,
+						43,
+						44
+					]
+				},
+				{
+					"build" : "tests/pvldb2020",
+					"jsonFile" : "directory-tests.pvldb2020-Debug-66cfcc53ef82fdea7f95.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 2,
+					"projectIndex" : 0,
+					"source" : "tests/pvldb2020",
+					"targetIndexes" : 
+					[
+						22,
+						27
+					]
+				},
+				{
+					"build" : "median",
+					"jsonFile" : "directory-median-Debug-5e127b92e4352dda5489.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "median",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						11,
+						13,
+						19,
+						20,
+						21,
+						29
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					],
+					"name" : "GEDLIB",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+						24,
+						25,
+						26,
+						27,
+						28,
+						29,
+						30,
+						31,
+						32,
+						33,
+						34,
+						35,
+						36,
+						37,
+						38,
+						39,
+						40,
+						41,
+						42,
+						43,
+						44
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 8,
+					"id" : "aids_edit_iso_test::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-aids_edit_iso_test-Debug-88567e2de15cbf42d98b.json",
+					"name" : "aids_edit_iso_test",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "bst::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-bst-Debug-041b05cc0381bffa2816.json",
+					"name" : "bst",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "bst_init_letter::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-bst_init_letter-Debug-7529cda32259c6a577d6.json",
+					"name" : "bst_init_letter",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "bst_query_letter::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-bst_query_letter-Debug-a001aea78a7f54bf1d98.json",
+					"name" : "bst_query_letter",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "classification_tests::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-classification_tests-Debug-5308d0ad511719589b68.json",
+					"name" : "classification_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "cluster::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-cluster-Debug-a6a25644eb43c5c4778a.json",
+					"name" : "cluster",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "cluster_letter::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-cluster_letter-Debug-8ea7ae77ec0bd8840a82.json",
+					"name" : "cluster_letter",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "clustering_tests::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-clustering_tests-Debug-a0555ab1b9aa24abd493.json",
+					"name" : "clustering_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "doc::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-doc-Debug-39c59cbd07d204d83ce6.json",
+					"name" : "doc",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ged_env_tests::@175c4eb20b3ff3e11682",
+					"jsonFile" : "target-ged_env_tests-Debug-cf669b58400fb4c67004.json",
+					"name" : "ged_env_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "gxlgedlib::@145eef247bfb46b6828c",
+					"jsonFile" : "target-gxlgedlib-Debug-995c101c20631229d030.json",
+					"name" : "gxlgedlib",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "ibd_tests::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-ibd_tests-Debug-76104f4543dd322ca4dc.json",
+					"name" : "ibd_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "ijprai2020::@cbdb995f48c1f339ec67",
+					"jsonFile" : "target-ijprai2020-Debug-9e6d89f5f08eef6f8f91.json",
+					"name" : "ijprai2020",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "indexing_tests::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-indexing_tests-Debug-1ec68ccb528a6c771b48.json",
+					"name" : "indexing_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "learn_ring_params::@f12dc5e9d28d229dcad7",
+					"jsonFile" : "target-learn_ring_params-Debug-f2b3d0b279e7f983507e.json",
+					"name" : "learn_ring_params",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "learn_subgraph_depths::@f12dc5e9d28d229dcad7",
+					"jsonFile" : "target-learn_subgraph_depths-Debug-14b4a3ce7c7a0cd4b3ae.json",
+					"name" : "learn_subgraph_depths",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "learn_walks_depths::@f12dc5e9d28d229dcad7",
+					"jsonFile" : "target-learn_walks_depths-Debug-7af7902ef80e1c6d776a.json",
+					"name" : "learn_walks_depths",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "lsap_solver_tests::@175c4eb20b3ff3e11682",
+					"jsonFile" : "target-lsap_solver_tests-Debug-8b981b21752d1ae18ae9.json",
+					"name" : "lsap_solver_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "main_exec::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-main_exec-Debug-0f7a86ef1454d058c1b4.json",
+					"name" : "main_exec",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "median::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-median-Debug-966a22120961a98f2ce0.json",
+					"name" : "median",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "median_letter_demo::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-median_letter_demo-Debug-0821a9fef2878eb3387d.json",
+					"name" : "median_letter_demo",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "median_tests::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-median_tests-Debug-ba071a7962f3fa3db01c.json",
+					"name" : "median_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "pvldb2020::@9ff89dcc701a9291ac22",
+					"jsonFile" : "target-pvldb2020-Debug-bfe5b7d8452eeb5f092b.json",
+					"name" : "pvldb2020",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "run_ipfp::@cbdb995f48c1f339ec67",
+					"jsonFile" : "target-run_ipfp-Debug-83115ea5ea333d83990d.json",
+					"name" : "run_ipfp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "run_tests::@cbdb995f48c1f339ec67",
+					"jsonFile" : "target-run_tests-Debug-ae12db3b6c2e6811986a.json",
+					"name" : "run_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "sspr2018::@f12dc5e9d28d229dcad7",
+					"jsonFile" : "target-sspr2018-Debug-a849c9616c2e20ef47a2.json",
+					"name" : "sspr2018",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "test_lsape_based_methods::@f12dc5e9d28d229dcad7",
+					"jsonFile" : "target-test_lsape_based_methods-Debug-c095836e6f28792d7f4f.json",
+					"name" : "test_lsape_based_methods",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "test_lsape_enum::@9ff89dcc701a9291ac22",
+					"jsonFile" : "target-test_lsape_enum-Debug-18cff252fefae4eeae68.json",
+					"name" : "test_lsape_enum",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "tests::@a44f0ac069e85531cdee",
+					"jsonFile" : "target-tests-Debug-84a50e60355d276b8d17.json",
+					"name" : "tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "time_limit_tests::@1eb884bdf6ccffd3ba0e",
+					"jsonFile" : "target-time_limit_tests-Debug-634d55fdf29785d3c552.json",
+					"name" : "time_limit_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "train_ml::@cbdb995f48c1f339ec67",
+					"jsonFile" : "target-train_ml-Debug-5cf1babb5bea1b1c2bc3.json",
+					"name" : "train_ml",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "train_ring::@cbdb995f48c1f339ec67",
+					"jsonFile" : "target-train_ring-Debug-6670c04d40f2f011b714.json",
+					"name" : "train_ring",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "train_subgraph::@cbdb995f48c1f339ec67",
+					"jsonFile" : "target-train_subgraph-Debug-b4b0d54169235ff4b8b2.json",
+					"name" : "train_subgraph",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "train_walks::@cbdb995f48c1f339ec67",
+					"jsonFile" : "target-train_walks-Debug-5702ac901f163c1f9655.json",
+					"name" : "train_walks",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "unit_tests::@175c4eb20b3ff3e11682",
+					"jsonFile" : "target-unit_tests-Debug-19d782e588c9cfa05f9c.json",
+					"name" : "unit_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "vldbj2020::@367bc7670796c9ba676e",
+					"jsonFile" : "target-vldbj2020-Debug-c71a0d65c70e69d910c5.json",
+					"name" : "vldbj2020",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "vldbj_test_best_methods::@367bc7670796c9ba676e",
+					"jsonFile" : "target-vldbj_test_best_methods-Debug-e493f2909a698680d881.json",
+					"name" : "vldbj_test_best_methods",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "vldbj_test_lp_based_methods::@367bc7670796c9ba676e",
+					"jsonFile" : "target-vldbj_test_lp_based_methods-Debug-cd53868b0dd8837df0f8.json",
+					"name" : "vldbj_test_lp_based_methods",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "vldbj_test_ls_based_methods::@367bc7670796c9ba676e",
+					"jsonFile" : "target-vldbj_test_ls_based_methods-Debug-835ff6426fe0af8d9bda.json",
+					"name" : "vldbj_test_ls_based_methods",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "vldbj_test_lsape_based_methods::@367bc7670796c9ba676e",
+					"jsonFile" : "target-vldbj_test_lsape_based_methods-Debug-a67792c8dd902238d31f.json",
+					"name" : "vldbj_test_lsape_based_methods",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "vldbj_test_misc_methods::@367bc7670796c9ba676e",
+					"jsonFile" : "target-vldbj_test_misc_methods-Debug-e8afbfc2cbe989404cdb.json",
+					"name" : "vldbj_test_misc_methods",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "vldbj_train_ml::@367bc7670796c9ba676e",
+					"jsonFile" : "target-vldbj_train_ml-Debug-1046472fefc44f447969.json",
+					"name" : "vldbj_train_ml",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "vldbj_train_ring::@367bc7670796c9ba676e",
+					"jsonFile" : "target-vldbj_train_ring-Debug-a4c244e262338725d670.json",
+					"name" : "vldbj_train_ring",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "vldbj_train_subgraph::@367bc7670796c9ba676e",
+					"jsonFile" : "target-vldbj_train_subgraph-Debug-6e626849ee7afb746596.json",
+					"name" : "vldbj_train_subgraph",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "vldbj_train_walks::@367bc7670796c9ba676e",
+					"jsonFile" : "target-vldbj_train_walks-Debug-fe9a1e22f50ab235ff01.json",
+					"name" : "vldbj_train_walks",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/mikef/PycharmProjects/ged-approximation/gedlib/cmake-build-debug",
+		"source" : "C:/Users/mikef/PycharmProjects/ged-approximation/gedlib"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

@@ -1,0 +1,81 @@
+{
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_custom_target"
+		],
+		"files" : 
+		[
+			"tests/sspr2018/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 24,
+				"parent" : 0
+			}
+		]
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "test_lsape_based_methods::@f12dc5e9d28d229dcad7"
+		},
+		{
+			"id" : "learn_walks_depths::@f12dc5e9d28d229dcad7"
+		},
+		{
+			"id" : "learn_subgraph_depths::@f12dc5e9d28d229dcad7"
+		},
+		{
+			"id" : "learn_ring_params::@f12dc5e9d28d229dcad7"
+		}
+	],
+	"id" : "sspr2018::@f12dc5e9d28d229dcad7",
+	"name" : "sspr2018",
+	"paths" : 
+	{
+		"build" : "tests/sspr2018",
+		"source" : "tests/sspr2018"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "CMake Rules",
+			"sourceIndexes" : 
+			[
+				1
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/tests/sspr2018/CMakeFiles/sspr2018",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/tests/sspr2018/CMakeFiles/sspr2018.rule",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "UTILITY"
+}

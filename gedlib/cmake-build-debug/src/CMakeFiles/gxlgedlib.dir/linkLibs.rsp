@@ -1,0 +1,1 @@
+  -L"C:/Users/mikef/PycharmProjects/ged-approximation/gedlib/ext/nomad.3.8.1/lib"  -L"C:/Users/mikef/PycharmProjects/ged-approximation/gedlib/ext/fann.2.2.0/lib"  -L"C:/Users/mikef/PycharmProjects/ged-approximation/gedlib/ext/libsvm.3.22"  -L/lib  -lnomad -ldoublefann -lsvm -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 
