@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15cb556e-3a88-4c7e-854d-eb5a85e56b0d" name="Changes" comment="Updated Path Usage" />
+    <list default="true" id="15cb556e-3a88-4c7e-854d-eb5a85e56b0d" name="Changes" comment="Cloned GEDLIB to the project">
+      <change beforePath="$PROJECT_DIR$/results/neural/PROTEINS/performance.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/results/neural/PROTEINS/performance.xlsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -50,6 +52,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Python.aids_converter.executor": "Run",
+    "Python.analyze_results.executor": "Run",
     "Python.converter.executor": "Run",
     "Python.extract_edit_path.executor": "Run",
     "Python.gedlib_parser.executor": "Run",
@@ -73,7 +76,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -93,7 +96,7 @@
       <recent name="C:\Users\mikef\PycharmProjects\ged-approximation\results\gedlib" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.aids_converter">
+  <component name="RunManager">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="ged-approximation" />
       <option name="ENV_FILES" value="" />
@@ -318,7 +321,7 @@
       <workItem from="1739652829255" duration="1626000" />
       <workItem from="1739703504263" duration="7940000" />
       <workItem from="1739714722063" duration="1258000" />
-      <workItem from="1739727167415" duration="54000" />
+      <workItem from="1739727167415" duration="565000" />
     </task>
     <task id="LOCAL-00001" summary="Resolve missing code">
       <option name="closed" value="true" />
@@ -624,7 +627,15 @@
       <option name="project" value="LOCAL" />
       <updated>1739715763671</updated>
     </task>
-    <option name="localTasksCounter" value="39" />
+    <task id="LOCAL-00039" summary="Cloned GEDLIB to the project">
+      <option name="closed" value="true" />
+      <created>1739727461155</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1739727461155</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -663,29 +674,30 @@
     <MESSAGE value="Corrected SimGNN Execution" />
     <MESSAGE value="Added saving the trained model" />
     <MESSAGE value="Updated SimGNN evaluation" />
-    <MESSAGE value="Cloned GEDLIB to the project" />
     <MESSAGE value="Modified SimGNN Evaluation" />
     <MESSAGE value="Modified Results Analysis" />
     <MESSAGE value="Added path extraction" />
     <MESSAGE value="Added separate visualizer of SimGNN performance" />
     <MESSAGE value="Modified Results Parsing" />
     <MESSAGE value="Updated Path Usage" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated Path Usage" />
+    <MESSAGE value="Cloned GEDLIB to the project" />
+    <option name="LAST_COMMIT_MESSAGE" value="Cloned GEDLIB to the project" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/ged_approximation$analyze_results.coverage" NAME="analyze_results Coverage Results" MODIFIED="1739727645469" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
     <SUITE FILE_PATH="coverage/ged_approximation$extract_edit_path.coverage" NAME="extract_edit_path Coverage Results" MODIFIED="1739642683378" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
     <SUITE FILE_PATH="coverage/ged_approximation$proteins_converter__1_.coverage" NAME="proteins_converter (1) Coverage Results" MODIFIED="1739453966482" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_converters" />
-    <SUITE FILE_PATH="coverage/ged_approximation$aids_converter.coverage" NAME="aids_converter Coverage Results" MODIFIED="1739715290368" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_gxl_xml" />
+    <SUITE FILE_PATH="coverage/ged_approximation$aids_converter.coverage" NAME="aids_converter Coverage Results" MODIFIED="1739727606141" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_json" />
     <SUITE FILE_PATH="coverage/ged_approximation$converter.coverage" NAME="converter Coverage Results" MODIFIED="1739394169624" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ged_approximation$gedlib_parser.coverage" NAME="gedlib_parser Coverage Results" MODIFIED="1739654442010" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
     <SUITE FILE_PATH="coverage/ged_approximation$visualize_simgnn_performance.coverage" NAME="visualize_simgnn_performance Coverage Results" MODIFIED="1739651005575" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
     <SUITE FILE_PATH="coverage/ged_approximation$proteins_converter_for_json.coverage" NAME="proteins_converter_for_json Coverage Results" MODIFIED="1739537701959" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
     <SUITE FILE_PATH="coverage/ged_approximation$json_converter__1_.coverage" NAME="json_converter (1) Coverage Results" MODIFIED="1739478697667" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
-    <SUITE FILE_PATH="coverage/ged_approximation$tester.coverage" NAME="tester Coverage Results" MODIFIED="1739629508863" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
+    <SUITE FILE_PATH="coverage/ged_approximation$tester.coverage" NAME="tester Coverage Results" MODIFIED="1739727685371" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
     <SUITE FILE_PATH="coverage/ged_approximation$mutag_converter.coverage" NAME="mutag_converter Coverage Results" MODIFIED="1739445844897" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ged_approximation$main.coverage" NAME="main Coverage Results" MODIFIED="1739627979357" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
     <SUITE FILE_PATH="coverage/ged_approximation$json_converter.coverage" NAME="json_converter Coverage Results" MODIFIED="1739478290111" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
-    <SUITE FILE_PATH="coverage/ged_approximation$imdb_binary_converter.coverage" NAME="imdb_binary_converter Coverage Results" MODIFIED="1739715323016" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_gxl_xml" />
-    <SUITE FILE_PATH="coverage/ged_approximation$proteins_converter.coverage" NAME="proteins_converter Coverage Results" MODIFIED="1739715736927" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_gxl_xml" />
+    <SUITE FILE_PATH="coverage/ged_approximation$imdb_binary_converter.coverage" NAME="imdb_binary_converter Coverage Results" MODIFIED="1739727575651" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_gxl_xml" />
+    <SUITE FILE_PATH="coverage/ged_approximation$proteins_converter.coverage" NAME="proteins_converter Coverage Results" MODIFIED="1739727615917" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_json" />
   </component>
 </project>
