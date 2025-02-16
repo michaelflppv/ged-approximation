@@ -5,16 +5,17 @@ import pandas as pd
 import tempfile
 import xml.etree.ElementTree as ET
 import platform
+import time
 
 # Define relative paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Define paths
-GED_EXECUTABLE = "C:\\Users\\mikef\\PycharmProjects\\ged-approximation\\gedlib\\build\\main_exec"  # Path to compiled C++ binary
-DATASET_PATH = "C:\\Users\\mikef\\PycharmProjects\\ged-approximation\\processed_data\\gxl\\AIDS"  # Path to AIDS dataset directory
-COLLECTION_XML = "C:\\Users\\mikef\\PycharmProjects\\ged-approximation\\processed_data\\xml\\AIDS.xml"  # Path to AIDS collection XML file
-RESULTS_DIR = "C:\\Users\\mikef\\PycharmProjects\\ged-approximation\\results\\gedlib"  # Directory to save GEDLIB results
-RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS_results.xlsx")  # Path to save results
+GED_EXECUTABLE = "../gedlib/build/main_exec"  # Path to compiled C++ binary
+DATASET_PATH = "../processed_data/gxl/PROTEINS"  # Path to AIDS dataset directory
+COLLECTION_XML = "../processed_data/xml/PROTEINS.xml"  # Path to AIDS collection XML file
+RESULTS_DIR = "../results/gedlib"  # Directory to save GEDLIB results
+RESULTS_FILE = os.path.join(RESULTS_DIR, "PROTEINS_results.xlsx")  # Path to save results
 
 METHOD_NAMES = {
     20: "STAR (Exact)",
@@ -96,7 +97,8 @@ def run_ged(dataset_path, collection_xml):
     command = [GED_EXECUTABLE, dataset_path, preprocessed_xml]
     try:
         # Run GEDLIB and capture output.
-        result = subprocess.run(command, capture_output=True, text=True, timeout=600)
+        result = subprocess.run(command, capture_output=True, text=True)
+
         if result.stderr:
             print("GEDLIB stderr:", result.stderr)
         output_lines = result.stdout.strip().split("\n")
@@ -171,7 +173,7 @@ def run_ged(dataset_path, collection_xml):
         return [{"error": str(e)}]
 
 def log_results(results):
-    """Log AIDS into an Excel file."""
+    """Log results into an Excel file."""
     df = pd.DataFrame(results)
     os.makedirs(RESULTS_DIR, exist_ok=True)
     df.to_excel(RESULTS_FILE, index=False, engine='openpyxl')
