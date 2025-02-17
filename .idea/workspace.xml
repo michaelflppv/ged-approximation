@@ -5,8 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="de8a58fa-27ee-457a-b98c-4c4aa6483549" name="Changes" comment="Update Results Analysis">
+      <change beforePath="$PROJECT_DIR$/.idea/GEDProfiler.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/GEDProfiler.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/analyze_results.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/analyze_results.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,49 +17,49 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "michaelflppv"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;michaelflppv&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/michaelflppv/ged-approximation.git",
-    "accountId": "f9fd85b6-78bd-40bd-9341-206c659376d2"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/michaelflppv/ged-approximation.git&quot;,
+    &quot;accountId&quot;: &quot;f9fd85b6-78bd-40bd-9341-206c659376d2&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 3
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
   <component name="ProjectId" id="2tAYC1pKBMKac98kcDqfc2fdDDl" />
-  <component name="ProjectLevelVcsManager">
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.aids_converter.executor": "Run",
-    "Python.analyze_results.executor": "Run",
-    "Python.gedlib_parser.executor": "Run",
-    "Python.imdb_binary_converter.executor": "Run",
-    "Python.proteins_converter.executor": "Run",
-    "Python.tester.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "/home/mfilippov/PycharmProjects/ged-approximation/results/neural/AIDS",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.aids_converter.executor&quot;: &quot;Run&quot;,
+    &quot;Python.analyze_results.executor&quot;: &quot;Run&quot;,
+    &quot;Python.gedlib_parser.executor&quot;: &quot;Run&quot;,
+    &quot;Python.imdb_binary_converter.executor&quot;: &quot;Run&quot;,
+    &quot;Python.proteins_converter.executor&quot;: &quot;Run&quot;,
+    &quot;Python.tester.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/mfilippov/PycharmProjects/ged-approximation/results/neural/AIDS&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/results/neural/AIDS" />
@@ -75,14 +76,6 @@
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
-    <task id="LOCAL-00001" summary="Refactoring the Project">
-      <option name="closed" value="true" />
-      <created>1739785893879</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1739785893879</updated>
-    </task>
     <task active="true" id="Default" summary="Default task">
       <changelist id="de8a58fa-27ee-457a-b98c-4c4aa6483549" name="Changes" comment="Refactoring the Project" />
       <created>1739796215345</created>
@@ -90,6 +83,14 @@
       <option name="presentableId" value="Default" />
       <updated>1739796215345</updated>
       <workItem from="1739796217165" duration="7817000" />
+    </task>
+    <task id="LOCAL-00001" summary="Resolve missing code">
+      <option name="closed" value="true" />
+      <created>1739785893879</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1739785893879</updated>
     </task>
     <task id="LOCAL-00002" summary="Add Star, IPFP, REFINE Performance">
       <option name="closed" value="true" />
@@ -147,7 +148,159 @@
       <option name="project" value="LOCAL" />
       <updated>1739804045625</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00022" summary="Refactored parsers and dataset converters to use relative paths for reproducibility">
+      <option name="closed" value="true" />
+      <created>1739555448182</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1739555448182</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Updated JSON Conversion">
+      <option name="closed" value="true" />
+      <created>1739555584559</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1739555584559</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Added requirements.txt">
+      <option name="closed" value="true" />
+      <created>1739557010351</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1739557010351</updated>
+    </task>
+    <task id="LOCAL-00025" summary="Added script to compute performance metrics (e.g., approximation error, runtime comparison, etc.)">
+      <option name="closed" value="true" />
+      <created>1739562843127</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1739562843127</updated>
+    </task>
+    <task id="LOCAL-00026" summary="Added script to generate visual representations of the experimental results.">
+      <option name="closed" value="true" />
+      <created>1739562893583</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1739562893583</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Corrected SimGNN Execution">
+      <option name="closed" value="true" />
+      <created>1739570866713</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1739570866713</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Added saving the trained model">
+      <option name="closed" value="true" />
+      <created>1739571106798</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1739571106798</updated>
+    </task>
+    <task id="LOCAL-00029" summary="Updated SimGNN evaluation">
+      <option name="closed" value="true" />
+      <created>1739572133667</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1739572133667</updated>
+    </task>
+    <task id="LOCAL-00030" summary="Cloned GEDLIB to the project">
+      <option name="closed" value="true" />
+      <created>1739620453565</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1739620453565</updated>
+    </task>
+    <task id="LOCAL-00031" summary="Cloned GEDLIB to the project">
+      <option name="closed" value="true" />
+      <created>1739620505424</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1739620505424</updated>
+    </task>
+    <task id="LOCAL-00032" summary="Modified SimGNN Evaluation">
+      <option name="closed" value="true" />
+      <created>1739630490674</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1739630490674</updated>
+    </task>
+    <task id="LOCAL-00033" summary="Modified Results Analysis">
+      <option name="closed" value="true" />
+      <created>1739631621494</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1739631621494</updated>
+    </task>
+    <task id="LOCAL-00034" summary="Added path extraction">
+      <option name="closed" value="true" />
+      <created>1739642947372</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1739642947372</updated>
+    </task>
+    <task id="LOCAL-00035" summary="Added separate visualizer of SimGNN performance">
+      <option name="closed" value="true" />
+      <created>1739654404159</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1739654404160</updated>
+    </task>
+    <task id="LOCAL-00036" summary="Modified Results Parsing">
+      <option name="closed" value="true" />
+      <created>1739713115226</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1739713115226</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Updated Path Usage">
+      <option name="closed" value="true" />
+      <created>1739715615813</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1739715615813</updated>
+    </task>
+    <task id="LOCAL-00038" summary="Updated Path Usage">
+      <option name="closed" value="true" />
+      <created>1739715763671</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1739715763671</updated>
+    </task>
+    <task id="LOCAL-00039" summary="Cloned GEDLIB to the project">
+      <option name="closed" value="true" />
+      <created>1739727461155</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1739727461155</updated>
+    </task>
+    <task id="LOCAL-00040" summary="Add JSON Pairs">
+      <option name="closed" value="true" />
+      <created>1739736107604</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1739736107604</updated>
+    </task>
+    <option name="localTasksCounter" value="41" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -163,11 +316,20 @@
     <option name="LAST_COMMIT_MESSAGE" value="Update Results Analysis" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/ged_approximation$imdb_binary_converter.coverage" NAME="imdb_binary_converter Coverage Results" MODIFIED="1739799547116" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_gxl_xml" />
-    <SUITE FILE_PATH="coverage/ged_approximation$aids_converter.coverage" NAME="aids_converter Coverage Results" MODIFIED="1739785638049" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_gxl_xml" />
-    <SUITE FILE_PATH="coverage/ged_approximation$proteins_converter.coverage" NAME="proteins_converter Coverage Results" MODIFIED="1739801759297" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_json" />
-    <SUITE FILE_PATH="coverage/ged_approximation$gedlib_parser.coverage" NAME="gedlib_parser Coverage Results" MODIFIED="1739800638345" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
-    <SUITE FILE_PATH="coverage/ged_approximation$analyze_results.coverage" NAME="analyze_results Coverage Results" MODIFIED="1739803510712" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
-    <SUITE FILE_PATH="coverage/ged_approximation$tester.coverage" NAME="tester Coverage Results" MODIFIED="1739802653545" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
+    <SUITE FILE_PATH="coverage/ged_approximation$analyze_results.coverage" NAME="analyze_results Coverage Results" MODIFIED="1739727645469" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/ged_approximation$extract_edit_path.coverage" NAME="extract_edit_path Coverage Results" MODIFIED="1739642683378" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
+    <SUITE FILE_PATH="coverage/ged_approximation$proteins_converter__1_.coverage" NAME="proteins_converter (1) Coverage Results" MODIFIED="1739453966482" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_converters" />
+    <SUITE FILE_PATH="coverage/ged_approximation$aids_converter.coverage" NAME="aids_converter Coverage Results" MODIFIED="1739735372424" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
+    <SUITE FILE_PATH="coverage/ged_approximation$converter.coverage" NAME="converter Coverage Results" MODIFIED="1739394169624" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ged_approximation$gedlib_parser.coverage" NAME="gedlib_parser Coverage Results" MODIFIED="1739654442010" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/ged_approximation$visualize_simgnn_performance.coverage" NAME="visualize_simgnn_performance Coverage Results" MODIFIED="1739651005575" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/ged_approximation$proteins_converter_for_json.coverage" NAME="proteins_converter_for_json Coverage Results" MODIFIED="1739537701959" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
+    <SUITE FILE_PATH="coverage/ged_approximation$json_converter__1_.coverage" NAME="json_converter (1) Coverage Results" MODIFIED="1739478697667" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
+    <SUITE FILE_PATH="coverage/ged_approximation$tester.coverage" NAME="tester Coverage Results" MODIFIED="1739727685371" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
+    <SUITE FILE_PATH="coverage/ged_approximation$mutag_converter.coverage" NAME="mutag_converter Coverage Results" MODIFIED="1739445844897" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ged_approximation$main.coverage" NAME="main Coverage Results" MODIFIED="1739627979357" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
+    <SUITE FILE_PATH="coverage/ged_approximation$json_converter.coverage" NAME="json_converter Coverage Results" MODIFIED="1739478290111" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
+    <SUITE FILE_PATH="coverage/ged_approximation$imdb_binary_converter.coverage" NAME="imdb_binary_converter Coverage Results" MODIFIED="1739727575651" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_gxl_xml" />
+    <SUITE FILE_PATH="coverage/ged_approximation$proteins_converter.coverage" NAME="proteins_converter Coverage Results" MODIFIED="1739735975501" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_json" />
   </component>
 </project>
