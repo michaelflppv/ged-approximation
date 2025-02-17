@@ -5,12 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="de8a58fa-27ee-457a-b98c-4c4aa6483549" name="Changes" comment="Add SimGNN Performance">
-      <change afterPath="$PROJECT_DIR$/results/neural/IMDB-BINARY/performance.xlsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimGNN/src/tester.py" beforeDir="false" afterPath="$PROJECT_DIR$/SimGNN/src/tester.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/neural/AIDS/performance.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/results/neural/AIDS/performance.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/neural/PROTEINS/performance.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/results/neural/PROTEINS/performance.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/convert_to_json/proteins_converter.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/convert_to_json/proteins_converter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/analyze_results.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/analyze_results.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,6 +42,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Python.aids_converter.executor": "Run",
+    "Python.analyze_results.executor": "Run",
     "Python.gedlib_parser.executor": "Run",
     "Python.imdb_binary_converter.executor": "Run",
     "Python.proteins_converter.executor": "Run",
@@ -53,6 +50,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
+    "last_opened_file_path": "/home/mfilippov/PycharmProjects/ged-approximation/results/neural/AIDS",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -85,7 +83,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1739796215345</updated>
-      <workItem from="1739796217165" duration="6474000" />
+      <workItem from="1739796217165" duration="7409000" />
     </task>
     <task id="LOCAL-00002" summary="Add Star, IPFP, REFINE Performance">
       <option name="closed" value="true" />
@@ -119,7 +117,23 @@
       <option name="project" value="LOCAL" />
       <updated>1739802702572</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Add SimGNN Performance">
+      <option name="closed" value="true" />
+      <created>1739802733840</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1739802733840</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Add SimGNN Performance">
+      <option name="closed" value="true" />
+      <created>1739802744905</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1739802744905</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -138,6 +152,7 @@
     <SUITE FILE_PATH="coverage/ged_approximation$aids_converter.coverage" NAME="aids_converter Coverage Results" MODIFIED="1739785638049" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_gxl_xml" />
     <SUITE FILE_PATH="coverage/ged_approximation$proteins_converter.coverage" NAME="proteins_converter Coverage Results" MODIFIED="1739801759297" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_json" />
     <SUITE FILE_PATH="coverage/ged_approximation$gedlib_parser.coverage" NAME="gedlib_parser Coverage Results" MODIFIED="1739800638345" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/ged_approximation$analyze_results.coverage" NAME="analyze_results Coverage Results" MODIFIED="1739803510712" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
     <SUITE FILE_PATH="coverage/ged_approximation$tester.coverage" NAME="tester Coverage Results" MODIFIED="1739802653545" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
   </component>
 </project>

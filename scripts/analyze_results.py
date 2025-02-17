@@ -5,12 +5,15 @@ import pandas as pd
 
 
 def main():
+    # Define the base directory relative to the script's location
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
     # Define paths to the input summary Excel files.
-    gedlib_summary_path = r"C:\Users\mikef\PycharmProjects\ged-approximation\results\gedlib\PROTEINS_results.xlsx"
-    simgnn_summary_path = r"C:\Users\mikef\PycharmProjects\ged-approximation\results\neural\PROTEINS\performance.xlsx"
+    gedlib_summary_path = os.path.join(base_dir, "../results/gedlib/PROTEINS_results.xlsx")
+    simgnn_summary_path = os.path.join(base_dir, "../results/neural/PROTEINS/performance.xlsx")
 
     # Define output directory and file.
-    relative_results_dir = r"C:\Users\mikef\PycharmProjects\ged-approximation\results\relative_performance"
+    relative_results_dir = os.path.join(base_dir, "../results/relative_performance")
     os.makedirs(relative_results_dir, exist_ok=True)
     relative_results_file = os.path.join(relative_results_dir, "PROTEINS_relative_performance.xlsx")
 
