@@ -10,7 +10,7 @@ import platform
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Define paths (adjust these relative paths as needed)
-GED_EXECUTABLE = "../gedlib/build/main_exec"  # Path to compiled C++ binary
+GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"  # Path to compiled C++ binary
 DATASET_PATH = "../processed_data/gxl/PROTEINS"  # Path to PROTEINS dataset directory
 COLLECTION_XML = "../processed_data/xml/PROTEINS.xml"  # Path to PROTEINS collection XML file
 RESULTS_DIR = "../results/gedlib"  # Directory to save GEDLIB results

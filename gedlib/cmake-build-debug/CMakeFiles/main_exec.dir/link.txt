@@ -1,3 +1,0 @@
-C:\Users\mikef\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -E rm -f CMakeFiles\main_exec.dir/objects.a
-C:\Users\mikef\AppData\Local\Programs\CLion\bin\mingw\bin\ar.exe qc CMakeFiles\main_exec.dir/objects.a @CMakeFiles\main_exec.dir\objects1.rsp
-C:\Users\mikef\AppData\Local\Programs\CLion\bin\mingw\bin\g++.exe -std=c++11 -Wall -Wextra -pedantic -Wredundant-decls -Wdisabled-optimization -Wctor-dtor-privacy -Wnon-virtual-dtor -Werror=old-style-cast -Wsign-promo -Werror=return-type -Wno-unused-parameter -fopenmp -O0 -g3 -Wl,--whole-archive CMakeFiles\main_exec.dir/objects.a -Wl,--no-whole-archive -o main_exec.exe -Wl,--out-implib,libmain_exec.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\main_exec.dir\linkLibs.rsp
