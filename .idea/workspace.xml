@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="de8a58fa-27ee-457a-b98c-4c4aa6483549" name="Changes" comment="Add SimGNN Performance">
+    <list default="true" id="de8a58fa-27ee-457a-b98c-4c4aa6483549" name="Changes" comment="Update Results Analysis">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/analyze_results.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/analyze_results.py" afterDir="false" />
     </list>
@@ -59,6 +59,12 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/results/neural/AIDS" />
+      <recent name="$PROJECT_DIR$/results/neural/IMDB-BINARY" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -83,7 +89,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1739796215345</updated>
-      <workItem from="1739796217165" duration="7409000" />
+      <workItem from="1739796217165" duration="7817000" />
     </task>
     <task id="LOCAL-00002" summary="Add Star, IPFP, REFINE Performance">
       <option name="closed" value="true" />
@@ -133,7 +139,15 @@
       <option name="project" value="LOCAL" />
       <updated>1739802744905</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Update Results Analysis">
+      <option name="closed" value="true" />
+      <created>1739804045625</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1739804045625</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -145,7 +159,8 @@
     <MESSAGE value="Add Star, IPFP, REFINE Performance" />
     <MESSAGE value="Add JSON Pairs" />
     <MESSAGE value="Add SimGNN Performance" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add SimGNN Performance" />
+    <MESSAGE value="Update Results Analysis" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update Results Analysis" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/ged_approximation$imdb_binary_converter.coverage" NAME="imdb_binary_converter Coverage Results" MODIFIED="1739799547116" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts/convert_to_gxl_xml" />
