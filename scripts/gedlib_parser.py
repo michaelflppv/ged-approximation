@@ -11,10 +11,10 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Define paths (adjust these relative paths as needed)
 GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"  # Path to compiled C++ binary
-DATASET_PATH = "../processed_data/gxl/PROTEINS"  # Path to PROTEINS dataset directory
-COLLECTION_XML = "../processed_data/xml/PROTEINS.xml"  # Path to PROTEINS collection XML file
+DATASET_PATH = "../processed_data/gxl/IMDB-BINARY"  # Path to IMDB-BINARY dataset directory
+COLLECTION_XML = "../processed_data/xml/IMDB-BINARY.xml"  # Path to IMDB-BINARY collection XML file
 RESULTS_DIR = "../results/gedlib"  # Directory to save GEDLIB results
-RESULTS_FILE = os.path.join(RESULTS_DIR, "PROTEINS_results.xlsx")  # Path to save results
+RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY_results.xlsx")  # Path to save results
 
 # Update method mapping according to new C++ enum values (assumed to be 0,1,2,3)
 METHOD_NAMES = {
@@ -97,7 +97,7 @@ def run_ged(dataset_path, collection_xml):
     command = [GED_EXECUTABLE, dataset_path, preprocessed_xml]
     try:
         # Run GEDLIB and capture output.
-        result = subprocess.run(command, capture_output=True, text=True, timeout=600)
+        result = subprocess.run(command, capture_output=True, text=True)
         if result.stderr:
             print("GEDLIB stderr:", result.stderr)
         output_lines = result.stdout.strip().split("\n")
