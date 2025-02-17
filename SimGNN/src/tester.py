@@ -87,8 +87,9 @@ def transfer_to_torch(data, global_labels):
 # -------------------------------
 def main():
     # Define paths
-    json_dir = r"C:\Users\mikef\PycharmProjects\ged-approximation\processed_data\json_pairs\PROTEINS"
-    model_path = r"C:\Users\mikef\PycharmProjects\ged-approximation\SimGNN\src\models\simgnn_model.h5"
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    json_dir = os.path.join(base_dir, "../../processed_data/json_pairs/IMDB-BINARY")
+    model_path = os.path.join(base_dir, "models/simgnn_model.h5")
 
     # Find all JSON files in the directory
     json_files = glob.glob(os.path.join(json_dir, "*.json"))
@@ -224,7 +225,7 @@ def main():
     df_summary = pd.DataFrame(summary_data)
 
     # Define the directory for saving performance results.
-    results_dir = r"C:\Users\mikef\PycharmProjects\ged-approximation\results\neural\PROTEINS"
+    results_dir = os.path.join(base_dir, "../../results/neural/IMDB-BINARY")
     os.makedirs(results_dir, exist_ok=True)
     save_path = os.path.join(results_dir, "performance.xlsx")
 
