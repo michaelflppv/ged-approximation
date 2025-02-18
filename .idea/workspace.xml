@@ -5,9 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="de8a58fa-27ee-457a-b98c-4c4aa6483549" name="Changes" comment="Update Results Analysis">
+      <change afterPath="$PROJECT_DIR$/results/gedlib/PROTEINS/PROTEINS_HED_results.xlsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/gedlib/PROTEINS_HED_results.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/results/gedlib/PROTEINS_HED_results.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/gedlib/PROTEINS_HED_results.xlsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/results/gedlib/PROTEINS_REFINE_results.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/results/gedlib/PROTEINS_REFINE_results.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/gedlib/PROTEINS_STAR_results.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/results/gedlib/PROTEINS/PROTEINS_STAR_results.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/gedlib/PROTEINS_results.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/results/gedlib/PROTEINS/PROTEINS_results.xlsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/gedlib_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/gedlib_parser.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -175,7 +178,15 @@
       <option name="project" value="LOCAL" />
       <updated>1739886601353</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Update Results Analysis">
+      <option name="closed" value="true" />
+      <created>1739887597755</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1739887597755</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -205,7 +216,7 @@
     <SUITE FILE_PATH="coverage/ged_approximation$json_converter.coverage" NAME="json_converter Coverage Results" MODIFIED="1739478290111" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
     <SUITE FILE_PATH="coverage/ged_approximation$proteins_converter__1_.coverage" NAME="proteins_converter (1) Coverage Results" MODIFIED="1739453966482" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_converters" />
     <SUITE FILE_PATH="coverage/ged_approximation$json_converter__1_.coverage" NAME="json_converter (1) Coverage Results" MODIFIED="1739478697667" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
-    <SUITE FILE_PATH="coverage/ged_approximation$gedlib_parser.coverage" NAME="gedlib_parser Coverage Results" MODIFIED="1739886662296" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/ged_approximation$gedlib_parser.coverage" NAME="gedlib_parser Coverage Results" MODIFIED="1739887541582" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
     <SUITE FILE_PATH="coverage/ged_approximation$tester.coverage" NAME="tester Coverage Results" MODIFIED="1739883684296" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimGNN/src" />
   </component>
 </project>
