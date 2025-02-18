@@ -14,7 +14,7 @@ GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"  # Path 
 DATASET_PATH = "../processed_data/gxl/PROTEINS"  # Path to PROTEINS dataset directory
 COLLECTION_XML = "../processed_data/xml/PROTEINS.xml"  # Path to PROTEINS collection XML file
 RESULTS_DIR = "../results/gedlib"  # Directory to save GEDLIB results
-RESULTS_FILE = os.path.join(RESULTS_DIR, "PROTEINS_IPFP_results.xlsx")  # Path to save results
+RESULTS_FILE = os.path.join(RESULTS_DIR, "PROTEINS_REFINE_results.xlsx")  # Path to save results
 
 # Update method mapping according to new C++ enum values (assumed to be 0,1,2,3)
 METHOD_NAMES = {
