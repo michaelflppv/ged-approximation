@@ -1,15 +1,3 @@
-<component name="InspectionProjectProfileManager">
-  <profile version="1.0">
-    <option name="myName" value="Project Default" />
-    <inspection_tool class="PyCompatibilityInspection" enabled="true" level="WARNING" enabled_by_default="true" editorAttributes="WARNING_ATTRIBUTES">
-      <option name="ourVersions">
-        <value>
-          <list size="2">
-            <item index="0" class="java.lang.String" itemvalue="3.13" />
-            <item index="1" class="java.lang.String" itemvalue="3.8" />
-          </list>
-        </value>
-      </option>
-    </inspection_tool>
-  </profile>
-</component>
+version https://git-lfs.github.com/spec/v1
+oid sha256:637ec71ce6f873b0a9edac135dd51173559453ba887e82a10a6ade7ddb9289b8
+size 615
