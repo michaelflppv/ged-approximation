@@ -1,6 +1,35 @@
 # **Graph Edit Distance Approximation - Experimental Repository**  
 
+
 This repository contains all code used for the **experimental work** in my Bachelor thesis on **Approximation Algorithms for Graph Edit Distance (GED)**. The experiments focus on benchmarking approximation methods against exact GED computations, using **GEDLIB** as the primary backend.
+
+---
+
+## **📌 Important Notice: Using Precompiled Data**
+This repository includes **precompiled datasets** and large files (e.g., GXL/XML files, JSON graph pairs, and pre-trained models).  
+To ensure these files are correctly downloaded, **Git LFS (Large File Storage)** must be installed.
+
+### **🛠 Install Git LFS**
+#### **On Linux/macOS:**
+```bash
+git lfs install
+git lfs pull
+```
+#### **On Windows (via Git Bash or PowerShell):**
+```bash
+git lfs install
+git lfs pull
+```
+#### **If Git LFS is not installed:**
+1. Download and install Git LFS from: https://git-lfs.github.com/
+2. Run the setup command:
+```bash
+git lfs install
+```
+3. Pull large files manually:
+```bash
+git lfs pull
+```
 
 ## **📌 Repository Overview**
 - **Graph Edit Distance (GED) Evaluation**: Compare multiple GED approximation algorithms.
@@ -155,6 +184,22 @@ python scripts/visualize_results.py
 ```
 
 ---
+
+### **📌 External Dependencies**
+This project also relies on the **[Graph Edit Distance (GED) repository by Lijun Chang](https://github.com/LijunChang/Graph_Edit_Distance.git)** for **exact GED computation**.  
+
+To use this repository:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/LijunChang/Graph_Edit_Distance.git
+   cd Graph_Edit_Distance
+   ```
+2. **Follow the build instructions** provided in the repository to compile and set up the exact GED computation framework.
+
+Make sure to integrate the results from this repository when comparing **approximate vs. exact GED values** in your experiments.
+
+---
+
 
 ## **📜 Citation & References**
 If you use this code in your work, please cite:
