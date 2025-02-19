@@ -1,108 +1,360 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+"""
+analyze_results.py
+
+This script performs a comprehensive statistical analysis on the synthesized performance data
+of multiple GED approximation algorithms. The input Excel file should contain the following columns:
+  - method                : Name of the approximation algorithm.
+  - ged                   : Approximated graph edit distance.
+  - runtime               : Duration of approximation (seconds).
+  - graph1, graph2        : Graph IDs in a pair.
+  - memory_usage_mb       : Memory usage in MB.
+  - graph1_n, graph2_n    : Number of nodes in graph1 and graph2.
+  - graph1_density, graph2_density : Density of graph1 and graph2.
+  - average_n             : Average number of nodes (or maximum nodes among the two).
+  - average_density       : Average density of the two graphs.
+  - scalability           : The maximum number of nodes in any graph processed.
+
+The script accomplishes the following:
+  1. Analyze and interpret the data:
+       - Compute overall and per-method descriptive statistics.
+       - Identify patterns/trends and potential outliers.
+       - Compare performance metrics across methods.
+  2. Perform statistical validation:
+       - One-way ANOVA (and pairwise tests, if desired) to test for differences in GED among methods.
+       - Compute 95% confidence intervals for selected metrics.
+  3. Derive actionable insights.
+
+All results are printed to the console and saved into an Excel file with multiple sheets.
+"""
 
 import os
 import pandas as pd
+import numpy as np
+import scipy.stats as stats
+import seaborn as sns
+import matplotlib.pyplot as plt
+from pandas.plotting import parallel_coordinates
+
+# Set a modern, clean theme.
+sns.set_theme(style="whitegrid", palette="muted")
+
+
+def load_data(excel_path):
+    if not os.path.exists(excel_path):
+        raise FileNotFoundError(f"Excel file not found at {excel_path}")
+    df = pd.read_excel(excel_path)
+    return df
+
+
+def descriptive_statistics(df):
+    metrics = ["ged", "runtime", "memory_usage_mb", "graph1_n", "graph2_n",
+               "graph1_density", "graph2_density", "average_n", "average_density", "scalability"]
+    desc = df[metrics].describe().T
+    return desc
+
+
+def group_by_method_stats(df):
+    # Group by the 'method' column and compute descriptive stats for each numeric metric.
+    grouped = df.groupby("method").describe()
+    return grouped
+
+
+def correlation_analysis(df):
+    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    corr_matrix = df[numeric_cols].corr()
+    return corr_matrix
+
+
+def perform_anova(df):
+    # Perform a one-way ANOVA test on the 'ged' values across methods.
+    groups = [group["ged"].dropna().values for name, group in df.groupby("method")]
+    if len(groups) > 1:
+        f_stat, p_val = stats.f_oneway(*groups)
+        return {"F-statistic": f_stat, "p_value": p_val}
+    else:
+        return {"F-statistic": None, "p_value": None}
+
+
+def compute_confidence_interval(data, confidence=0.95):
+    data = np.array(data)
+    mean_val = np.mean(data)
+    std_error = stats.sem(data)
+    df_deg = len(data) - 1
+    t_critical = stats.t.ppf((1 + confidence) / 2, df_deg)
+    margin_error = t_critical * std_error
+    return mean_val - margin_error, mean_val + margin_error
+
+
+def confidence_intervals(df):
+    ci_dict = {}
+    for metric in ["ged", "runtime", "memory_usage_mb"]:
+        if metric in df.columns:
+            data = df[metric].dropna()
+            if len(data) > 1:
+                ci_dict[metric] = compute_confidence_interval(data)
+    return ci_dict
+
+
+def identify_outliers(df, metric, threshold=1.5):
+    if metric not in df.columns:
+        return None
+    Q1 = df[metric].quantile(0.25)
+    Q3 = df[metric].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - threshold * IQR
+    upper_bound = Q3 + threshold * IQR
+    outliers = df[(df[metric] < lower_bound) | (df[metric] > upper_bound)]
+    return outliers
+
+
+def derive_insights(df, desc_stats, corr_matrix, anova_results, ci_dict):
+    insights = []
+    # 1. Accuracy and Approximation Quality (ged)
+    mean_ged = desc_stats.loc["ged", "mean"]
+    insights.append(f"Overall average approximated GED is {mean_ged:.2f}.")
+    # 2. Runtime and Efficiency
+    mean_runtime = desc_stats.loc["runtime", "mean"]
+    insights.append(f"Overall average runtime is {mean_runtime:.2f} seconds.")
+    # 3. Memory Usage
+    mean_memory = desc_stats.loc["memory_usage_mb", "mean"]
+    insights.append(f"Average memory usage per pair is {mean_memory:.2f} MB.")
+    # 4. Correlation insights
+    if "ged" in corr_matrix.index and "runtime" in corr_matrix.columns:
+        corr_ged_runtime = corr_matrix.loc["ged", "runtime"]
+        insights.append(f"Correlation between GED and runtime is {corr_ged_runtime:.2f}.")
+    # 5. ANOVA on GED across methods
+    if anova_results["p_value"] is not None:
+        if anova_results["p_value"] < 0.05:
+            insights.append("There is a statistically significant difference in GED across methods (ANOVA p < 0.05).")
+        else:
+            insights.append(
+                "No statistically significant difference in GED was observed across methods (ANOVA p >= 0.05).")
+    # 6. Confidence intervals
+    for metric, ci in ci_dict.items():
+        insights.append(f"95% CI for {metric}: ({ci[0]:.2f}, {ci[1]:.2f}).")
+    # 7. Outlier detection (for runtime)
+    outliers_runtime = identify_outliers(df, "runtime")
+    if outliers_runtime is not None and not outliers_runtime.empty:
+        insights.append(
+            f"Found {len(outliers_runtime)} outlier pairs in runtime. Investigate these for potential algorithmic bottlenecks.")
+    else:
+        insights.append("No significant outliers detected in runtime.")
+    # 8. Scalability
+    avg_scalability = desc_stats.loc["scalability", "mean"]
+    insights.append(
+        f"On average, the maximum graph size processed is {avg_scalability:.0f} nodes, indicating scalability limits.")
+    return insights
+
+
+def save_plots(df, output_folder):
+    os.makedirs(output_folder, exist_ok=True)
+
+    # -------- Group 1: Performance Evaluation --------
+    # 1.1 Runtime vs. Approximation Quality (Scatter with regression line)
+    plt.figure(figsize=(8, 6))
+    # Use a logarithmic scale for runtime
+    ax = sns.lmplot(data=df, x="runtime", y="ged", hue="method", height=6, aspect=1.3,
+                    scatter_kws={'s': 50, 'alpha': 0.7})
+    plt.xscale("log")
+    plt.title("Runtime vs. Approximation Quality")
+    plt.xlabel("Runtime (s) [log-scale]")
+    plt.ylabel("Approximated GED")
+    plt.tight_layout()
+    ax.savefig(os.path.join(output_folder, "runtime_vs_ged.png"))
+    plt.close("all")
+
+    # 1.2 Runtime vs. Memory Usage (Scatter/Bubble Plot)
+    plt.figure(figsize=(8, 6))
+    if "average_n" in df.columns:
+        # Use average_n as size
+        ax = sns.scatterplot(data=df, x="runtime", y="memory_usage_mb", hue="method", size="average_n", sizes=(50, 200),
+                             alpha=0.7)
+    else:
+        ax = sns.scatterplot(data=df, x="runtime", y="memory_usage_mb", hue="method", s=70, alpha=0.7)
+    plt.xscale("log")
+    plt.title("Runtime vs. Memory Usage")
+    plt.xlabel("Runtime (s) [log-scale]")
+    plt.ylabel("Memory Usage (MB)")
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_folder, "runtime_vs_memory.png"))
+    plt.close()
+
+    # 1.3 Memory Usage vs. Number of Nodes (Violin Plot)
+    plt.figure(figsize=(8, 6))
+    sns.violinplot(data=df, x="method", y="memory_usage_mb", inner="box")
+    plt.title("Memory Usage vs. Method")
+    plt.xlabel("Method")
+    plt.ylabel("Memory Usage (MB)")
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_folder, "memory_vs_method.png"))
+    plt.close()
+
+    # -------- Group 2: Scalability Analysis --------
+    # 2.1 Scalability vs. Runtime (Scatter with trend line)
+    plt.figure(figsize=(8, 6))
+    ax = sns.lmplot(data=df, x="scalability", y="runtime", hue="method", height=6, aspect=1.3,
+                    scatter_kws={'s': 50, 'alpha': 0.7})
+    plt.title("Scalability vs. Runtime")
+    plt.xlabel("Scalability (max nodes)")
+    plt.ylabel("Runtime (s)")
+    plt.tight_layout()
+    ax.savefig(os.path.join(output_folder, "scalability_vs_runtime.png"))
+    plt.close("all")
+
+    # 2.2 Scalability vs. Approximation Quality (Scatter with trend line)
+    plt.figure(figsize=(8, 6))
+    ax = sns.lmplot(data=df, x="scalability", y="ged", hue="method", height=6, aspect=1.3,
+                    scatter_kws={'s': 50, 'alpha': 0.7})
+    plt.title("Scalability vs. Approximated GED")
+    plt.xlabel("Scalability (max nodes)")
+    plt.ylabel("Approximated GED")
+    plt.tight_layout()
+    ax.savefig(os.path.join(output_folder, "scalability_vs_ged.png"))
+    plt.close("all")
+
+    # 2.3 Scalability vs. Memory Usage (Line Plot)
+    plt.figure(figsize=(8, 6))
+    # For line plot, we need to sort data by scalability per method.
+    sorted_df = df.sort_values("scalability")
+    sns.lineplot(data=sorted_df, x="scalability", y="memory_usage_mb", hue="method", style="method", markers=True)
+    plt.title("Scalability vs. Memory Usage")
+    plt.xlabel("Scalability (max nodes)")
+    plt.ylabel("Memory Usage (MB)")
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_folder, "scalability_vs_memory.png"))
+    plt.close()
+
+    # -------- Group 3: Approximation Quality and Accuracy --------
+    # 3.1 GED vs. Average Node Count (Scatter Plot)
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(data=df, x="average_n", y="ged", hue="method", s=70, alpha=0.7)
+    plt.title("GED vs. Average Number of Nodes")
+    plt.xlabel("Average Number of Nodes")
+    plt.ylabel("Approximated GED")
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_folder, "ged_vs_avg_nodes.png"))
+    plt.close()
+
+    # 3.2 GED vs. Graph Density (Scatter with regression line)
+    plt.figure(figsize=(8, 6))
+    ax = sns.lmplot(data=df, x="average_density", y="ged", hue="method", height=6, aspect=1.3,
+                    scatter_kws={'s': 50, 'alpha': 0.7})
+    plt.title("GED vs. Average Graph Density")
+    plt.xlabel("Average Graph Density")
+    plt.ylabel("Approximated GED")
+    plt.tight_layout()
+    ax.savefig(os.path.join(output_folder, "ged_vs_avg_density.png"))
+    plt.close("all")
+
+    # -------- Group 4: Correlation and Comparative Insights --------
+    # 4.1 Correlation Matrix (Heatmap)
+    selected_vars = ["runtime", "ged", "memory_usage_mb", "average_n", "scalability"]
+    corr = df[selected_vars].corr()
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(corr, annot=True, cmap="coolwarm", fmt=".2f", square=True)
+    plt.title("Correlation Matrix")
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_folder, "correlation_heatmap.png"))
+    plt.close()
+
+    # 4.2 Distribution of GED Across Methods (Violin Plot)
+    plt.figure(figsize=(8, 6))
+    sns.violinplot(data=df, x="method", y="ged", inner="box")
+    plt.title("Distribution of GED Across Methods")
+    plt.xlabel("Method")
+    plt.ylabel("Approximated GED")
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_folder, "ged_distribution.png"))
+    plt.close()
+
+    # 4.3 Parallel Coordinates Plot (Multidimensional Analysis)
+    # Select and normalize columns: runtime, ged, memory_usage_mb, scalability.
+    pc_df = df[["method", "runtime", "ged", "memory_usage_mb", "scalability"]].copy()
+    for col in ["runtime", "ged", "memory_usage_mb", "scalability"]:
+        # Normalize each column between 0 and 1.
+        pc_df[col] = (pc_df[col] - pc_df[col].min()) / (pc_df[col].max() - pc_df[col].min())
+    plt.figure(figsize=(10, 6))
+    parallel_coordinates(pc_df, "method", colormap=plt.get_cmap("Set2"))
+    plt.title("Parallel Coordinates Plot")
+    plt.xlabel("Metrics")
+    plt.ylabel("Normalized Value")
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_folder, "parallel_coordinates.png"))
+    plt.close()
+
+    print("All plots saved in:", output_folder)
 
 
 def main():
-    # Define the base directory relative to the script's location
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    # Define the path to the Excel file containing algorithm performance data.
+    excel_path = "../results/gedlib/PROTEINS/PROTEINS_HED_results.xlsx"
 
-    # Define paths to the input summary Excel files.
-    gedlib_summary_path = os.path.join(base_dir, "../results/gedlib/PROTEINS_results.xlsx")
-    simgnn_summary_path = os.path.join(base_dir, "../results/neural/PROTEINS/performance.xlsx")
+    try:
+        df = load_data(excel_path)
+    except FileNotFoundError as e:
+        print(e)
+        return
 
-    # Define output directory and file.
-    relative_results_dir = os.path.join(base_dir, "../results/relative_performance")
-    os.makedirs(relative_results_dir, exist_ok=True)
-    relative_results_file = os.path.join(relative_results_dir, "PROTEINS_relative_performance.xlsx")
+    # Compute overall descriptive statistics.
+    desc_stats = descriptive_statistics(df)
 
-    # Load summary sheets.
-    # GEDLIB summary sheet is assumed to have columns:
-    # "Total Graph Pairs", "Average MSE", "Average MAE", "Total Runtime (s)", "Average Memory Usage (MB)", "Maximum Graph Size"
-    df_gedlib = pd.read_excel(gedlib_summary_path, sheet_name="Summary")
+    # Compute per-method descriptive statistics.
+    grouped_stats = group_by_method_stats(df)
 
-    # SimGNN summary sheet is assumed to have columns (or similar):
-    # "Total graph pairs processed", "Average MSE", "Average MAE", "Total runtime (s)", "Memory usage (MB)", "Maximum graph size processed (number of nodes)"
-    df_simgnn = pd.read_excel(simgnn_summary_path, sheet_name="Summary")
+    # Compute the overall correlation matrix.
+    corr_matrix = correlation_analysis(df)
 
-    # Extract values from GEDLIB summary.
-    total_pairs_gedlib = df_gedlib.iloc[0]["Total Graph Pairs"]
-    avg_mse_gedlib = df_gedlib.iloc[0]["Average MSE"]
-    avg_mae_gedlib = df_gedlib.iloc[0]["Average MAE"]
-    total_runtime_gedlib = df_gedlib.iloc[0]["Total Runtime (s)"]
-    avg_mem_gedlib = df_gedlib.iloc[0]["Average Memory Usage (MB)"]
-    max_graph_size_gedlib = df_gedlib.iloc[0]["Maximum Graph Size"]
+    # Perform a one-way ANOVA test on the "ged" values across methods.
+    anova_results = perform_anova(df)
 
-    # Extract values from SimGNN summary.
-    # Depending on the exact column names, we try a couple of alternatives.
-    total_pairs_simgnn = df_simgnn.iloc[0].get("Total graph pairs processed",
-                                               df_simgnn.iloc[0].get("Total Graph Pairs"))
-    avg_mse_simgnn = df_simgnn.iloc[0]["Average MSE"]
-    avg_mae_simgnn = df_simgnn.iloc[0]["Average MAE"]
-    total_runtime_simgnn = df_simgnn.iloc[0].get("Total runtime (s)", df_simgnn.iloc[0].get("Total Runtime (s)"))
-    avg_mem_simgnn = df_simgnn.iloc[0].get("Memory usage (MB)", df_simgnn.iloc[0].get("Memory Usage (MB)"))
-    max_graph_size_simgnn = df_simgnn.iloc[0].get("Maximum graph size processed (number of nodes)",
-                                                  df_simgnn.iloc[0].get("Maximum Graph Size"))
+    # Compute 95% confidence intervals for selected metrics.
+    ci_dict = confidence_intervals(df)
 
-    # Compute relative improvements for error metrics.
-    # For error metrics, a lower value is better so we compute:
-    #   Relative improvement (%) = (GEDLIB_error - SimGNN_error) / GEDLIB_error * 100
-    mse_improvement = ((avg_mse_gedlib - avg_mse_simgnn) / avg_mse_gedlib * 100) if avg_mse_gedlib else None
-    mae_improvement = ((avg_mae_gedlib - avg_mae_simgnn) / avg_mae_gedlib * 100) if avg_mae_gedlib else None
+    # Derive actionable insights.
+    insights = derive_insights(df, desc_stats, corr_matrix, anova_results, ci_dict)
 
-    # For runtime and memory usage, we compute the ratio (SimGNN value relative to GEDLIB).
-    runtime_ratio = (total_runtime_simgnn / total_runtime_gedlib * 100) if total_runtime_gedlib else None
-    memory_ratio = (avg_mem_simgnn / avg_mem_gedlib * 100) if avg_mem_gedlib else None
+    # Save plots into a folder.
+    plots_folder = "../results/analysis/HED/PROTEINS/plots"
+    save_plots(df, plots_folder)
 
-    # Build a summary DataFrame with the relative metrics.
-    summary_data = {
-        "Metric": [
-            "Total Graph Pairs",
-            "Average MSE",
-            "Average MAE",
-            "Total Runtime (s)",
-            "Average Memory Usage (MB)",
-            "Maximum Graph Size"
-        ],
-        "GEDLIB": [
-            total_pairs_gedlib,
-            avg_mse_gedlib,
-            avg_mae_gedlib,
-            total_runtime_gedlib,
-            avg_mem_gedlib,
-            max_graph_size_gedlib
-        ],
-        "SimGNN": [
-            total_pairs_simgnn,
-            avg_mse_simgnn,
-            avg_mae_simgnn,
-            total_runtime_simgnn,
-            avg_mem_simgnn,
-            max_graph_size_simgnn
-        ],
-        "Relative Difference (%)": [
-            None,  # For total pairs, relative difference may not be meaningful.
-            mse_improvement,
-            mae_improvement,
-            runtime_ratio,
-            memory_ratio,
-            None  # Maximum graph size is determined by the dataset.
-        ]
-    }
-    df_relative = pd.DataFrame(summary_data)
+    # Compile results into a report DataFrame (for descriptive stats and tests).
+    report_lines = []
+    report_lines.append("=== Overall Descriptive Statistics ===")
+    report_lines.append(desc_stats.to_string())
+    report_lines.append("\n=== Per-Method Descriptive Statistics ===")
+    report_lines.append(grouped_stats.to_string())
+    report_lines.append("\n=== Correlation Matrix ===")
+    report_lines.append(corr_matrix.to_string())
+    report_lines.append("\n=== ANOVA Results (GED across methods) ===")
+    report_lines.append(str(anova_results))
+    report_lines.append("\n=== Confidence Intervals ===")
+    for metric, ci in ci_dict.items():
+        report_lines.append(f"{metric}: ({ci[0]:.2f}, {ci[1]:.2f})")
+    report_lines.append("\n=== Actionable Insights ===")
+    for ins in insights:
+        report_lines.append(" - " + ins)
 
-    # (Optional) Additional performance metrics could be computed here, e.g.:
-    #   - Outlier detection in per-pair errors
-    #   - Correlation between runtime and graph size
-    #   - Standard deviation of errors, etc.
+    report_text = "\n".join(report_lines)
+    print(report_text)
 
-    # Save the relative performance summary to an Excel file.
-    with pd.ExcelWriter(relative_results_file, engine='openpyxl') as writer:
-        df_relative.to_excel(writer, sheet_name="Relative Summary", index=False)
+    # Save the report into an Excel file with multiple sheets.
+    writer_path = "../results/analysis/HED/PROTEINS/algorithm_performance_analysis.xlsx"
+    with pd.ExcelWriter(writer_path, engine="openpyxl") as writer:
+        desc_stats.to_excel(writer, sheet_name="Overall_Stats")
+        grouped_stats.to_excel(writer, sheet_name="Per_Method_Stats")
+        corr_matrix.to_excel(writer, sheet_name="Correlation")
+        # Also write a sheet for ANOVA, Confidence Intervals, and Insights.
+        extra_df = pd.DataFrame({
+            "Metric": list(ci_dict.keys()) + ["ANOVA_F", "ANOVA_p"],
+            "Value": [f"({ci[0]:.2f}, {ci[1]:.2f})" for ci in ci_dict.values()] +
+                     [anova_results.get("F-statistic", "N/A"), anova_results.get("p_value", "N/A")]
+        })
+        extra_df.to_excel(writer, sheet_name="Statistical_Tests", index=False)
+        insights_df = pd.DataFrame({"Insight": insights})
+        insights_df.to_excel(writer, sheet_name="Insights", index=False)
 
-    print("Analysis completed. Relative performance results saved in:")
-    print(relative_results_file)
+    print(f"Analysis report saved to {writer_path}")
 
 
 if __name__ == "__main__":

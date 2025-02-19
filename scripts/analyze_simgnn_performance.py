@@ -161,7 +161,7 @@ def derive_insights(df, stats_dict, corr_matrix, test_results, ci_dict):
 def main():
     # Define the Excel file path (adjust relative path as needed)
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    excel_path = os.path.join(script_dir, "..", "..", "results", "performance", "SimGNN_performance.xlsx")
+    excel_path = "../results/neural/PROTEINS/performance.xlsx"
 
     # Load the data.
     try:
@@ -196,7 +196,7 @@ def main():
         print(" -", insight)
 
     # Save the report to a text file.
-    report_path = os.path.join(script_dir, "..", "..", "results", "performance", "SimGNN_analysis_report.txt")
+    report_path = "../results/analysis/SimGNN/PROTEINS/SimGNN_analysis_report.txt"
     with open(report_path, "w") as f:
         f.write("=== SimGNN Performance Analysis Report ===\n\n")
         f.write("Descriptive Statistics:\n")

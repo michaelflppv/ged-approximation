@@ -38,7 +38,7 @@ def main():
         df["Avg_Density"] = np.nan
 
     # Create a folder to save plots.
-    plots_dir = "../results/neural/PROTEINS/plots"
+    plots_dir = "../results/analysis/SimGNN/PROTEINS/plots"
     os.makedirs(plots_dir, exist_ok=True)
 
     # 1. Performance Accuracy Analysis
