@@ -29,40 +29,38 @@ import tempfile
 import pandas as pd
 from itertools import combinations
 
-
 def parse_graphs(file_path):
     """
     Parses the converted PROTEINS.txt file into a list of graph blocks.
-    Each block is a list of lines corresponding to one graph.
-    The first line of each block starts with 't', and we also extract an identifier.
-    Returns a list of tuples: (graph_id, graph_text)
+    Each block is represented as a tuple: (unique_id, label, graph_text)
+    The unique_id is generated sequentially, and label is extracted from the t-line.
     """
     graphs = []
     current_graph = []
-    current_id = None
+    current_label = None
+    graph_counter = 0
     with open(file_path, "r") as f:
         for line in f:
             line = line.rstrip("\n")
             if line.startswith("t "):
-                # If we have a current graph, store it.
                 if current_graph:
-                    graphs.append((current_id, "\n".join(current_graph)))
+                    unique_id = f"graph_{graph_counter}"
+                    graphs.append((unique_id, current_label, "\n".join(current_graph)))
+                    graph_counter += 1
                     current_graph = []
-                # Extract graph identifier from the "t" line.
-                # Format: "t # <graph_label>" - we take <graph_label> as id.
                 parts = line.split()
+                # Expected format: "t # <graph_label>"
                 if len(parts) >= 3:
-                    current_id = parts[2]
+                    current_label = parts[2]
                 else:
-                    current_id = f"graph_{len(graphs) + 1}"
+                    current_label = f"graph_{graph_counter}"
                 current_graph.append(line)
             else:
                 current_graph.append(line)
-        # Add the last graph block.
         if current_graph:
-            graphs.append((current_id, "\n".join(current_graph)))
+            unique_id = f"graph_{graph_counter}"
+            graphs.append((unique_id, current_label, "\n".join(current_graph)))
     return graphs
-
 
 def call_ged(graph_g_file, graph_q_file, ged_executable="./ged"):
     """
@@ -80,13 +78,13 @@ def call_ged(graph_g_file, graph_q_file, ged_executable="./ged"):
         print(f"Error calling GED for files {graph_g_file} and {graph_q_file}: {e}")
         return None
 
-
 def parse_ged_output(output):
     """
-    Parses the output of the GED executable to extract relevant information.
-    Expected output format (for example):
+    Parses the output of the GED executable to extract:
+      - method, graph1, graph2, predicted GED, runtime, and memory usage.
+    Expected output format (example):
       METHOD=20 GRAPH1=18 GRAPH2=42531 PREDGED=132 GTGED=N/A RUNTIME=0.123 MEM=12.34
-    Returns a dict with keys: method, graph1, graph2, ged, runtime, mem.
+    Returns a dictionary with the parsed values.
     """
     regex = re.compile(
         r"METHOD=(\d+).*?GRAPH1=(\S+).*?GRAPH2=(\S+).*?PREDGED=([\d.]+).*?RUNTIME=([\d.]+).*?MEM=([\d.]+)"
@@ -109,43 +107,42 @@ def main():
     # Define paths.
     script_dir = os.path.dirname(os.path.abspath(__file__))
     proteins_txt = "../processed_data/txt/PROTEINS/PROTEINS.txt"
-    ged_executable = "/home/mfilippov/CLionProjects/Graph_Edit_Distance/ged"  # adjust if needed
+    ged_executable = r"/mnt/c/Users/mikef/CLionProjects/Graph_Edit_Distance/ged"  # adjust if needed
     output_excel = os.path.join(script_dir, "..", "..", "results", "exact_ged_results.xlsx")
 
     if not os.path.exists(proteins_txt):
         print(f"Error: {proteins_txt} not found.")
         sys.exit(1)
 
-    # Parse the PROTEINS.txt file once.
+        # Parse the PROTEINS.txt file once.
     graphs = parse_graphs(proteins_txt)
     num_graphs = len(graphs)
     print(f"Parsed {num_graphs} graphs from PROTEINS.txt.")
 
-    # We'll collect results as a list of dicts.
+    # We'll collect results as a list of dictionaries.
     results = []
     overall_min_ged = float("inf")
     overall_max_ged = float("-inf")
 
-    # For each unique pair of graphs:
-    pair_count = 0
+    # Iterate over every unique pair of graphs.
     total_pairs = num_graphs * (num_graphs - 1) // 2
     print(f"Processing {total_pairs} graph pairs...")
-
-    # Use combinations from itertools.
-    for (id1, graph1_text), (id2, graph2_text) in combinations(graphs, 2):
+    pair_count = 0
+    for (uid1, label1, text1), (uid2, label2, text2) in combinations(graphs, 2):
         pair_count += 1
-        # Create temporary files for the two graphs.
+
+        # Create temporary files for each graph.
         with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as tmp_g:
-            tmp_g.write(graph1_text)
+            tmp_g.write(text1)
             file_g = tmp_g.name
         with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as tmp_q:
-            tmp_q.write(graph2_text)
+            tmp_q.write(text2)
             file_q = tmp_q.name
 
         # Call the GED executable.
         output = call_ged(file_g, file_q, ged_executable=ged_executable)
 
-        # Clean up the temporary files.
+        # Remove temporary files.
         os.remove(file_g)
         os.remove(file_q)
 
@@ -154,36 +151,38 @@ def main():
 
         parsed = parse_ged_output(output)
         if parsed is None:
-            print(f"Warning: Could not parse output for pair ({id1}, {id2}). Output was:\n{output}")
+            print(f"Warning: Could not parse output for pair ({uid1}, {uid2}). Output was:\n{output}")
             continue
 
-        # For reporting, we include the pair identifiers and the GED value.
+        # Record the results with our unique graph IDs.
         results.append({
-            "Graph1 ID": id1,
-            "Graph2 ID": id2,
+            "Graph1 ID": uid1,
+            "Graph2 ID": uid2,
+            "Graph1 Label": label1,
+            "Graph2 Label": label2,
             "GED": parsed["ged"],
             "Runtime (s)": parsed["runtime"],
             "Memory Usage (MB)": parsed["memory"],
         })
 
-        # Update overall min and max GED.
         if parsed["ged"] < overall_min_ged:
             overall_min_ged = parsed["ged"]
         if parsed["ged"] > overall_max_ged:
             overall_max_ged = parsed["ged"]
 
-        # Optionally print progress.
         if pair_count % 10 == 0:
             print(f"Processed {pair_count}/{total_pairs} pairs...", end="\r")
 
     print(f"\nProcessed {pair_count} pairs.")
     print(f"Overall min GED: {overall_min_ged}, max GED: {overall_max_ged}")
 
-    # Create a DataFrame and add overall min and max as extra rows.
+    # Create a DataFrame and append a summary row.
     df = pd.DataFrame(results)
     summary = pd.DataFrame({
         "Graph1 ID": ["Overall"],
         "Graph2 ID": ["min GED / max GED"],
+        "Graph1 Label": [""],
+        "Graph2 Label": [""],
         "GED": [f"{overall_min_ged} / {overall_max_ged}"],
         "Runtime (s)": [""],
         "Memory Usage (MB)": [""]

@@ -36,8 +36,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from pandas.plotting import parallel_coordinates
 
-# Set a modern, clean theme.
-sns.set_theme(style="whitegrid", palette="muted")
+# Set Power BI-like style
+sns.set_style("whitegrid")
+sns.set_palette(["#B19CD9", "#7D6EA7", "#E6E6FA", "#9370DB", "#CBAACB"])  # Lavender tones
+
+# Define figure size and DPI for 4K resolution
+figsize = (32, 18)
+dpi = 300
 
 
 def load_data(excel_path):
@@ -151,136 +156,115 @@ def save_plots(df, output_folder):
     os.makedirs(output_folder, exist_ok=True)
 
     # -------- Group 1: Performance Evaluation --------
-    # 1.1 Runtime vs. Approximation Quality (Scatter with regression line)
-    plt.figure(figsize=(8, 6))
-    # Use a logarithmic scale for runtime
-    ax = sns.lmplot(data=df, x="runtime", y="ged", hue="method", height=6, aspect=1.3,
-                    scatter_kws={'s': 50, 'alpha': 0.7})
+    ## 1.1 Runtime vs. Approximation Quality (Scatter with regression)
+    ax = sns.lmplot(data=df, x="runtime", y="ged", hue="method", height=12, aspect=2,
+                    scatter_kws={'s': 100, 'alpha': 0.7})
     plt.xscale("log")
-    plt.title("Runtime vs. Approximation Quality")
-    plt.xlabel("Runtime (s) [log-scale]")
-    plt.ylabel("Approximated GED")
-    plt.tight_layout()
-    ax.savefig(os.path.join(output_folder, "runtime_vs_ged.png"))
+    plt.title("Runtime vs. Approximation Quality", fontsize=24, fontweight="bold")
+    plt.xlabel("Runtime (s) [log-scale]", fontsize=18)
+    plt.ylabel("Approximated GED", fontsize=18)
+    plt.savefig(os.path.join(output_folder, "runtime_vs_ged.png"), dpi=300)
     plt.close("all")
 
-    # 1.2 Runtime vs. Memory Usage (Scatter/Bubble Plot)
-    plt.figure(figsize=(8, 6))
-    if "average_n" in df.columns:
-        # Use average_n as size
-        ax = sns.scatterplot(data=df, x="runtime", y="memory_usage_mb", hue="method", size="average_n", sizes=(50, 200),
-                             alpha=0.7)
-    else:
-        ax = sns.scatterplot(data=df, x="runtime", y="memory_usage_mb", hue="method", s=70, alpha=0.7)
+    ## 1.2 Runtime vs. Memory Usage (Bubble Plot)
+    plt.figure(figsize=(32, 18), dpi=300)
+    ax = sns.scatterplot(data=df, x="runtime", y="memory_usage_mb", hue="method", size="average_n", sizes=(50, 400),
+                         alpha=0.7, edgecolor="white", linewidth=1.5)
     plt.xscale("log")
-    plt.title("Runtime vs. Memory Usage")
-    plt.xlabel("Runtime (s) [log-scale]")
-    plt.ylabel("Memory Usage (MB)")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_folder, "runtime_vs_memory.png"))
+    plt.title("Runtime vs. Memory Usage", fontsize=24, fontweight="bold")
+    plt.xlabel("Runtime (s) [log-scale]", fontsize=18)
+    plt.ylabel("Memory Usage (MB)", fontsize=18)
+    plt.savefig(os.path.join(output_folder, "runtime_vs_memory.png"), dpi=300)
     plt.close()
 
-    # 1.3 Memory Usage vs. Number of Nodes (Violin Plot)
-    plt.figure(figsize=(8, 6))
-    sns.violinplot(data=df, x="method", y="memory_usage_mb", inner="box")
-    plt.title("Memory Usage vs. Method")
-    plt.xlabel("Method")
-    plt.ylabel("Memory Usage (MB)")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_folder, "memory_vs_method.png"))
+    ## 1.3 Memory Usage vs. Number of Nodes (Violin Plot)
+    plt.figure(figsize=(32, 18), dpi=300)
+    sns.violinplot(data=df, x="method", y="memory_usage_mb", inner="box", linewidth=2)
+    plt.title("Memory Usage vs. Method", fontsize=24, fontweight="bold")
+    plt.xlabel("Method", fontsize=18)
+    plt.ylabel("Memory Usage (MB)", fontsize=18)
+    plt.savefig(os.path.join(output_folder, "memory_vs_method.png"), dpi=300)
     plt.close()
 
     # -------- Group 2: Scalability Analysis --------
-    # 2.1 Scalability vs. Runtime (Scatter with trend line)
-    plt.figure(figsize=(8, 6))
-    ax = sns.lmplot(data=df, x="scalability", y="runtime", hue="method", height=6, aspect=1.3,
-                    scatter_kws={'s': 50, 'alpha': 0.7})
-    plt.title("Scalability vs. Runtime")
-    plt.xlabel("Scalability (max nodes)")
-    plt.ylabel("Runtime (s)")
-    plt.tight_layout()
-    ax.savefig(os.path.join(output_folder, "scalability_vs_runtime.png"))
+    ## 2.1 Scalability vs. Runtime (Scatter with trend line)
+    ax = sns.lmplot(data=df, x="scalability", y="runtime", hue="method", height=12, aspect=2,
+                    scatter_kws={'s': 100, 'alpha': 0.7})
+    plt.title("Scalability vs. Runtime", fontsize=24, fontweight="bold")
+    plt.xlabel("Scalability (max nodes)", fontsize=18)
+    plt.ylabel("Runtime (s)", fontsize=18)
+    plt.savefig(os.path.join(output_folder, "scalability_vs_runtime.png"), dpi=300)
     plt.close("all")
 
-    # 2.2 Scalability vs. Approximation Quality (Scatter with trend line)
-    plt.figure(figsize=(8, 6))
-    ax = sns.lmplot(data=df, x="scalability", y="ged", hue="method", height=6, aspect=1.3,
-                    scatter_kws={'s': 50, 'alpha': 0.7})
-    plt.title("Scalability vs. Approximated GED")
-    plt.xlabel("Scalability (max nodes)")
-    plt.ylabel("Approximated GED")
-    plt.tight_layout()
-    ax.savefig(os.path.join(output_folder, "scalability_vs_ged.png"))
+    ## 2.2 Scalability vs. Approximation Quality (Scatter with trend line)
+    ax = sns.lmplot(data=df, x="scalability", y="ged", hue="method", height=12, aspect=2,
+                    scatter_kws={'s': 100, 'alpha': 0.7})
+    plt.title("Scalability vs. Approximated GED", fontsize=24, fontweight="bold")
+    plt.xlabel("Scalability (max nodes)", fontsize=18)
+    plt.ylabel("Approximated GED", fontsize=18)
+    plt.savefig(os.path.join(output_folder, "scalability_vs_ged.png"), dpi=300)
     plt.close("all")
 
-    # 2.3 Scalability vs. Memory Usage (Line Plot)
-    plt.figure(figsize=(8, 6))
-    # For line plot, we need to sort data by scalability per method.
+    ## 2.3 Scalability vs. Memory Usage (Line Plot)
     sorted_df = df.sort_values("scalability")
-    sns.lineplot(data=sorted_df, x="scalability", y="memory_usage_mb", hue="method", style="method", markers=True)
-    plt.title("Scalability vs. Memory Usage")
-    plt.xlabel("Scalability (max nodes)")
-    plt.ylabel("Memory Usage (MB)")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_folder, "scalability_vs_memory.png"))
+    plt.figure(figsize=(32, 18), dpi=300)
+    sns.lineplot(data=sorted_df, x="scalability", y="memory_usage_mb", hue="method", style="method", markers=True,
+                 linewidth=2)
+    plt.title("Scalability vs. Memory Usage", fontsize=24, fontweight="bold")
+    plt.xlabel("Scalability (max nodes)", fontsize=18)
+    plt.ylabel("Memory Usage (MB)", fontsize=18)
+    plt.savefig(os.path.join(output_folder, "scalability_vs_memory.png"), dpi=300)
     plt.close()
 
     # -------- Group 3: Approximation Quality and Accuracy --------
-    # 3.1 GED vs. Average Node Count (Scatter Plot)
-    plt.figure(figsize=(8, 6))
-    sns.scatterplot(data=df, x="average_n", y="ged", hue="method", s=70, alpha=0.7)
-    plt.title("GED vs. Average Number of Nodes")
-    plt.xlabel("Average Number of Nodes")
-    plt.ylabel("Approximated GED")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_folder, "ged_vs_avg_nodes.png"))
+    ## 3.1 GED vs. Average Node Count (Scatter Plot)
+    plt.figure(figsize=(32, 18), dpi=300)
+    sns.scatterplot(data=df, x="average_n", y="ged", hue="method", s=100, alpha=0.7, edgecolor="white", linewidth=1.5)
+    plt.title("GED vs. Average Number of Nodes", fontsize=24, fontweight="bold")
+    plt.xlabel("Average Number of Nodes", fontsize=18)
+    plt.ylabel("Approximated GED", fontsize=18)
+    plt.savefig(os.path.join(output_folder, "ged_vs_avg_nodes.png"), dpi=300)
     plt.close()
 
-    # 3.2 GED vs. Graph Density (Scatter with regression line)
-    plt.figure(figsize=(8, 6))
-    ax = sns.lmplot(data=df, x="average_density", y="ged", hue="method", height=6, aspect=1.3,
-                    scatter_kws={'s': 50, 'alpha': 0.7})
-    plt.title("GED vs. Average Graph Density")
-    plt.xlabel("Average Graph Density")
-    plt.ylabel("Approximated GED")
-    plt.tight_layout()
-    ax.savefig(os.path.join(output_folder, "ged_vs_avg_density.png"))
+    ## 3.2 GED vs. Graph Density (Scatter with regression)
+    ax = sns.lmplot(data=df, x="average_density", y="ged", hue="method", height=12, aspect=2,
+                    scatter_kws={'s': 100, 'alpha': 0.7})
+    plt.title("GED vs. Average Graph Density", fontsize=24, fontweight="bold")
+    plt.xlabel("Average Graph Density", fontsize=18)
+    plt.ylabel("Approximated GED", fontsize=18)
+    plt.savefig(os.path.join(output_folder, "ged_vs_avg_density.png"), dpi=300)
     plt.close("all")
 
     # -------- Group 4: Correlation and Comparative Insights --------
-    # 4.1 Correlation Matrix (Heatmap)
+    ## 4.1 Correlation Matrix (Heatmap)
     selected_vars = ["runtime", "ged", "memory_usage_mb", "average_n", "scalability"]
     corr = df[selected_vars].corr()
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(corr, annot=True, cmap="coolwarm", fmt=".2f", square=True)
-    plt.title("Correlation Matrix")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_folder, "correlation_heatmap.png"))
+    plt.figure(figsize=(32, 18), dpi=300)
+    sns.heatmap(corr, annot=True, cmap="Purples", fmt=".2f", square=True, linewidths=1, linecolor="white")
+    plt.title("Correlation Matrix", fontsize=24, fontweight="bold")
+    plt.savefig(os.path.join(output_folder, "correlation_heatmap.png"), dpi=300)
     plt.close()
 
-    # 4.2 Distribution of GED Across Methods (Violin Plot)
-    plt.figure(figsize=(8, 6))
-    sns.violinplot(data=df, x="method", y="ged", inner="box")
-    plt.title("Distribution of GED Across Methods")
-    plt.xlabel("Method")
-    plt.ylabel("Approximated GED")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_folder, "ged_distribution.png"))
+    ## 4.2 Distribution of GED Across Methods (Violin Plot)
+    plt.figure(figsize=(32, 18), dpi=300)
+    sns.violinplot(data=df, x="method", y="ged", inner="box", linewidth=2)
+    plt.title("Distribution of GED Across Methods", fontsize=24, fontweight="bold")
+    plt.xlabel("Method", fontsize=18)
+    plt.ylabel("Approximated GED", fontsize=18)
+    plt.savefig(os.path.join(output_folder, "ged_distribution.png"), dpi=300)
     plt.close()
 
-    # 4.3 Parallel Coordinates Plot (Multidimensional Analysis)
-    # Select and normalize columns: runtime, ged, memory_usage_mb, scalability.
+    ## 4.3 Parallel Coordinates Plot (Multidimensional Analysis)
     pc_df = df[["method", "runtime", "ged", "memory_usage_mb", "scalability"]].copy()
     for col in ["runtime", "ged", "memory_usage_mb", "scalability"]:
-        # Normalize each column between 0 and 1.
         pc_df[col] = (pc_df[col] - pc_df[col].min()) / (pc_df[col].max() - pc_df[col].min())
-    plt.figure(figsize=(10, 6))
-    parallel_coordinates(pc_df, "method", colormap=plt.get_cmap("Set2"))
-    plt.title("Parallel Coordinates Plot")
-    plt.xlabel("Metrics")
-    plt.ylabel("Normalized Value")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_folder, "parallel_coordinates.png"))
+
+    plt.figure(figsize=(32, 18), dpi=300)
+    parallel_coordinates(pc_df, "method", colormap=plt.get_cmap("Purples"))
+    plt.title("Parallel Coordinates Plot", fontsize=24, fontweight="bold")
+    plt.xlabel("Metrics", fontsize=18)
+    plt.ylabel("Normalized Value", fontsize=18)
+    plt.savefig(os.path.join(output_folder, "parallel_coordinates.png"), dpi=300)
     plt.close()
 
     print("All plots saved in:", output_folder)
