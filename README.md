@@ -8,19 +8,6 @@ This repository contains all code used for the **experimental work** in my Bache
 ## **📌 Important Notice: Using Precompiled Data**
 This repository includes **precompiled datasets** and large files (e.g., GXL/XML files, JSON graph pairs, and pre-trained models).  
 To ensure these files are correctly downloaded, **Git LFS (Large File Storage)** must be installed.
-
-### **🛠 Install Git LFS**
-#### **On Linux/macOS:**
-```bash
-git lfs install
-git lfs pull
-```
-#### **On Windows (via Git Bash or PowerShell):**
-```bash
-git lfs install
-git lfs pull
-```
-#### **If Git LFS is not installed:**
 1. Download and install Git LFS from: https://git-lfs.github.com/
 2. Run the setup command:
 ```bash
