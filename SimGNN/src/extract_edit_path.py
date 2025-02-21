@@ -103,6 +103,7 @@ def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
     padded_cost = pad_cost_matrix(cost_matrix, n1, n2, dummy_cost)
     row_ind, col_ind = linear_sum_assignment(padded_cost)
 
+    # Interpret the assignment as edit operations.
     edit_operations = []
     for i, j in zip(row_ind, col_ind):
         if i < n1 and j < n2:
