@@ -24,11 +24,11 @@ GED_EXECUTABLE = os.path.join(script_dir, "../gedlib/build/main_exec")  # Ensure
 DATASET_PATH = os.path.join(script_dir, "../processed_data/gxl/PROTEINS")
 COLLECTION_XML = os.path.join(script_dir, "../processed_data/xml/PROTEINS.xml")
 RESULTS_DIR = os.path.join(script_dir, "../results/gedlib")
-RESULTS_FILE = os.path.join(RESULTS_DIR, "PROTEINS_IPFP_results.xlsx")
+RESULTS_FILE = os.path.join(RESULTS_DIR, "PROTEINS_ANCHOR_AWARE_results.xlsx")
 
 # Update method mapping according to new C++ enum values (adjust as needed)
 METHOD_NAMES = {
-    0: "F2",
+    8: "Anchor Aware",
     20: "STAR (Exact)",
     10: "IPFP",
     11: "BIPARTITE",
