@@ -1,201 +1,199 @@
 #!/usr/bin/env python3
-"""
-calculate_exact_ged.py
-
-This script reads the converted PROTEINS.txt file (which contains multiple graphs in the following format):
-
-    t # <graph_label>
-    v <local_vertex_id> <vertex_label>
-    e <local_vertex_id1> <local_vertex_id2> <edge_label>
-
-It then compares every unique pair of graphs by:
-  1. Writing each graph (from PROTEINS.txt) into a temporary file.
-  2. Calling the GED executable (e.g., "./ged -d <graph_g.txt> -q <graph_q.txt> -m pair -p astar -l LSa -g")
-  3. Parsing the output to extract at least:
-       - The graph identifiers (from the "t" line or from the executable’s output)
-       - The computed GED value.
-  4. Collecting results for all pairs and computing overall min and max GED.
-  5. Saving all the results into an Excel file.
-
-It is sufficient to parse the PROTEINS.txt file only once into memory (as a list of graph blocks),
-rather than reading it twice.
-"""
-
 import os
-import sys
-import subprocess
 import re
-import tempfile
+import subprocess
+import argparse
 import pandas as pd
-from itertools import combinations
+import signal
+import sys
+import resource
 
-def parse_graphs(file_path):
-    """
-    Parses the converted PROTEINS.txt file into a list of graph blocks.
-    Each block is represented as a tuple: (unique_id, label, graph_text)
-    The unique_id is generated sequentially, and label is extracted from the t-line.
-    """
-    graphs = []
-    current_graph = []
-    current_label = None
-    graph_counter = 0
-    with open(file_path, "r") as f:
-        for line in f:
-            line = line.rstrip("\n")
-            if line.startswith("t "):
-                if current_graph:
-                    unique_id = f"graph_{graph_counter}"
-                    graphs.append((unique_id, current_label, "\n".join(current_graph)))
-                    graph_counter += 1
-                    current_graph = []
-                parts = line.split()
-                # Expected format: "t # <graph_label>"
-                if len(parts) >= 3:
-                    current_label = parts[2]
-                else:
-                    current_label = f"graph_{graph_counter}"
-                current_graph.append(line)
-            else:
-                current_graph.append(line)
-        if current_graph:
-            unique_id = f"graph_{graph_counter}"
-            graphs.append((unique_id, current_label, "\n".join(current_graph)))
-    return graphs
+# Global variable to store results and the Excel filename so that signal handlers can access them.
+results = []
+output_excel = None
 
-def call_ged(graph_g_file, graph_q_file, ged_executable="./ged"):
+
+def parse_executable_output(output):
     """
-    Calls the GED executable with the given database and query files.
-    Returns the raw output (as string) of the executable.
-    Example command:
-       ./ged -d <graph_g_file> -q <graph_q_file> -m pair -p astar -l LSa -g
+    Parse the output from the GED executable.
+    We expect lines such as:
+      "*** GEDs ***"
+      "min_ged: 12, max_ged: 45"
+      ... other progress lines ...
+      "Total time: 123456 (microseconds), total search space: 7890"
+      "#candidates: 34, #matches: 12"
+
+    Returns:
+      min_ged, max_ged, total_time, candidates, matches
     """
-    command = [ged_executable, "-d", graph_g_file, "-q", graph_q_file, "-m", "pair", "-p", "astar", "-l", "LSa", "-g"]
+    min_ged = None
+    max_ged = None
+    total_time = None
+    candidates = None
+    matches = None
+
+    m = re.search(r"min_ged:\s*(\d+),\s*max_ged:\s*(\d+)", output)
+    if m:
+        min_ged = int(m.group(1))
+        max_ged = int(m.group(2))
+
+    m = re.search(r"Total time:\s*([^\s]+)\s*\(microseconds\)", output)
+    if m:
+        try:
+            total_time = int(m.group(1))
+        except ValueError:
+            total_time = m.group(1)
+
+    m = re.search(r"#candidates:\s*(\d+),\s*#matches:\s*(\d+)", output)
+    if m:
+        candidates = int(m.group(1))
+        matches = int(m.group(2))
+
+    return min_ged, max_ged, total_time, candidates, matches
+
+
+def run_ged_executable(graph_file1, graph_file2, ged_executable):
+    """
+    Call the GED executable for a single pair of graphs.
+    Command line:
+      ./ged -d <graph_file1> -q <graph_file2> -m pair -p astar -l LSa -g
+
+    The process is started with resource limits lifted (set to unlimited) so that it can use
+    as much CPU time and memory as available on the system.
+
+    Returns:
+      The captured output (stdout+stderr) or None on error.
+    """
+
+    # Function to set resource limits to unlimited
+    def set_unlimited():
+        try:
+            resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+        except Exception as e:
+            print("Warning: could not set RLIMIT_AS unlimited:", e)
+        try:
+            resource.setrlimit(resource.RLIMIT_CPU, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+        except Exception as e:
+            print("Warning: could not set RLIMIT_CPU unlimited:", e)
+
+    cmd = [
+        ged_executable,
+        "-d", graph_file1,
+        "-q", graph_file2,
+        "-m", "pair",
+        "-p", "astar",
+        "-l", "LSa",
+        "-g"
+    ]
     try:
-        result = subprocess.run(command, capture_output=True, text=True)
-        output = result.stdout.strip()
-        return output
-    except Exception as e:
-        print(f"Error calling GED for files {graph_g_file} and {graph_q_file}: {e}")
+        result = subprocess.run(cmd,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                text=True,
+                                check=True,
+                                preexec_fn=set_unlimited)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"Error running command: {' '.join(cmd)}")
+        print(e)
         return None
 
-def parse_ged_output(output):
+
+def get_graph_id_from_filename(filename):
     """
-    Parses the output of the GED executable to extract:
-      - method, graph1, graph2, predicted GED, runtime, and memory usage.
-    Expected output format (example):
-      METHOD=20 GRAPH1=18 GRAPH2=42531 PREDGED=132 GTGED=N/A RUNTIME=0.123 MEM=12.34
-    Returns a dictionary with the parsed values.
+    Extract the graph id from the filename.
+    Assumes files are named as "graph_<id>.txt"
     """
-    regex = re.compile(
-        r"METHOD=(\d+).*?GRAPH1=(\S+).*?GRAPH2=(\S+).*?PREDGED=([\d.]+).*?RUNTIME=([\d.]+).*?MEM=([\d.]+)"
-    )
-    match = regex.search(output)
+    base = os.path.basename(filename)
+    match = re.match(r"graph_(\d+)\.txt", base)
     if match:
-        return {
-            "method": int(match.group(1)),
-            "graph1": match.group(2),
-            "graph2": match.group(3),
-            "ged": float(match.group(4)),
-            "runtime": float(match.group(5)),
-            "memory": float(match.group(6))
-        }
+        return match.group(1)
     else:
-        return None
+        return base
 
 
-def main():
-    # Define paths.
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    proteins_txt = "../processed_data/txt/PROTEINS/PROTEINS.txt"
-    ged_executable = r"/mnt/c/Users/mikef/CLionProjects/Graph_Edit_Distance/ged"  # adjust if needed
-    output_excel = os.path.join(script_dir, "..", "..", "results", "exact_ged_results.xlsx")
+def save_results(excel_file, results_list):
+    """
+    Save the results list to an Excel file.
+    """
+    df = pd.DataFrame(results_list, columns=["graph_id_1", "graph_id_2",
+                                             "min_ged", "max_ged",
+                                             "total_time", "candidates", "matches"])
+    df.to_excel(excel_file, index=False)
+    print(f"Results written to {excel_file}")
 
-    if not os.path.exists(proteins_txt):
-        print(f"Error: {proteins_txt} not found.")
-        sys.exit(1)
 
-        # Parse the PROTEINS.txt file once.
-    graphs = parse_graphs(proteins_txt)
-    num_graphs = len(graphs)
-    print(f"Parsed {num_graphs} graphs from PROTEINS.txt.")
+def signal_handler(signum, frame):
+    """
+    Handle signals (e.g. SIGINT or SIGTERM) by saving partial results before exit.
+    """
+    print(f"\nSignal {signum} received. Saving partial results and exiting.")
+    global output_excel, results
+    save_results(output_excel, results)
+    sys.exit(1)
 
-    # We'll collect results as a list of dictionaries.
+
+def main(txt_dir, ged_executable, output_excel_param):
+    global output_excel, results
+    output_excel = output_excel_param
+
+    # Install signal handlers for SIGINT (Ctrl+C) and SIGTERM.
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    # Gather all .txt files in the specified directory.
+    txt_files = [os.path.join(txt_dir, f) for f in os.listdir(txt_dir) if f.endswith('.txt')]
+    txt_files.sort()  # Assumes naming "graph_<id>.txt" for proper ordering.
     results = []
-    overall_min_ged = float("inf")
-    overall_max_ged = float("-inf")
 
-    # Iterate over every unique pair of graphs.
-    total_pairs = num_graphs * (num_graphs - 1) // 2
-    print(f"Processing {total_pairs} graph pairs...")
-    pair_count = 0
-    for (uid1, label1, text1), (uid2, label2, text2) in combinations(graphs, 2):
-        pair_count += 1
-
-        # Create temporary files for each graph.
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as tmp_g:
-            tmp_g.write(text1)
-            file_g = tmp_g.name
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as tmp_q:
-            tmp_q.write(text2)
-            file_q = tmp_q.name
-
-        # Call the GED executable.
-        output = call_ged(file_g, file_q, ged_executable=ged_executable)
-
-        # Remove temporary files.
-        os.remove(file_g)
-        os.remove(file_q)
-
-        if output is None:
-            continue
-
-        parsed = parse_ged_output(output)
-        if parsed is None:
-            print(f"Warning: Could not parse output for pair ({uid1}, {uid2}). Output was:\n{output}")
-            continue
-
-        # Record the results with our unique graph IDs.
-        results.append({
-            "Graph1 ID": uid1,
-            "Graph2 ID": uid2,
-            "Graph1 Label": label1,
-            "Graph2 Label": label2,
-            "GED": parsed["ged"],
-            "Runtime (s)": parsed["runtime"],
-            "Memory Usage (MB)": parsed["memory"],
-        })
-
-        if parsed["ged"] < overall_min_ged:
-            overall_min_ged = parsed["ged"]
-        if parsed["ged"] > overall_max_ged:
-            overall_max_ged = parsed["ged"]
-
-        if pair_count % 10 == 0:
-            print(f"Processed {pair_count}/{total_pairs} pairs...", end="\r")
-
-    print(f"\nProcessed {pair_count} pairs.")
-    print(f"Overall min GED: {overall_min_ged}, max GED: {overall_max_ged}")
-
-    # Create a DataFrame and append a summary row.
-    df = pd.DataFrame(results)
-    summary = pd.DataFrame({
-        "Graph1 ID": ["Overall"],
-        "Graph2 ID": ["min GED / max GED"],
-        "Graph1 Label": [""],
-        "Graph2 Label": [""],
-        "GED": [f"{overall_min_ged} / {overall_max_ged}"],
-        "Runtime (s)": [""],
-        "Memory Usage (MB)": [""]
-    })
-    df_final = pd.concat([df, summary], ignore_index=True)
-
-    # Ensure the output directory exists.
-    output_dir = os.path.dirname(output_excel)
-    os.makedirs(output_dir, exist_ok=True)
-
-    df_final.to_excel(output_excel, index=False)
-    print(f"Results saved to {output_excel}")
+    try:
+        # For each unique pair (i, j) with i < j.
+        for i in range(len(txt_files)):
+            for j in range(i + 1, len(txt_files)):
+                file1 = txt_files[i]
+                file2 = txt_files[j]
+                print(f"Processing pair: {file1} and {file2}")
+                output = run_ged_executable(file1, file2, ged_executable)
+                id1 = get_graph_id_from_filename(file1)
+                id2 = get_graph_id_from_filename(file2)
+                if output is None:
+                    print(f"Error processing pair ({file1}, {file2}). Inserting N/A for results.")
+                    results.append({
+                        "graph_id_1": id1,
+                        "graph_id_2": id2,
+                        "min_ged": "N/A",
+                        "max_ged": "N/A",
+                        "total_time": "N/A",
+                        "candidates": "N/A",
+                        "matches": "N/A"
+                    })
+                    continue
+                # Parse and add the results.
+                min_ged, max_ged, total_time, candidates, matches = parse_executable_output(output)
+                results.append({
+                    "graph_id_1": id1,
+                    "graph_id_2": id2,
+                    "min_ged": min_ged,
+                    "max_ged": max_ged,
+                    "total_time": total_time,
+                    "candidates": candidates,
+                    "matches": matches
+                })
+    except Exception as e:
+        print("An unexpected error occurred. Saving partial results before termination.")
+        save_results(output_excel, results)
+        raise e
+    else:
+        save_results(output_excel, results)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        description="For every pair of graph txt files in a directory, compute the Graph Edit Distance (GED) using a C++ executable and output the results to an Excel file."
+    )
+    parser.add_argument("txt_dir", help="Directory containing the graph txt files")
+    parser.add_argument("ged_executable",
+                        help="Path to the GED executable (e.g. /mnt/c/Users/mikef/CLionProjects/Graph_Edit_Distance/ged)")
+    parser.add_argument("output_excel", help="Output Excel file (e.g. results.xlsx)")
+    args = parser.parse_args()
+    main(args.txt_dir, args.ged_executable, args.output_excel)
