@@ -6,9 +6,10 @@ import seaborn as sns
 # -------- CONFIGURATION --------
 # Excel file paths (replace with actual filenames)
 excel_hed    = "../../../results/gedlib/PROTEINS/PROTEINS_HED_results.xlsx"
-excel_ipfp   = "../../../results/gedlib/PROTEINS_IPFP_results.xlsx"
+excel_ipfp   = "../../../results/gedlib/PROTEINS/PROTEINS_IPFP_results.xlsx"
 excel_simgnn = "../../../results/neural/PROTEINS/performance.xlsx"
-excel_exact  = "../../../results/exact_ged/PROTEINS/exact_ged.xlsx"
+exact_excel_file_1 = "../../../results/exact_ged/PROTEINS/exact_ged.xlsx"  # File with exact GED values
+exact_excel_file_2 = "../../../results/exact_ged/PROTEINS/exact_ged_2.xlsx"  # File with exact GED values
 
 # Output directory
 output_folder = "plots"
@@ -22,8 +23,9 @@ algorithm_colors = {"HED": "#c392ec", "IPFP": "#1a1a1a", "SimGNN": "#85d5c8"}
 df_hed = pd.read_excel(excel_hed)
 df_hed["Algorithm"] = "HED"
 
-# Load IPFP results
+# Load IPFP results and replace <unset> values with 0
 df_ipfp = pd.read_excel(excel_ipfp)
+df_ipfp.replace("", 0, inplace=True)
 df_ipfp["Algorithm"] = "IPFP"
 
 # Load SimGNN results and extract graph pairs
@@ -46,14 +48,21 @@ for df in [df_hed, df_ipfp, df_simgnn]:
     df["Graph Pair"] = df["graph1"] + "-" + df["graph2"]
 
 # -------- LOAD EXACT GED DATA --------
-df_exact = pd.read_excel(excel_exact)
+# Read the exact GED Excel file
+df_exact_1 = pd.read_excel(exact_excel_file_1)
+df_exact_2 = pd.read_excel(exact_excel_file_2)
+
+# Merge the dataframes
+df_exact_combined = pd.concat([df_exact_1, df_exact_2], ignore_index=True)
+# Drop duplicates if any
+df_exact_combined.drop_duplicates(inplace=True)
 # Ensure required columns exist
 required_exact_cols = {"graph_id_1", "graph_id_2", "min_ged"}
-if not required_exact_cols.issubset(df_exact.columns):
+if not required_exact_cols.issubset(df_exact_combined.columns):
     raise ValueError(f"Exact GED file must contain columns: {required_exact_cols}")
 # Convert "min_ged" to numeric and drop rows with N/A
-df_exact["min_ged_numeric"] = pd.to_numeric(df_exact["min_ged"], errors="coerce")
-df_exact = df_exact.dropna(subset=["min_ged_numeric"])
+df_exact_combined["min_ged_numeric"] = pd.to_numeric(df_exact_combined["min_ged"], errors="coerce")
+df_exact = df_exact_combined.dropna(subset=["min_ged_numeric"])
 # Create a unique identifier for each graph pair in the exact GED file
 df_exact["Graph Pair"] = df_exact["graph_id_1"].astype(str) + "-" + df_exact["graph_id_2"].astype(str)
 
@@ -125,26 +134,24 @@ plt.show()
 print(f"GED comparison plot saved at: {plot_path_ged}")
 
 # -------- SELECT COMMON GRAPH PAIRS (for Runtime Comparison) --------
-# For runtime, consider only the three algorithm datasets (exclude exact GED)
-common_pairs_runtime = (set(df_hed["Graph Pair"]) &
-                          set(df_ipfp["Graph Pair"]) &
-                          set(df_simgnn["Graph Pair"]))
+# Filter HED results to include only rows where runtime is <= 2 seconds
+df_hed = df_hed[df_hed["runtime"] <= 2]
+
+# Find common pairs for runtime comparison
+common_pairs_runtime = set(df_hed["Graph Pair"]) & set(df_ipfp["Graph Pair"]) & set(df_simgnn["Graph Pair"])
 
 if len(common_pairs_runtime) == 0:
-    raise ValueError("No common graph pairs found across algorithm datasets for runtime comparison.")
+    raise ValueError("No common graph pairs found across datasets for runtime comparison.")
 
-# Use all common pairs among algorithms
-selected_pairs_runtime = sorted(list(common_pairs_runtime))
+# Filter each algorithm's DataFrame for runtime
+df_hed_rt = df_hed[df_hed["Graph Pair"].isin(common_pairs_runtime)]
+df_ipfp_rt = df_ipfp[df_ipfp["Graph Pair"].isin(common_pairs_runtime)]
+df_simgnn_rt = df_simgnn[df_simgnn["Graph Pair"].isin(common_pairs_runtime)]
+df_simgnn_rt.rename(columns={"Runtime (s)": "runtime"}, inplace=True)
 
-# Filter each algorithm DataFrame for runtime comparison
-df_hed_rt    = df_hed[df_hed["Graph Pair"].isin(selected_pairs_runtime)]
-df_ipfp_rt   = df_ipfp[df_ipfp["Graph Pair"].isin(selected_pairs_runtime)]
-df_simgnn_rt = df_simgnn[df_simgnn["Graph Pair"].isin(selected_pairs_runtime)]
-
-# Combine runtime data into a single DataFrame and order by Graph Pair
+# Combine and sort by HED’s runtime
 df_runtime_combined = pd.concat([df_hed_rt, df_ipfp_rt, df_simgnn_rt], ignore_index=True)
-df_runtime_combined["Graph Pair"] = pd.Categorical(df_runtime_combined["Graph Pair"], categories=selected_pairs_runtime, ordered=True)
-df_runtime_combined = df_runtime_combined.sort_values("Graph Pair")
+df_runtime_combined = df_runtime_combined.sort_values(by=["Algorithm", "runtime"])
 
 # -------- CREATE RUNTIME COMPARISON PLOT --------
 fig = plt.figure(figsize=(25, 20), dpi=200)
