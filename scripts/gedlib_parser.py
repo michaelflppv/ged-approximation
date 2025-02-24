@@ -24,7 +24,7 @@ GED_EXECUTABLE = os.path.join(script_dir, "../gedlib/build/main_exec")  # Ensure
 DATASET_PATH = os.path.join(script_dir, "../processed_data/gxl/PROTEINS")
 COLLECTION_XML = os.path.join(script_dir, "../processed_data/xml/PROTEINS.xml")
 RESULTS_DIR = os.path.join(script_dir, "../results/gedlib")
-RESULTS_FILE = os.path.join(RESULTS_DIR, "PROTEINS_ANCHOR_AWARE_results.xlsx")
+RESULTS_FILE = os.path.join(RESULTS_DIR, "PROTEINS/PROTEINS_IPFP_results.xlsx")
 
 # Update method mapping according to new C++ enum values (adjust as needed)
 METHOD_NAMES = {
@@ -52,11 +52,19 @@ def log_results(results):
         print("Warning: DataFrame is empty; nothing to write.")
         return
     os.makedirs(RESULTS_DIR, exist_ok=True)
+    temp_file = os.path.join(RESULTS_DIR, "temp_results.xlsx")
     try:
-        df.to_excel(RESULTS_FILE, index=False, engine='openpyxl')
+        # Write to a temporary file first.
+        df.to_excel(temp_file, index=False, engine='openpyxl')
+        # Atomically replace the final file with the temp file.
+        os.replace(temp_file, RESULTS_FILE)
         print(f"Intermediate results saved in {RESULTS_FILE} (total rows: {len(df)}).")
     except Exception as e:
         print("Error writing Excel file:", e)
+        # Clean up the temporary file if it exists.
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+
 
 # Signal handler to flush current results before exiting.
 def signal_handler(signum, frame):

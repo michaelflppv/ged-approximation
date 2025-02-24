@@ -150,11 +150,17 @@ def main():
     # Prepare a list to accumulate all results.
     results = []
 
+    # Dictionary to store degree information for each dataset.
+    degree_info = {}
+
     # Iterate over each dataset directory.
     for dataset_name in os.listdir(parent_dir):
         dataset_path = os.path.join(parent_dir, dataset_name)
         if not os.path.isdir(dataset_path):
             continue
+
+        # Initialize degree lists for the current dataset.
+        degrees = []
 
         # Find all JSON files in the current dataset directory matching "pair_*.json"
         json_files = glob(os.path.join(dataset_path, "pair_*.json"))
@@ -164,12 +170,15 @@ def main():
             base = os.path.basename(json_file)
             match = re.match(r"pair_(\d+)_(\d+)\.json", base)
             if not match:
-                #print(f"Filename {base} does not match expected format. Skipping.")
                 continue
             id1, id2 = match.groups()
 
             # Load the pair data.
             G1, G2, labels1, labels2 = load_pair_json(json_file)
+
+            # Collect degrees from both graphs.
+            degrees.extend(dict(G1.degree()).values())
+            degrees.extend(dict(G2.degree()).values())
 
             # Compute each heuristic and record graph_id1 and graph_id2 separately.
             # 1. Node Count Difference
@@ -227,6 +236,16 @@ def main():
                     "Heuristic": "Node Label Mismatch",
                     "Lower Bound": h6
                 })
+
+        # Calculate and store the maximum and average degrees for the current dataset.
+        if degrees:
+            max_degree = max(degrees)
+            avg_degree = sum(degrees) / len(degrees)
+            degree_info[dataset_name] = (max_degree, avg_degree)
+
+    # Print out the maximum and average degrees for each dataset.
+    for dataset_name, (max_degree, avg_degree) in degree_info.items():
+        print(f"Dataset: {dataset_name}, Max Degree: {max_degree}, Avg Degree: {avg_degree:.2f}")
 
     # Convert the results to a pandas DataFrame.
     df = pd.DataFrame(results)

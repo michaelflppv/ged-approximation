@@ -86,13 +86,18 @@ def run_ged_executable(graph_file1, graph_file2, ged_executable):
         "-g"
     ]
     try:
+        # Set a timeout of 100 seconds (i.e., 100,000,000 microseconds)
         result = subprocess.run(cmd,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT,
                                 text=True,
                                 check=True,
-                                preexec_fn=set_unlimited)
+                                preexec_fn=set_unlimited,
+                                timeout=100)
         return result.stdout
+    except subprocess.TimeoutExpired:
+        print(f"Timeout expired for command: {' '.join(cmd)}. Proceeding with the next pair.")
+        return None
     except subprocess.CalledProcessError as e:
         print(f"Error running command: {' '.join(cmd)}")
         print(e)
@@ -152,10 +157,16 @@ def main(txt_dir, ged_executable, output_excel_param):
             for j in range(i + 1, len(txt_files)):
                 file1 = txt_files[i]
                 file2 = txt_files[j]
-                print(f"Processing pair: {file1} and {file2}")
-                output = run_ged_executable(file1, file2, ged_executable)
+
+                # Get graph IDs and skip any pair with graph_1.txt.
                 id1 = get_graph_id_from_filename(file1)
                 id2 = get_graph_id_from_filename(file2)
+                if id1 == "1" or id2 == "1":
+                    print(f"Skipping pair with graph_1.txt: {file1} and {file2}")
+                    continue
+
+                print(f"Processing pair: {file1} and {file2}")
+                output = run_ged_executable(file1, file2, ged_executable)
                 if output is None:
                     print(f"Error processing pair ({file1}, {file2}). Inserting N/A for results.")
                     results.append({

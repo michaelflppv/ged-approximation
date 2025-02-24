@@ -6,7 +6,8 @@ import seaborn as sns
 # -------- CONFIGURATIONS --------
 # Input Excel files
 heuristic_excel_file = "heuristic_lower_bounds.xlsx"  # File with heuristic estimates
-exact_excel_file = "../results/exact_ged/PROTEINS/exact_ged.xlsx"  # File with exact GED values
+exact_excel_file_1 = "../results/exact_ged/PROTEINS/exact_ged.xlsx"  # File with exact GED values
+exact_excel_file_2 = "../results/exact_ged/PROTEINS/exact_ged_2.xlsx"  # File with exact GED values
 
 # Output directory for plots
 output_folder = "plots"
@@ -31,16 +32,22 @@ df_heuristics = df_heuristics[df_heuristics["Dataset"] == "PROTEINS"]
 df_heuristics["Graph Pair"] = df_heuristics["graph_id1"].astype(str) + "-" + df_heuristics["graph_id2"].astype(str)
 
 # Read the exact GED Excel file
-df_exact = pd.read_excel(exact_excel_file)
+df_exact_1 = pd.read_excel(exact_excel_file_1)
+df_exact_2 = pd.read_excel(exact_excel_file_2)
+
+# Merge the dataframes
+df_exact_combined = pd.concat([df_exact_1, df_exact_2], ignore_index=True)
+# Drop duplicates if any
+df_exact_combined.drop_duplicates(inplace=True)
 
 # Ensure required columns exist in exact GED file
 required_exact_cols = {"graph_id_1", "graph_id_2", "min_ged"}
-if not required_exact_cols.issubset(df_exact.columns):
+if not required_exact_cols.issubset(df_exact_combined.columns):
     raise ValueError(f"Exact GED file must contain columns: {required_exact_cols}")
 
 # Convert "min_ged" to numeric (set errors to NaN) and filter out non-numeric ("N/A") rows
-df_exact["min_ged_numeric"] = pd.to_numeric(df_exact["min_ged"], errors="coerce")
-df_exact = df_exact.dropna(subset=["min_ged_numeric"])
+df_exact_combined["min_ged_numeric"] = pd.to_numeric(df_exact_combined["min_ged"], errors="coerce")
+df_exact = df_exact_combined.dropna(subset=["min_ged_numeric"])
 
 # Create a common "Graph Pair" column for exact GED (note: column names differ slightly)
 df_exact["Graph Pair"] = df_exact["graph_id_1"].astype(str) + "-" + df_exact["graph_id_2"].astype(str)
