@@ -15,7 +15,7 @@ excel_star = "../results/gedlib/PROTEINS/PROTEINS_STAR_results.xlsx"  # Exact GE
 df_hed = pd.read_excel(excel_hed, usecols=["graph1", "graph2", "runtime", "ged"])
 df_ipfp = pd.read_excel(excel_ipfp, usecols=["graph1", "graph2", "runtime", "ged"])
 
-# Load SimGNN data (No 'graph1', 'graph2', but has 'File' in "pair_id1_id2.json" format)
+# Load SimGNN data
 df_simgnn = pd.read_excel(excel_simgnn, usecols=["File", "Runtime (s)", "Predicted GED"])
 df_simgnn["graph1"] = df_simgnn["File"].apply(lambda x: int(re.findall(r"_(\d+)_", x)[0]))
 df_simgnn["graph2"] = df_simgnn["File"].apply(lambda x: int(re.findall(r"_(\d+).json", x)[0]))
@@ -46,9 +46,9 @@ df_ipfp = df_ipfp.merge(df_star[["pair", "exact_ged"]], on="pair")
 df_simgnn = df_simgnn.merge(df_star[["pair", "exact_ged"]], on="pair")
 
 # Compute accuracy: 1 - |approximate GED - exact GED| / exact GED
-df_hed["accuracy"] = 1 - abs(df_hed["ged"] - df_hed["exact_ged"]) / df_hed["exact_ged"]
+df_hed["accuracy"] = abs(1 - abs(df_hed["ged"] - df_hed["exact_ged"]) / df_hed["exact_ged"])
 df_ipfp["accuracy"] = abs(1 - abs(df_ipfp["ged"] - df_ipfp["exact_ged"]) / df_ipfp["exact_ged"])
-df_simgnn["accuracy"] = 1 - abs(df_simgnn["ged"] - df_simgnn["exact_ged"]) / df_simgnn["exact_ged"]
+df_simgnn["accuracy"] = abs(1 - abs(df_simgnn["ged"] - df_simgnn["exact_ged"]) / df_simgnn["exact_ged"])
 
 # Clip accuracy values to avoid weird outliers
 df_hed["accuracy"] = df_hed["accuracy"].clip(0, 1)
@@ -60,40 +60,38 @@ merged_df = df_hed[["pair", "runtime", "accuracy"]].rename(columns={"runtime": "
 merged_df = merged_df.merge(df_ipfp[["pair", "runtime", "accuracy"]].rename(columns={"runtime": "ipfp_runtime", "accuracy": "ipfp_accuracy"}), on="pair", how="inner")
 merged_df = merged_df.merge(df_simgnn[["pair", "runtime", "accuracy"]].rename(columns={"runtime": "simgnn_runtime", "accuracy": "simgnn_accuracy"}), on="pair", how="inner")
 
-# 🔹 Sort data by runtime (ensuring monotonic increase)
-merged_df = merged_df.sort_values(by="hed_runtime")
-merged_df["hed_runtime"] = np.sort(merged_df["hed_runtime"])
-merged_df["ipfp_runtime"] = np.sort(merged_df["ipfp_runtime"])
-merged_df["simgnn_runtime"] = np.sort(merged_df["simgnn_runtime"])
+# 🔹 Sort data by accuracy (ensuring monotonic increase)
+merged_df = merged_df.sort_values(by="hed_accuracy")
+merged_df["hed_accuracy"] = np.sort(merged_df["hed_accuracy"])
+merged_df["ipfp_accuracy"] = np.sort(merged_df["ipfp_accuracy"])
+merged_df["simgnn_accuracy"] = np.sort(merged_df["simgnn_accuracy"])
 
 # Create separate plots for each algorithm
 fig, axes = plt.subplots(3, 1, figsize=(12, 12), sharex=True)
 
-for ax, (runtime_col, accuracy_col, algorithm, color) in zip(axes,
-    [("hed_runtime", "hed_accuracy", "HED", "blue"),
-     ("ipfp_runtime", "ipfp_accuracy", "IPFP", "orange"),
-     ("simgnn_runtime", "simgnn_accuracy", "SimGNN", "green")]):
+for ax, (accuracy_col, runtime_col, algorithm, color) in zip(axes,
+    [("hed_accuracy", "hed_runtime", "HED", "blue"),
+     ("ipfp_accuracy", "ipfp_runtime", "IPFP", "orange"),
+     ("simgnn_accuracy", "simgnn_runtime", "SimGNN", "green")]):
 
-    # Apply Gaussian smoothing for smooth curves (increased sigma for stability)
-    smoothed_runtime = gaussian_filter1d(merged_df[runtime_col], sigma=8)  # 🔹 Smoother curves
+    # Apply Gaussian smoothing for smooth curves
     smoothed_accuracy = gaussian_filter1d(merged_df[accuracy_col], sigma=8)
+    smoothed_runtime = gaussian_filter1d(merged_df[runtime_col], sigma=8)
 
-    # Prevent weird loops by forcing monotonic runtime increase
-    smoothed_runtime = np.sort(smoothed_runtime)
+    # Prevent weird loops by forcing monotonic accuracy increase
+    smoothed_accuracy = np.sort(smoothed_accuracy)
 
     # Plot the smoothed data
-    ax.plot(smoothed_runtime, smoothed_accuracy, label=algorithm, color=color, linewidth=2)
-    ax.set_xscale("log")  # Log scale for runtime
-    ax.set_ylim(0, 1)  # Accuracy is between 0 and 1
-    ax.set_ylabel("Accuracy", fontsize=14)
-    ax.set_title(f"Runtime vs. Accuracy for {algorithm}", fontsize=16)
+    ax.plot(smoothed_accuracy, smoothed_runtime, label=algorithm, color=color, linewidth=2)
+    ax.set_yscale("log")  # Log scale for runtime
+    ax.set_xlim(0.2, 0.9)  # Accuracy is between 0 and 1
+    ax.set_ylabel("Runtime (seconds, log scale)", fontsize=14)
+    ax.set_title(f"Accuracy vs. Runtime for {algorithm}", fontsize=16)
     ax.grid(True, which="both", linestyle="--", linewidth=0.5)  # ✅ Grid restored
     ax.legend()  # ✅ Legend restored
 
-# 🔹 Apply runtime limits outside the loop
-axes[-1].set_xlabel("Runtime (seconds, log scale)", fontsize=14)
-for ax in axes:
-    ax.set_xlim(2 * (10 ** -3), 3 * (10 ** -3))  # ✅ Keeps all subplots within visible range
+# Common x-axis label
+axes[-1].set_xlabel("Accuracy", fontsize=14)
 
 # Show the plots
 plt.tight_layout()
