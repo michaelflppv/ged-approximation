@@ -29,7 +29,6 @@ df_ipfp["pair"] = list(zip(df_ipfp["graph1"], df_ipfp["graph2"]))
 df_simgnn["pair"] = list(zip(df_simgnn["graph1"], df_simgnn["graph2"]))
 
 common_pairs = set(df_hed["pair"]) & set(df_ipfp["pair"]) & set(df_simgnn["pair"])
-common_pairs = list(common_pairs)[:1000]  # Select 1000 common pairs
 
 # Filter data to only include these pairs
 df_hed = df_hed[df_hed["pair"].isin(common_pairs)]
