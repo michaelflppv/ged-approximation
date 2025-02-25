@@ -161,9 +161,6 @@ def main(txt_dir, ged_executable, output_excel_param):
                 # Get graph IDs and skip any pair with graph_1.txt.
                 id1 = get_graph_id_from_filename(file1)
                 id2 = get_graph_id_from_filename(file2)
-                if id1 == "1" or id2 == "1":
-                    print(f"Skipping pair with graph_1.txt: {file1} and {file2}")
-                    continue
 
                 print(f"Processing pair: {file1} and {file2}")
                 output = run_ged_executable(file1, file2, ged_executable)
