@@ -21,10 +21,10 @@ from glob import glob
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 GED_EXECUTABLE = os.path.join(script_dir, "../gedlib/build/main_exec")  # Ensure this path is correct
-DATASET_PATH = os.path.join(script_dir, "../processed_data/gxl/PROTEINS")
-COLLECTION_XML = os.path.join(script_dir, "../processed_data/xml/PROTEINS.xml")
+DATASET_PATH = os.path.join(script_dir, "../processed_data/gxl/IMDB-BINARY")
+COLLECTION_XML = os.path.join(script_dir, "../processed_data/xml/IMDB-BINARY.xml")
 RESULTS_DIR = os.path.join(script_dir, "../results/gedlib")
-RESULTS_FILE = os.path.join(RESULTS_DIR, "PROTEINS/PROTEINS_IPFP_results.xlsx")
+RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY/IMDB-BINARY_IPFP_results.xlsx")
 
 # Update method mapping according to new C++ enum values (adjust as needed)
 METHOD_NAMES = {

@@ -74,11 +74,11 @@ df_ipfp = df_ipfp_filtered[df_ipfp_filtered["Graph Pair"].isin(selected_pairs)]
 df_simgnn = df_simgnn[df_simgnn["Graph Pair"].isin(selected_pairs)]
 df_exact = df_exact[df_exact["Graph Pair"].isin(selected_pairs)]
 
-# Sort the exact GED data by min_ged_numeric
+# Sort the exact GED data by min_ged_numeric and order graph pairs accordingly
 df_exact_sorted = df_exact.sort_values("min_ged_numeric")
 ordered_pairs = df_exact_sorted["Graph Pair"].tolist()
 
-# Combine datasets and order by Graph Pair
+# Combine algorithm datasets and order by Graph Pair
 df_combined = pd.concat([df_hed, df_ipfp, df_simgnn], ignore_index=True)
 df_combined["Graph Pair"] = pd.Categorical(df_combined["Graph Pair"], categories=ordered_pairs, ordered=True)
 df_combined = df_combined.sort_values("Graph Pair")
@@ -87,32 +87,34 @@ df_combined = df_combined.sort_values("Graph Pair")
 sns.set_style("whitegrid")
 fig = plt.figure(figsize=(25, 20), dpi=200)
 
+# Plot algorithm predictions (with thicker lines)
 ax = sns.lineplot(
     data=df_combined,
     x="Graph Pair",
     y="GED",
     hue="Algorithm",
     marker="o",
-    linewidth=3.5,
+    linewidth=4.5,
     palette=algorithm_colors
 )
 
+# Overlay the exact GED line in red
 ax.plot(
     df_exact_sorted["Graph Pair"],
     df_exact_sorted["min_ged_numeric"],
     marker="o",
     markersize=10,
-    linewidth=3.5,
+    linewidth=4.5,
     color="red",
     label="Exact GED"
 )
 
-plt.xticks(rotation=90, fontsize=18)
+plt.xticks(rotation=45, fontsize=18)  # Rotate x-axis labels at 45° for clarity
 plt.yticks(fontsize=20)
 plt.xlabel("Graph Pair", fontsize=40, fontweight="bold")
-plt.ylabel("Estimated GED", fontsize=40, fontweight="bold")
-plt.title("Comparison of Predicted GED Across Algorithms", fontsize=40, fontweight="bold")
-plt.legend(title="Algorithm", fontsize=22, title_fontsize=26, loc="upper left", bbox_to_anchor=(1, 1))
+plt.ylabel("Graph Edit Distance (GED) Score", fontsize=40, fontweight="bold")
+plt.title("Graph Edit Distance (GED) Predictions vs. Exact Computation", fontsize=40, fontweight="bold")
+plt.legend(title="Algorithm", fontsize=24, title_fontsize=28, loc="upper left", bbox_to_anchor=(1, 1))
 plt.tight_layout()
 
 plot_path_ged = os.path.join(output_folder, "estimated_ged_comparison.png")
@@ -121,11 +123,11 @@ plt.show()
 print(f"GED comparison plot saved at: {plot_path_ged}")
 
 # -------- SELECT COMMON GRAPH PAIRS (For Runtime Comparison) --------
-# Limit only HED under 2 seconds, but allow IPFP and SimGNN to remain unchanged
-df_hed_filtered = df_hed[df_hed["runtime"] <= 2]
+# For runtime, we consider only algorithm datasets (exact GED is excluded).
+# For instance, limit HED runtimes to <= 2 seconds.
+df_hed_filtered_runtime = df_hed[df_hed["runtime"] <= 2]
 
-# Find common pairs among the filtered HED and the other datasets
-common_pairs_runtime = set(df_hed_filtered["Graph Pair"]) & set(df_ipfp["Graph Pair"]) & set(df_simgnn["Graph Pair"])
+common_pairs_runtime = set(df_hed_filtered_runtime["Graph Pair"]) & set(df_ipfp["Graph Pair"]) & set(df_simgnn["Graph Pair"])
 
 if len(common_pairs_runtime) == 0:
     raise ValueError("No common graph pairs found across algorithm datasets for runtime comparison.")
@@ -133,53 +135,52 @@ if len(common_pairs_runtime) == 0:
 selected_pairs_runtime = sorted(list(common_pairs_runtime))
 
 # Filter each dataset for runtime comparison
-df_hed_rt = df_hed_filtered[df_hed_filtered["Graph Pair"].isin(selected_pairs_runtime)]
+df_hed_rt = df_hed_filtered_runtime[df_hed_filtered_runtime["Graph Pair"].isin(selected_pairs_runtime)]
 df_ipfp_rt = df_ipfp[df_ipfp["Graph Pair"].isin(selected_pairs_runtime)]
 df_simgnn_rt = df_simgnn[df_simgnn["Graph Pair"].isin(selected_pairs_runtime)]
-
 df_simgnn_rt.rename(columns={"Runtime (s)": "runtime"}, inplace=True)
 
 df_runtime_combined = pd.concat([df_hed_rt, df_ipfp_rt, df_simgnn_rt], ignore_index=True)
 df_runtime_combined["Graph Pair"] = pd.Categorical(df_runtime_combined["Graph Pair"], categories=selected_pairs_runtime, ordered=True)
 df_runtime_combined = df_runtime_combined.sort_values("Graph Pair")
 
-# -------- RUNTIME COMPARISON: LOG-LOG PLOT --------
-# **Limit only HED runtime (not IPFP)**
-df_hed = df_hed[df_hed["runtime"] <= 2]
+# -------- CREATE RUNTIME COMPARISON VIOLIN PLOT --------
+fig, ax_v = plt.subplots(figsize=(25, 20), dpi=200)
 
-# Find common pairs among runtime datasets
-common_pairs_runtime = set(df_hed["Graph Pair"]) & set(df_ipfp["Graph Pair"]) & set(df_simgnn["Graph Pair"])
+# Create a violin plot for runtime distributions across algorithms.
+sns.violinplot(
+    data=df_runtime_combined,
+    x="Algorithm",
+    y="runtime",
+    palette=algorithm_colors,
+    inner="quartiles",
+    cut=0,
+    scale="width",
+    ax=ax_v
+)
 
-if len(common_pairs_runtime) == 0:
-    raise ValueError("No common graph pairs found across algorithm datasets for runtime comparison.")
+# Overlay individual data points using a swarmplot for clarity.
+sns.swarmplot(
+    data=df_runtime_combined,
+    x="Algorithm",
+    y="runtime",
+    color="k",
+    alpha=0.6,
+    ax=ax_v
+)
 
-selected_pairs_runtime = sorted(list(common_pairs_runtime))
+# Apply log scale to the y-axis
+ax_v.set_yscale("log")
+ax_v.grid(True, which="both", linestyle="--", linewidth=0.5, color="lightgray")
 
-df_hed_rt    = df_hed[df_hed["Graph Pair"].isin(selected_pairs_runtime)]
-df_ipfp_rt   = df_ipfp[df_ipfp["Graph Pair"].isin(selected_pairs_runtime)]
-df_simgnn_rt = df_simgnn[df_simgnn["Graph Pair"].isin(selected_pairs_runtime)]
-df_simgnn_rt.rename(columns={"Runtime (s)": "runtime"}, inplace=True)
-
-df_runtime_combined = pd.concat([df_hed_rt, df_ipfp_rt, df_simgnn_rt], ignore_index=True)
-df_runtime_combined["Graph Pair"] = pd.Categorical(df_runtime_combined["Graph Pair"], categories=selected_pairs_runtime, ordered=True)
-df_runtime_combined = df_runtime_combined.sort_values("Graph Pair")
-
-# **Log-Log Plot for Runtime Comparison**
-fig, ax_rt = plt.subplots(figsize=(25, 20), dpi=200)
-
-for algo, color in algorithm_colors.items():
-    df_algo = df_runtime_combined[df_runtime_combined["Algorithm"] == algo]
-    ax_rt.loglog(df_algo["Graph Pair"], df_algo["runtime"], marker="o", linestyle="-", color=color, label=algo)
-
-plt.xticks(rotation=90, fontsize=18)
+plt.xlabel("Algorithm", fontsize=40, fontweight="bold")
+plt.ylabel("Runtime (seconds) [log scale]", fontsize=40, fontweight="bold")
+plt.title("Runtime Distribution Comparison Across Algorithms", fontsize=40, fontweight="bold")
+plt.xticks(fontsize=18)
 plt.yticks(fontsize=20)
-plt.xlabel("Graph Pair", fontsize=40, fontweight="bold")
-plt.ylabel("Runtime (seconds)", fontsize=40, fontweight="bold")
-plt.title("Log-Log Runtime Comparison Across Algorithms", fontsize=40, fontweight="bold")
-plt.legend(title="Algorithm", fontsize=22, title_fontsize=26, loc="upper left", bbox_to_anchor=(1, 1))
 plt.tight_layout()
 
-plot_path_runtime = os.path.join(output_folder, "runtime_comparison_loglog.png")
+plot_path_runtime = os.path.join(output_folder, "runtime_comparison_violin.png")
 plt.savefig(plot_path_runtime, dpi=200, bbox_inches="tight")
 plt.show()
-print(f"Runtime comparison plot saved at: {plot_path_runtime}")
+print(f"Runtime comparison violin plot saved at: {plot_path_runtime}")
