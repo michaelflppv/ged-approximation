@@ -84,7 +84,7 @@ for ax, (accuracy_col, runtime_col, algorithm, color) in zip(axes,
     # Plot the smoothed data
     ax.plot(smoothed_accuracy, smoothed_runtime, label=algorithm, color=color, linewidth=2)
     ax.set_yscale("log")  # Log scale for runtime
-    ax.set_xlim(0.2, 0.9)  # Accuracy is between 0 and 1
+    ax.set_xlim(0.2, 0.3)  # Accuracy is between 0 and 1
     ax.set_ylabel("Runtime (seconds, log scale)", fontsize=14)
     ax.set_title(f"Accuracy vs. Runtime for {algorithm}", fontsize=16)
     ax.grid(True, which="both", linestyle="--", linewidth=0.5)  # ✅ Grid restored
