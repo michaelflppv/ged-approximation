@@ -82,6 +82,18 @@ def transfer_to_torch(data, global_labels):
     return new_data
 
 
+def calculate_accuracy(predicted, exact):
+    """
+    Calculate accuracy for a pair based on the predicted GED and the exact GED (min_ged).
+    Accuracy is defined as 1 - (absolute_error / exact), clamped to a minimum of 0.
+    If the exact value is 0, we return 1 if predicted is also 0, else 0.
+    """
+    if exact == 0:
+        return 1.0 if predicted == 0 else 0.0
+    acc = 1 - abs(predicted - exact) / exact
+    return max(0.0, acc)
+
+
 # -------------------------------
 # Main testing routine
 # -------------------------------
@@ -90,12 +102,20 @@ def main():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     json_dir = os.path.join(base_dir, "../../processed_data/json_pairs/IMDB-BINARY")
     model_path = os.path.join(base_dir, "models/simgnn_model.h5")
+    # Path to the Excel file with exact GED results (must contain a column "min_ged")
+    exact_ged_path = os.path.join(base_dir, "../../processed_data/exact_ged.xlsx")
 
-    # Find all JSON files in the directory
+    # Find and sort all JSON files in the directory to ensure order matches the Excel file rows.
     json_files = glob.glob(os.path.join(json_dir, "*.json"))
+    json_files.sort()
     if not json_files:
         print("No JSON files found in", json_dir)
         return
+
+    # Load the exact GED Excel file.
+    df_exact = pd.read_excel(exact_ged_path)
+    if df_exact.shape[0] != len(json_files):
+        print("Warning: Number of rows in exact GED Excel file does not match number of JSON files.")
 
     # Build a global mapping of unique node labels across all graph pairs.
     global_labels_set = set()
@@ -129,12 +149,6 @@ def main():
     model.load_state_dict(state_dict)
     model.eval()
 
-    # Metrics initialization for overall stats.
-    total_pairs = len(json_files)
-    mse_sum = 0.0
-    mae_sum = 0.0
-    max_graph_size = 0
-
     # List to store per-pair results.
     pair_results = []
 
@@ -142,7 +156,7 @@ def main():
     process = psutil.Process(os.getpid())
 
     # Process each JSON file.
-    for filepath in json_files:
+    for i, filepath in enumerate(json_files):
         # Measure per-pair runtime and memory usage.
         pair_start_time = time.time()
         mem_before = process.memory_info().rss / (1024 * 1024)
@@ -150,7 +164,6 @@ def main():
         data = load_json(filepath)
         n1 = len(data["labels_1"])
         n2 = len(data["labels_2"])
-        max_graph_size = max(max_graph_size, n1, n2)
 
         # Compute graph densities.
         density1 = compute_density(data["graph_1"], n1)
@@ -170,12 +183,18 @@ def main():
         # Compute the predicted raw GED.
         pred_ged = pred_norm_ged * (0.5 * (n1 + n2))
 
-        # Compute per-pair errors.
-        gt_ged = data["ged"]
-        abs_error = abs(pred_ged - gt_ged)
-        squared_error = (pred_ged - gt_ged) ** 2
-        mse_sum += squared_error
-        mae_sum += abs_error
+        # Use the exact GED (min_ged) from the Excel file.
+        exact_ged = df_exact.iloc[i]["min_ged"]
+
+        # Check if exact GED is missing or not available.
+        if pd.isna(exact_ged) or str(exact_ged).upper() == "N/A":
+            acc = "N/A"
+            abs_error = "N/A"
+            squared_error = "N/A"
+        else:
+            abs_error = abs(pred_ged - exact_ged)
+            squared_error = (pred_ged - exact_ged) ** 2
+            acc = calculate_accuracy(pred_ged, exact_ged)
 
         # Measure per-pair runtime and memory after processing.
         pair_end_time = time.time()
@@ -185,54 +204,69 @@ def main():
         # In case garbage collection freed memory, we record non-negative usage.
         mem_delta = mem_delta if mem_delta > 0 else 0.0
 
+        # Parse graph IDs from filename (expects format: "pair_id1_id2.json")
+        base_name = os.path.splitext(os.path.basename(filepath))[0]
+        parts = base_name.split('_')
+        if len(parts) >= 3 and parts[0] == "pair":
+            graph_id_1 = parts[1]
+            graph_id_2 = parts[2]
+        else:
+            # Fallback in case the naming convention is not followed.
+            if len(parts) >= 2:
+                graph_id_1 = parts[0]
+                graph_id_2 = parts[1]
+            else:
+                graph_id_1 = base_name
+                graph_id_2 = base_name
+
+        # Compute a simple scalability metric (runtime normalized by total number of nodes).
+        scalability = runtime_pair / (n1 + n2) if (n1 + n2) > 0 else runtime_pair
+
+        # Append results using EXACTLY the required columns and order.
         pair_results.append({
-            "File": os.path.basename(filepath),
-            "Predicted GED": pred_ged,
-            "Ground Truth GED": gt_ged,
-            "Absolute Error": abs_error,
-            "Squared Error": squared_error,
-            "Graph1 Nodes": n1,
-            "Graph2 Nodes": n2,
-            "Graph1 Density": density1,
-            "Graph2 Density": density2,
-            "Runtime (s)": runtime_pair,
-            "Memory Usage (MB)": mem_delta
+            "method": "SimGNN",
+            "ged": pred_ged,
+            "runtime": runtime_pair,
+            "graph_id_1": graph_id_1,
+            "graph_id_2": graph_id_2,
+            "accuracy": acc,
+            "absolute_error": abs_error,
+            "squared_error": squared_error,
+            "memory_usage_mb": mem_delta,
+            "graph1_n": n1,
+            "graph1_density": density1,
+            "graph2_n": n2,
+            "graph2_density": density2,
+            "scalability": scalability
         })
 
-    mse = mse_sum / total_pairs
-    mae = mae_sum / total_pairs
-
-    # Compute overall runtime and memory usage for processing all pairs.
-    # (For overall memory, we simply take the current memory usage.)
-    overall_runtime = sum([r["Runtime (s)"] for r in pair_results])
-    overall_memory_usage = process.memory_info().rss / (1024 * 1024)
-
-    # -------------------------------
-    # Save Performance Metrics to Excel
-    # -------------------------------
-    # Create a DataFrame for per-pair results.
-    df_pairs = pd.DataFrame(pair_results)
-
-    # Create a summary DataFrame for overall metrics.
-    summary_data = {
-        "Total Graph Pairs": [total_pairs],
-        "Average MSE": [mse],
-        "Average MAE": [mae],
-        "Total Runtime (s)": [overall_runtime],
-        "Memory Usage (MB)": [overall_memory_usage],
-        "Maximum Graph Size": [max_graph_size]
-    }
-    df_summary = pd.DataFrame(summary_data)
+    # Define the required column order.
+    ordered_columns = [
+        "method",
+        "graph_id_1",
+        "graph_id_2",
+        "ged",
+        "accuracy",
+        "absolute_error",
+        "squared_error",
+        "runtime",
+        "memory_usage_mb",
+        "graph1_n",
+        "graph1_density",
+        "graph2_n",
+        "graph2_density",
+        "scalability"
+    ]
+    # Create a DataFrame for per-pair results using the explicit order.
+    df_pairs = pd.DataFrame(pair_results)[ordered_columns]
 
     # Define the directory for saving performance results.
     results_dir = os.path.join(base_dir, "../../results/neural/IMDB-BINARY")
     os.makedirs(results_dir, exist_ok=True)
     save_path = os.path.join(results_dir, "performance.xlsx")
 
-    # Save both DataFrames to separate sheets in the Excel workbook.
-    with pd.ExcelWriter(save_path) as writer:
-        df_pairs.to_excel(writer, sheet_name="Pair Results", index=False)
-        df_summary.to_excel(writer, sheet_name="Summary", index=False)
+    # Save the DataFrame to Excel (only one sheet with the required columns).
+    df_pairs.to_excel(save_path, index=False)
 
     print(f"\nPerformance saved to: {save_path}")
 

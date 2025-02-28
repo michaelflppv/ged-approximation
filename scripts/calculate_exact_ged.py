@@ -9,10 +9,9 @@ import sys
 import resource
 from multiprocessing import Pool, cpu_count
 
-# Global variable to store results and the Excel filename so that signal handlers can access them.
+# Global variables so signal handlers can access the results and output filename.
 results = []
 output_excel = None
-
 
 def parse_executable_output(output):
     """
@@ -39,12 +38,10 @@ def parse_executable_output(output):
 
     return min_ged, max_ged, total_time, candidates, matches
 
-
 def run_ged_executable(graph_file1, graph_file2, ged_executable):
     """
     Call the GED executable for a single pair of graphs.
     """
-
     def set_unlimited():
         try:
             resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
@@ -83,7 +80,6 @@ def run_ged_executable(graph_file1, graph_file2, ged_executable):
         print(e)
         return None
 
-
 def get_graph_id_from_filename(filename):
     """
     Extract the graph id from the filename.
@@ -91,7 +87,6 @@ def get_graph_id_from_filename(filename):
     base = os.path.basename(filename)
     match = re.match(r"graph_(\d+)\.txt", base)
     return match.group(1) if match else base
-
 
 def process_pair(args):
     """
@@ -112,33 +107,30 @@ def process_pair(args):
     return {"graph_id_1": id1, "graph_id_2": id2, "min_ged": min_ged,
             "max_ged": max_ged, "runtime": runtime, "candidates": candidates, "matches": matches}
 
-
 def save_results(excel_file, results_list):
     """
     Save the results list to an Excel file with the correct column order.
     """
     df = pd.DataFrame(results_list, columns=["graph_id_1", "graph_id_2",
-                                             "min_ged", "max_ged",
-                                             "runtime", "candidates", "matches"])
+                                              "min_ged", "max_ged",
+                                              "runtime", "candidates", "matches"])
     df.to_excel(excel_file, index=False)
     print(f"Results saved to {excel_file}")
 
-
 def signal_handler(signum, frame):
     """
-    Handle signals by saving partial results before exit.
+    Handle signals by saving partial results before exiting.
     """
     print(f"\nSignal {signum} received. Saving partial results and exiting.")
     global output_excel, results
     save_results(output_excel, results)
     sys.exit(1)
 
-
 def main(txt_dir, ged_executable, output_excel_param, num_workers):
     global output_excel, results
     output_excel = output_excel_param
 
-    # Install signal handlers for SIGINT (Ctrl+C) and SIGTERM.
+    # Set signal handlers for SIGINT and SIGTERM.
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
@@ -148,16 +140,37 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers):
     results = []
 
     # Generate all unique graph pairs (i < j).
-    graph_pairs = [(txt_files[i], txt_files[j], ged_executable) for i in range(len(txt_files)) for j in
-                   range(i + 1, len(txt_files))]
+    graph_pairs = [(txt_files[i], txt_files[j], ged_executable)
+                   for i in range(len(txt_files)) for j in range(i + 1, len(txt_files))]
+    print(f"Total graph pairs to process: {len(graph_pairs)}")
 
-    # Run GED computations in parallel
-    with Pool(processes=num_workers) as pool:
-        results = pool.map(process_pair, graph_pairs)
-
-    # Save final results
-    save_results(output_excel, results)
-
+    pool = Pool(processes=num_workers)
+    try:
+        # Process results one by one using imap.
+        for count, res in enumerate(pool.imap(process_pair, graph_pairs), 1):
+            results.append(res)
+            # Immediately save the current results to the Excel file.
+            save_results(output_excel, results)
+            if count % 10 == 0:
+                print(f"{count} pairs processed.")
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt caught in main loop. Terminating pool and saving partial results.")
+        pool.terminate()
+        pool.join()
+        save_results(output_excel, results)
+        sys.exit(1)
+    except Exception as e:
+        print("An error occurred:", e)
+        pool.terminate()
+        pool.join()
+        save_results(output_excel, results)
+        sys.exit(1)
+    else:
+        pool.close()
+        pool.join()
+    finally:
+        # In any case, ensure that results are saved.
+        save_results(output_excel, results)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

@@ -25,6 +25,8 @@ DATASET_PATH = os.path.join(script_dir, "../processed_data/gxl/IMDB-BINARY")
 COLLECTION_XML = os.path.join(script_dir, "../processed_data/xml/IMDB-BINARY.xml")
 RESULTS_DIR = os.path.join(script_dir, "../results/gedlib")
 RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY/IMDB-BINARY_IPFP_results.xlsx")
+# New: Path to the Excel file with exact GED results (must contain columns "graph_id_1", "graph_id_2", and "min_ged")
+EXACT_GED_FILE = os.path.join(script_dir, "../results/exact_ged/IMDB-BINARY/exact_ged.xlsx")
 
 # Update method mapping according to new C++ enum values (adjust as needed)
 METHOD_NAMES = {
@@ -42,8 +44,41 @@ if platform.system() != "Windows":
 # Global variable to hold intermediate results.
 global_results = []  # This will be appended to as new lines are parsed.
 
+# Global lookup dictionary for exact GED results.
+exact_lookup = {}
+
+def load_exact_lookup(exact_file):
+    """Load the exact GED results and return a lookup dict mapping (graph_id_1, graph_id_2) to min_ged."""
+    try:
+        df_exact = pd.read_excel(exact_file)
+        df_exact["min_ged_numeric"] = pd.to_numeric(df_exact["min_ged"], errors="coerce")
+        df_exact = df_exact.dropna(subset=["min_ged_numeric"])
+        lookup = {}
+        for _, row in df_exact.iterrows():
+            try:
+                g1 = int(row["graph_id_1"])
+                g2 = int(row["graph_id_2"])
+            except Exception as e:
+                g1 = row["graph_id_1"]
+                g2 = row["graph_id_2"]
+            lookup[(g1, g2)] = row["min_ged_numeric"]
+        return lookup
+    except Exception as e:
+        print("Error loading exact GED file:", e)
+        return {}
+
+def compute_absolute_error(pred, exact):
+    return abs(pred - exact)
+
+def compute_squared_error(pred, exact):
+    return (pred - exact) ** 2
+
 def log_results(results):
-    """Log results into an Excel file after checking that data exists."""
+    """Log results into an Excel file after checking that data exists.
+       The resulting Excel file will contain only the following columns (in order):
+         method, ged, runtime, graph_id_1, graph_id_2, accuracy, absolute_error, squared_error,
+         memory_usage_mb, graph1_n, graph1_density, graph2_n, graph2_density, scalability
+    """
     if not results:
         print("Warning: No results to log.")
         return
@@ -51,6 +86,28 @@ def log_results(results):
     if df.empty:
         print("Warning: DataFrame is empty; nothing to write.")
         return
+
+    # Rename graph1 and graph2 to graph_id_1 and graph_id_2.
+    df["graph_id_1"] = df["graph1"]
+    df["graph_id_2"] = df["graph2"]
+    # Select and order the desired columns.
+    desired_columns = [
+        "method",
+        "graph_id_1",
+        "graph_id_2",
+        "ged",
+        "accuracy",
+        "absolute_error",
+        "squared_error",
+        "runtime",
+        "memory_usage_mb",
+        "graph1_n",
+        "graph1_density",
+        "graph2_n",
+        "graph2_density",
+        "scalability"
+    ]
+    df = df[desired_columns]
     os.makedirs(RESULTS_DIR, exist_ok=True)
     temp_file = os.path.join(RESULTS_DIR, "temp_results.xlsx")
     try:
@@ -61,10 +118,8 @@ def log_results(results):
         print(f"Intermediate results saved in {RESULTS_FILE} (total rows: {len(df)}).")
     except Exception as e:
         print("Error writing Excel file:", e)
-        # Clean up the temporary file if it exists.
         if os.path.exists(temp_file):
             os.remove(temp_file)
-
 
 # Signal handler to flush current results before exiting.
 def signal_handler(signum, frame):
@@ -203,21 +258,19 @@ def run_ged(dataset_path, collection_xml):
             method_name = METHOD_NAMES.get(method_id, f"Unknown Method {method_id}")
             result_entry = {
                 "method": method_name,
-                "ged": pred_ged,
-                "runtime": runtime,
                 "graph1": graph1,
                 "graph2": graph2,
+                "ged": pred_ged,
+                "accuracy": "N/A",  # Will be computed later.
+                "absolute_error": "N/A",  # Will be computed later.
+                "squared_error": "N/A",  # Will be computed later.
+                "runtime": runtime,
                 "memory_usage_mb": mem_usage,
                 "graph1_n": n1 if n1 is not None else "N/A",
                 "graph1_density": round(p1, 4) if p1 is not None else "N/A",
                 "graph2_n": n2 if n2 is not None else "N/A",
                 "graph2_density": round(p2, 4) if p2 is not None else "N/A",
-                "average_n": avg_n if avg_n is not None else "N/A",
-                "average_density": round(avg_p, 4) if avg_p is not None else "N/A",
                 "scalability": scalability if scalability is not None else "N/A",
-                "accuracy": "N/A",
-                "precision": "N/A",
-                "rank_correlation": "N/A"
             }
             global_results.append(result_entry)
         else:
@@ -241,21 +294,31 @@ def run_ged(dataset_path, collection_xml):
     log_results(global_results)
     os.remove(preprocessed_xml)
 
-    # Optionally, compute "accuracy" based on Exact if available.
-    groundtruth = None
+    # Compute accuracy, absolute error, and squared error using exact GED values.
     for res in global_results:
-        if res["method"] == "STAR (Exact)":
-            groundtruth = res["ged"]
-            break
-    for res in global_results:
-        if groundtruth is not None and res["ged"] != 0:
-            res["accuracy"] = 100.0 if res["method"] == "STAR (Exact)" else round((groundtruth / res["ged"]) * 100, 2)
+        key = (res["graph1"], res["graph2"])
+        # Only compute errors if an exact GED value exists for this pair.
+        if key in exact_lookup:
+            exact_val = exact_lookup[key]
+            # If the exact value is not NA and prediction is nonzero, compute errors.
+            if pd.notna(exact_val) and res["ged"] != "N/A":
+                res["accuracy"] = round((exact_val / res["ged"]) * 100, 2)
+                res["absolute_error"] = round(compute_absolute_error(res["ged"], exact_val), 4)
+                res["squared_error"] = round(compute_squared_error(res["ged"], exact_val), 4)
+            else:
+                res["accuracy"] = "N/A"
+                res["absolute_error"] = "N/A"
+                res["squared_error"] = "N/A"
         else:
             res["accuracy"] = "N/A"
+            res["absolute_error"] = "N/A"
+            res["squared_error"] = "N/A"
 
     return global_results
 
 if __name__ == "__main__":
+    # Load exact GED lookup table.
+    exact_lookup = load_exact_lookup(EXACT_GED_FILE)
     results = run_ged(DATASET_PATH, COLLECTION_XML)
     if results:
         print(f"Parsed {len(results)} result(s).")
