@@ -26,7 +26,7 @@ COLLECTION_XML = os.path.join(script_dir, "../processed_data/xml/IMDB-BINARY.xml
 RESULTS_DIR = os.path.join(script_dir, "../results/gedlib")
 RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY/IMDB-BINARY_IPFP_results.xlsx")
 # New: Path to the Excel file with exact GED results (must contain columns "graph_id_1", "graph_id_2", and "min_ged")
-EXACT_GED_FILE = os.path.join(script_dir, "../results/exact_ged/IMDB-BINARY/exact_ged.xlsx")
+EXACT_GED_FILE = os.path.join(script_dir, "../results/exact_ged/IMDB-BINARY/exact_ged_IMDB.xlsx")
 
 # Update method mapping according to new C++ enum values (adjust as needed)
 METHOD_NAMES = {
