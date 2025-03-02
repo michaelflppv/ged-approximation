@@ -70,7 +70,7 @@ def run_ged_executable(graph_file1, graph_file2, ged_executable):
                                 text=True,
                                 check=True,
                                 preexec_fn=set_unlimited,
-                                timeout=300)
+                                timeout=10)
         return result.stdout
     except subprocess.TimeoutExpired:
         print(f"Timeout expired for command: {' '.join(cmd)}. Skipping this pair.")
@@ -110,11 +110,14 @@ def process_pair(args):
 def save_results(excel_file, results_list):
     """
     Save the results list to an Excel file with the correct column order.
+    This function overwrites any existing file.
     """
     df = pd.DataFrame(results_list, columns=["graph_id_1", "graph_id_2",
                                               "min_ged", "max_ged",
                                               "runtime", "candidates", "matches"])
-    df.to_excel(excel_file, index=False)
+    # Use a context manager to ensure proper closing of the file.
+    with pd.ExcelWriter(excel_file, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False)
     print(f"Results saved to {excel_file}")
 
 def signal_handler(signum, frame):
@@ -142,14 +145,22 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers):
     # Generate all unique graph pairs (i < j).
     graph_pairs = [(txt_files[i], txt_files[j], ged_executable)
                    for i in range(len(txt_files)) for j in range(i + 1, len(txt_files))]
-    print(f"Total graph pairs to process: {len(graph_pairs)}")
+    total_pairs = len(graph_pairs)
+    print(f"Total graph pairs available: {total_pairs}")
+
+    # Skip the first 2041 pairs; start with the 2042nd pair.
+    if 10835 >= total_pairs:
+        print("Not enough pairs to start processing. Exiting.")
+        sys.exit(0)
+    graph_pairs = graph_pairs[10835:]
+    print(f"Processing {len(graph_pairs)} pairs starting from the 2042nd pair.")
 
     pool = Pool(processes=num_workers)
     try:
         # Process results one by one using imap.
         for count, res in enumerate(pool.imap(process_pair, graph_pairs), 1):
             results.append(res)
-            # Immediately save the current results to the Excel file.
+            # Immediately save the accumulated results to the new Excel file.
             save_results(output_excel, results)
             if count % 10 == 0:
                 print(f"{count} pairs processed.")
@@ -174,10 +185,11 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Compute the Graph Edit Distance (GED) for all graph pairs in a directory using parallel processing.")
+        description="Compute the Graph Edit Distance (GED) for all graph pairs in a directory using parallel processing."
+    )
     parser.add_argument("txt_dir", help="Directory containing the graph txt files")
     parser.add_argument("ged_executable", help="Path to the GED executable")
-    parser.add_argument("output_excel", help="Output Excel file")
+    parser.add_argument("output_excel", help="Output Excel file (new file will be created)")
     parser.add_argument("--workers", type=int, default=cpu_count(),
                         help="Number of parallel workers (default: all CPU cores)")
 
