@@ -148,12 +148,12 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers):
     total_pairs = len(graph_pairs)
     print(f"Total graph pairs available: {total_pairs}")
 
-    # Skip the first 2041 pairs; start with the 2042nd pair.
-    if 10835 >= total_pairs:
+    # Skip the first n pairs; start with the n-th pair.
+    if 27922 >= total_pairs:
         print("Not enough pairs to start processing. Exiting.")
         sys.exit(0)
-    graph_pairs = graph_pairs[10835:]
-    print(f"Processing {len(graph_pairs)} pairs starting from the 2042nd pair.")
+    graph_pairs = graph_pairs[27922:]
+    print(f"Processing {len(graph_pairs)} pairs starting from the 27922nd pair.")
 
     pool = Pool(processes=num_workers)
     try:
