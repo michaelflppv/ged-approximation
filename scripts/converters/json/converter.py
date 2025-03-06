@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
-"""
-proteins_converter.py
 
-This script reads the PROTEINS dataset from a relative path:
-    ../../data/PROTEINS
-relative to the script location and creates an output folder inside:
-    ../../processed_data/json_pairs/PROTEINS/
-The dataset is expected to contain the following files:
-  - PROTEINS_A.txt                : Comma separated edge list (global node IDs) for all graphs.
-  - PROTEINS_graph_indicator.txt  : One integer per line indicating the graph_id for each node.
-  - PROTEINS_graph_labels.txt     : (Not used in this script; contains graph labels.)
-  - PROTEINS_node_labels.txt      : One integer per line indicating the label of each node.
-  - PROTEINS_node_attributes.txt  : (Not used in this script; contains node attributes.)
+"""
+DS_converter.py
+
+This script reads the DS dataset from a relative path:
+    ../../data/DS
+(relative to the script location) and creates an output folder inside:
+    ../../processed_data/json_pairs/DS/
+
+The dataset is expected to contain the following comma separated text files:
+  (1) DS_A.txt                : Sparse (block diagonal) edge list for all graphs.
+  (2) DS_graph_indicator.txt  : One integer per line indicating the graph_id for each node.
+  (3) DS_graph_labels.txt     : (Not used in this script; contains graph labels.)
+
+Optional files (if available):
+  (4) DS_node_labels.txt      : One label per line for each node.
+  (5) DS_edge_labels.txt      : (Not used here.)
+  (6) DS_edge_attributes.txt  : (Not used here.)
+  (7) DS_node_attributes.txt  : (Not used here.)
+  (8) DS_graph_attributes.txt : (Not used here.)
 
 For each unordered pair of graphs in the dataset, the script produces a JSON file
 with the following structure:
@@ -32,24 +39,27 @@ import json
 from collections import defaultdict
 import pandas as pd
 
+# Set the dataset name (manually specify the dataset)
+DATASET = "PROTEINS"
+
 def main():
     # Determine the directory of this script.
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Build the relative paths.
-    dataset_dir = os.path.join(script_dir, "..", "..", "data", "PROTEINS")
-    output_dir = os.path.join(script_dir, "..", "..", "processed_data", "json_pairs", "PROTEINS")
-    # Relative path to the GEDLIB results Excel file.
-    ged_excel_path = os.path.join(script_dir, "..", "..", "results", "gedlib", "PROTEINS_results.xlsx")
+    dataset_dir = os.path.join(script_dir, "..", "..", "..", "data", DATASET)
+    output_dir = os.path.join(script_dir, "..", "..", "..", "processed_data", "json_pairs", DATASET)
+    ged_excel_path = os.path.join(script_dir, "..", "..", "..", "results", "gedlib", f"{DATASET}_results.xlsx")
 
     # --- Read GED values from the Excel file ---
     ged_dict = {}
     if os.path.exists(ged_excel_path):
         try:
             ged_df = pd.read_excel(ged_excel_path)
-            # Filter rows where the method is "STAR (Exact)".
+            # Filter rows where the method is "STAR (Exact)" if the column exists.
             if "method" in ged_df.columns:
                 ged_df = ged_df[ged_df["method"] == "STAR (Exact)"]
+
             # Build a dictionary with key: (graph1, graph2) and value: ged.
             for _, row in ged_df.iterrows():
                 try:
@@ -57,9 +67,9 @@ def main():
                     g2 = int(row["graph2"])
                     ged_val = int(row["ged"])
                     ged_dict[(g1, g2)] = ged_val
-                except Exception as e:
-                    # Skip rows with missing or malformed values.
+                except Exception:
                     continue
+
         except Exception as e:
             print(f"Error reading GED values from Excel: {e}")
             ged_dict = {}
@@ -76,17 +86,17 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     # Define the required file paths.
-    file_A = os.path.join(dataset_dir, "PROTEINS_A.txt")
-    file_graph_indicator = os.path.join(dataset_dir, "PROTEINS_graph_indicator.txt")
-    file_node_labels = os.path.join(dataset_dir, "PROTEINS_node_labels.txt")
+    file_A = os.path.join(dataset_dir, f"{DATASET}_A.txt")
+    file_graph_indicator = os.path.join(dataset_dir, f"{DATASET}_graph_indicator.txt")
+    file_node_labels = os.path.join(dataset_dir, f"{DATASET}_node_labels.txt")
 
     # Verify that the essential input files exist.
-    for file_path in [file_A, file_graph_indicator, file_node_labels]:
+    for file_path in [file_A, file_graph_indicator]:
         if not os.path.exists(file_path):
             print(f"Error: Required file '{file_path}' does not exist.")
             sys.exit(1)
 
-    # --- Step 1: Parse PROTEINS_graph_indicator.txt ---
+    # --- Step 1: Parse DS_graph_indicator.txt ---
     graph_nodes = defaultdict(list)
     global_indicator = []
 
@@ -99,6 +109,7 @@ def main():
                 graph_id = int(line)
             except ValueError:
                 continue
+
             global_node_id = i + 1  # Nodes are numbered from 1.
             global_indicator.append(graph_id)
             graph_nodes[graph_id].append(global_node_id)
@@ -107,24 +118,28 @@ def main():
     graph_node_mapping = {graph_id: {global_id: idx for idx, global_id in enumerate(nodes)}
                           for graph_id, nodes in graph_nodes.items()}
 
-    # --- Step 2: Parse PROTEINS_node_labels.txt ---
+    # --- Step 2: Parse DS_node_labels.txt (optional) ---
     node_labels = []
-
-    with open(file_node_labels, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                label = int(line)
-            except ValueError:
+    if os.path.exists(file_node_labels):
+        with open(file_node_labels, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
                 try:
-                    label = float(line)
+                    label = int(line)
                 except ValueError:
-                    label = line  # Keep as string if neither int nor float.
-            node_labels.append(label)
+                    try:
+                        label = float(line)
+                    except ValueError:
+                        label = line  # Keep as string if neither int nor float.
+                node_labels.append(label)
 
-    # --- Step 3: Parse PROTEINS_A.txt and build edge lists for each graph ---
+    else:
+        print(f"Optional file '{file_node_labels}' not found. Node labels will be empty.")
+        node_labels = None
+
+    # --- Step 3: Parse DS_A.txt and build edge lists for each graph ---
     graph_edges = {graph_id: [] for graph_id in graph_nodes.keys()}
 
     with open(file_A, 'r') as f:
@@ -155,10 +170,13 @@ def main():
             graph_edges[graph_id].append([local_u, local_v])
 
     # --- Step 4: Build local node label lists for each graph ---
-    graph_local_node_labels = {graph_id: [node_labels[global_id - 1] for global_id in nodes]
-                               for graph_id, nodes in graph_nodes.items()}
+    if node_labels is not None:
+        graph_local_node_labels = {graph_id: [node_labels[global_id - 1] for global_id in nodes]
+                                   for graph_id, nodes in graph_nodes.items()}
+    else:
+        graph_local_node_labels = {graph_id: [] for graph_id in graph_nodes.keys()}
 
-    # --- Step 5: Produce JSON files for every pair of graphs ---
+    # --- Step 5: Produce JSON files for every unordered pair of graphs ---
     sorted_graph_ids = sorted(graph_nodes.keys())
     pair_count = 0
     total_pairs = len(sorted_graph_ids) * (len(sorted_graph_ids) - 1) // 2
@@ -166,33 +184,31 @@ def main():
 
     for i in range(len(sorted_graph_ids)):
         for j in range(i + 1, len(sorted_graph_ids)):
-            if pair_count >= 2000:
-                print("Reached the limit of 2000 JSON files. Stopping.")
-                break
             g1 = sorted_graph_ids[i]
             g2 = sorted_graph_ids[j]
+
             json_data = {
                 "graph_1": graph_edges[g1],
                 "graph_2": graph_edges[g2],
                 "labels_1": graph_local_node_labels[g1],
                 "labels_2": graph_local_node_labels[g2],
+
             }
-            # Look up the GED value for this pair (assume g1 and g2 are in sorted order).
+
+            # Look up the GED value for this pair (assumes g1 and g2 are in sorted order).
             ged_value = ged_dict.get((g1, g2), 0)
             json_data["ged"] = ged_value
 
             # Name the JSON file according to the pair of graph ids.
             json_filename = f"pair_{g1}_{g2}.json"
             json_filepath = os.path.join(output_dir, json_filename)
+
             with open(json_filepath, 'w') as json_file:
                 json.dump(json_data, json_file)
             pair_count += 1
 
             if pair_count % 1000 == 0:
                 print(f"Processed {pair_count}/{total_pairs} pairs...")
-
-        if pair_count >= 2000:
-            break
 
     print(f"Finished processing {pair_count} graph pairs.")
 

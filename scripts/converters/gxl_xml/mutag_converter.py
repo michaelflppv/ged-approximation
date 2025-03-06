@@ -145,7 +145,7 @@ def main():
     args = parser.parse_args()
 
     # Input directory is data/MUTAG.
-    input_dir = os.path.join("../../data", "MUTAG")
+    input_dir = os.path.join("../../../data", "MUTAG")
 
     # Construct file paths.
     file_A = os.path.join(input_dir, f"{args.prefix}_A.txt")

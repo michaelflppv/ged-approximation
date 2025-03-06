@@ -108,9 +108,9 @@ def main():
                         help="Prefix for the dataset files (default: 'PROTEINS')")
     args = parser.parse_args()
 
-    input_dir = "../../data/PROTEINS/"
-    output_dir = "../../processed_data/gxl/PROTEINS/"
-    collection_file = "../../processed_data/xml/PROTEINS.xml"
+    input_dir = "../../../data/PROTEINS/"
+    output_dir = "../../../processed_data/gxl/PROTEINS/"
+    collection_file = "../../../processed_data/xml/PROTEINS.xml"
 
     os.makedirs(output_dir, exist_ok=True)
 

@@ -15,7 +15,7 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Define the path to the Excel file (adjust the relative path as needed)
-    excel_path = "../results/neural/PROTEINS/performance.xlsx"
+    excel_path = "../../results/neural/PROTEINS/performance.xlsx"
 
     if not os.path.exists(excel_path):
         print(f"Error: Excel file '{excel_path}' does not exist.")
@@ -38,7 +38,7 @@ def main():
         df["Avg_Density"] = np.nan
 
     # Create a folder to save plots.
-    plots_dir = "../results/analysis/SimGNN/PROTEINS/plots"
+    plots_dir = "../../results/analysis/SimGNN/PROTEINS/plots"
     os.makedirs(plots_dir, exist_ok=True)
 
     # 1. Performance Accuracy Analysis

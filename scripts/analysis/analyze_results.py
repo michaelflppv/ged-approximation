@@ -272,7 +272,7 @@ def save_plots(df, output_folder):
 
 def main():
     # Define the path to the Excel file containing algorithm performance data.
-    excel_path = "../results/gedlib/PROTEINS/PROTEINS_HED_results.xlsx"
+    excel_path = "../../results/gedlib/PROTEINS/PROTEINS_HED_results.xlsx"
 
     try:
         df = load_data(excel_path)
@@ -323,7 +323,7 @@ def main():
     print(report_text)
 
     # Save the report into an Excel file with multiple sheets.
-    writer_path = "../results/analysis/HED/PROTEINS/algorithm_performance_analysis.xlsx"
+    writer_path = "../../results/analysis/HED/PROTEINS/algorithm_performance_analysis.xlsx"
     with pd.ExcelWriter(writer_path, engine="openpyxl") as writer:
         desc_stats.to_excel(writer, sheet_name="Overall_Stats")
         grouped_stats.to_excel(writer, sheet_name="Per_Method_Stats")

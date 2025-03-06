@@ -87,7 +87,7 @@ def visualize_simgnn_excel_detailed(input_excel_path, output_plots_dir):
 
 if __name__ == "__main__":
     # Provide the path to the Excel file and the directory where plots should be saved.
-    input_path = "../results/neural/PROTEINS/performance.xlsx"
-    output_dir = "../results/analysis/SimGNN/PROTEINS/plots"
+    input_path = "../../results/neural/PROTEINS/performance.xlsx"
+    output_dir = "../../results/analysis/SimGNN/PROTEINS/plots"
     visualize_simgnn_excel(input_path, output_dir)
     visualize_simgnn_excel_detailed(input_path, output_dir)
