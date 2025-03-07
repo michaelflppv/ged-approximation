@@ -167,7 +167,7 @@ results/neural/AIDS_predictions.json
 ### **4️⃣ Analyze & Visualize**
 ```bash
 python scripts/analyze_results.py
-python scripts/visualize_results.py
+python scripts/visualize_lower_bound.py
 ```
 
 ---
