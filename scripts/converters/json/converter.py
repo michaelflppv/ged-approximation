@@ -40,7 +40,7 @@ from collections import defaultdict
 import pandas as pd
 
 # Set the dataset name (manually specify the dataset)
-DATASET = "PROTEINS"
+DATASET = "AIDS"
 
 def main():
     # Determine the directory of this script.
