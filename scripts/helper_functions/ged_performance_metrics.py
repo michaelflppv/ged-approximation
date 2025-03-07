@@ -10,9 +10,9 @@ def compute_relative_accuracy(ged_approx, ged_exact):
       (ged_approx - ged_exact) / ged_exact.
     If ged_exact is zero, return 0 if both are zero; otherwise, return infinity.
     """
-    if ged_exact == 0:
+    if ged_exact == 'N/A':
         return 0.0 if ged_approx == 0 else float('inf')
-    return (ged_approx - ged_exact) / ged_exact
+    return abs(ged_approx - ged_exact) / ged_exact
 
 
 def compute_scalability(graph_sizes, runtimes, memory_usages):
