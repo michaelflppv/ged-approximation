@@ -20,21 +20,22 @@ from glob import glob
 # Define relative paths (adjust these relative paths as needed)
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-GED_EXECUTABLE = os.path.join(script_dir, "../gedlib/build/main_exec")  # Ensure this path is correct
-DATASET_PATH = os.path.join(script_dir, "../processed_data/gxl/IMDB-BINARY")
-COLLECTION_XML = os.path.join(script_dir, "../processed_data/xml/IMDB-BINARY.xml")
-RESULTS_DIR = os.path.join(script_dir, "../results/gedlib")
+GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"
+DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/IMDB-BINARY"
+COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/IMDB-BINARY.xml"
+RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib"
 RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY/IMDB-BINARY_IPFP_results.xlsx")
 # New: Path to the Excel file with exact GED results (must contain columns "graph_id_1", "graph_id_2", and "min_ged")
-EXACT_GED_FILE = os.path.join(script_dir, "../results/exact_ged/IMDB-BINARY/exact_ged_IMDB.xlsx")
+EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/IMDB-BINARY/results.xlsx"
 
 # Update method mapping according to new C++ enum values (adjust as needed)
 METHOD_NAMES = {
     8: "Anchor Aware",
-    20: "STAR (Exact)",
     10: "IPFP",
     11: "BIPARTITE",
     16: "REFINE",
+    19: "HED",
+    20: "STAR (Exact)"
 }
 
 # Conditional import for resource module

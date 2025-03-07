@@ -70,7 +70,7 @@ def run_ged_executable(graph_file1, graph_file2, ged_executable):
                                 text=True,
                                 check=True,
                                 preexec_fn=set_unlimited,
-                                timeout=10)
+                                timeout=5)
         return result.stdout
     except subprocess.TimeoutExpired:
         print(f"Timeout expired for command: {' '.join(cmd)}. Skipping this pair.")
@@ -88,7 +88,7 @@ def get_graph_id_from_filename(filename):
     match = re.match(r"graph_(\d+)\.txt", base)
     return match.group(1) if match else base
 
-def should_skip_pair(dataset, graph_id1, graph_id2, lb_df, threshold=150):
+def should_skip_pair(dataset, graph_id1, graph_id2, lb_df, threshold=100):
     """
     Check the filtering Excel file (lb_df) for the given dataset and graph pair (graph_id1, graph_id2).
     Returns True if the "Lower Bound" exceeds the threshold.
@@ -112,12 +112,12 @@ def should_skip_pair(dataset, graph_id1, graph_id2, lb_df, threshold=150):
     if not matching_rows.empty:
         lb_value = matching_rows.iloc[0]["Lower Bound"]
         # Debug output: print the pair and its lower bound value.
-        print(f"Pair ({id1}, {id2}) has lower bound: {lb_value}")
+        #print(f"Pair ({id1}, {id2}) has lower bound: {lb_value}")
         if lb_value > threshold:
             return True
     return False
 
-def test_all_heuristics_in_folder(dataset, lb_folder, graph_pairs, threshold=150):
+def test_all_heuristics_in_folder(dataset, lb_folder, graph_pairs, threshold=100):
     """
     For every Excel file in lb_folder starting with the dataset name,
     load its lower bound info and test how many pairs would be skipped if that heuristic were used.
@@ -224,7 +224,7 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
         print(f"Error loading filtering Excel file {filtering_file}: {e}")
         sys.exit(1)
 
-    # Gather all .txt files.
+    # Gather all .txt files in the specified directory.
     txt_files = [os.path.join(txt_dir, f) for f in os.listdir(txt_dir) if f.endswith('.txt')]
     txt_files.sort()
     results = []
@@ -235,34 +235,38 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
     total_pairs_initial = len(graph_pairs)
     print(f"Total graph pairs available: {total_pairs_initial}")
 
-    # If requested, test all heuristics.
+    # If requested, test all heuristics from the folder.
     if test_heuristics:
-        test_all_heuristics_in_folder(dataset, lb_folder, graph_pairs, threshold=150)
+        test_all_heuristics_in_folder(dataset, lb_folder, graph_pairs, threshold=100)
 
-    # Filter pairs based on the filtering file.
-    filtered_pairs = []
+    # Instead of pre-filtering all pairs, define a generator that checks each pair on the fly.
     skipped_count = 0
-    for pair in graph_pairs:
-        file1, file2, ged_exec = pair
-        id1 = get_graph_id_from_filename(file1)
-        id2 = get_graph_id_from_filename(file2)
-        if should_skip_pair(dataset, id1, id2, lb_df_filter, threshold=150):
-            print(f"Skipping pair: {file1} and {file2} (lower bound threshold exceeded)")
-            skipped_count += 1
-            continue
-        filtered_pairs.append(pair)
+    total_valid = 0
 
-    print(f"Skipped {skipped_count} pairs out of {len(graph_pairs)} based on the lower bound threshold (using Combined_Basic_Node_Edge_Count_Difference).")
+    def valid_pairs():
+        nonlocal skipped_count
+        for pair in graph_pairs:
+            file1, file2, ged_exec = pair
+            id1 = get_graph_id_from_filename(file1)
+            id2 = get_graph_id_from_filename(file2)
+            if should_skip_pair(dataset, id1, id2, lb_df_filter, threshold=100):
+                #print(f"Skipping pair: {file1} and {file2} (lower bound threshold exceeded)")
+                skipped_count += 1
+            else:
+                yield pair
 
+    # Process pairs as they pass the check.
     pool = Pool(processes=num_workers)
     try:
-        for count, res in enumerate(pool.imap(process_pair, filtered_pairs), 1):
+        # Here, pool.imap will consume the generator; each pair is checked and, if valid, immediately submitted.
+        for count, res in enumerate(pool.imap(process_pair, valid_pairs()), 1):
+            total_valid += 1
             results.append(res)
             save_results(output_excel, results)
             if count % 10 == 0:
-                print(f"{count} pairs processed.")
+                print(f"{count} valid pairs processed.")
     except KeyboardInterrupt:
-        print("KeyboardInterrupt caught. Terminating pool and saving partial results.")
+        print("KeyboardInterrupt caught in main loop. Terminating pool and saving partial results.")
         pool.terminate()
         pool.join()
         save_results(output_excel, results)
@@ -279,10 +283,10 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
     finally:
         save_results(output_excel, results)
 
-    total_pairs_processed = len(filtered_pairs)
     overall_pairs = len(graph_pairs)
     print(f"Final ratio of skipped pairs to total pairs: {skipped_count}/{overall_pairs} "
-          f"({skipped_count / overall_pairs:.2%} skipped, {total_pairs_processed} processed)")
+          f"({skipped_count / overall_pairs:.2%} skipped, {total_valid} processed)")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
