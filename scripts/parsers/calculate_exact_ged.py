@@ -73,11 +73,11 @@ def run_ged_executable(graph_file1, graph_file2, ged_executable):
                                 timeout=5)
         return result.stdout
     except subprocess.TimeoutExpired:
-        print(f"Timeout expired for command: {' '.join(cmd)}. Skipping this pair.")
+        #print(f"Timeout expired for command: {' '.join(cmd)}. Skipping this pair.")
         return None
     except subprocess.CalledProcessError as e:
-        print(f"Error running command: {' '.join(cmd)}")
-        print(e)
+        #print(f"Error running command: {' '.join(cmd)}")
+        #print(e)
         return None
 
 def get_graph_id_from_filename(filename):
@@ -174,11 +174,11 @@ def process_pair(args):
     file1, file2, ged_executable = args
     id1, id2 = get_graph_id_from_filename(file1), get_graph_id_from_filename(file2)
 
-    print(f"Processing pair: {file1} and {file2}")
+    #print(f"Processing pair: {file1} and {file2}")
     output = run_ged_executable(file1, file2, ged_executable)
 
     if output is None:
-        print(f"Error processing pair ({file1}, {file2}). Inserting N/A for results.")
+        #print(f"Error processing pair ({file1}, {file2}). Inserting N/A for results.")
         return {"graph_id_1": id1, "graph_id_2": id2, "min_ged": "N/A",
                 "max_ged": "N/A", "runtime": "N/A", "candidates": "N/A", "matches": "N/A"}
 
@@ -289,23 +289,13 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Compute the Graph Edit Distance (GED) for all graph pairs in a directory using parallel processing.\n"
-                    "Filtering is based on the lower bound info in <dataset>_Combined_Basic_Node_Edge_Count_Difference.xlsx.\n"
-                    "Also tests all heuristic files if --test_heuristics is set."
-    )
-    parser.add_argument("txt_dir", help="Directory containing the graph txt files")
-    parser.add_argument("ged_executable", help="Path to the GED executable")
-    parser.add_argument("output_excel", help="Output Excel file (new file will be created)")
-    parser.add_argument("--workers", type=int, default=cpu_count(),
-                        help="Number of parallel workers (default: all CPU cores)")
-    parser.add_argument("--dataset", required=True,
-                        help="Dataset name (used to locate the filtering and heuristic files)")
-    parser.add_argument("--lb_folder", required=True,
-                        help="Path to the folder containing lower bound Excel files for the dataset")
-    parser.add_argument("--test_heuristics", action="store_true",
-                        help="If set, test all heuristics (from lb_folder) and print out how many pairs would be skipped.")
+    # Specify parameters directly here instead of using argparse.
+    txt_dir = "/mnt/c/project_data/processed_data/txt/IMDB-BINARY"  # Directory with graph .txt files
+    ged_executable = "/mnt/c/Users/mikef/CLionProjects/Graph_Edit_Distance/ged"  # Path to GED executable
+    output_excel = "/mnt/c/project_data/results/exact_ged/IMDB-BINARY/results_v2.xlsx"  # Base output file
+    workers = 8  # Maximum concurrent tasks
+    dataset = "IMDB-BINARY"
+    lb_folder = "/mnt/c/project_data/results/lower_bound/IMDB-BINARY"
+    test_heuristics = False
 
-    args = parser.parse_args()
-    main(args.txt_dir, args.ged_executable, args.output_excel, args.workers,
-         args.dataset, args.lb_folder, args.test_heuristics)
+    main(txt_dir, ged_executable, output_excel, workers, dataset, lb_folder, test_heuristics)
