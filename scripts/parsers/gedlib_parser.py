@@ -21,13 +21,13 @@ import psutil  # For polling subprocess memory usage
 # Define relative paths (adjust these relative paths as needed)
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-GED_EXECUTABLE = "PASTE HERE"
-DATASET_PATH = "PASTE HERE"
-COLLECTION_XML = "PASTE HERE"
-RESULTS_DIR = "PASTE HERE"
-RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY/IMDB-BINARY_IPFP_results.xlsx")
+GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"
+DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/AIDS"
+COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/AIDS.xml"
+RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib/AIDS"
+RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS/AIDS_IPFP_results.xlsx")
 # New: Path to the Excel file with exact GED results (must contain columns "graph_id_1", "graph_id_2", and "min_ged")
-EXACT_GED_FILE = "PASTE HERE"
+EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/AIDS/results.xlsx"
 
 # Update method mapping according to new C++ enum values (adjust as needed)
 METHOD_NAMES = {
