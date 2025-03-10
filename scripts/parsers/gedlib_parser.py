@@ -25,7 +25,8 @@ GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"
 DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/AIDS"
 COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/AIDS.xml"
 RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib/AIDS"
-RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS/AIDS_IPFP_results.xlsx")
+# Updated: Remove extra "AIDS/" from the file name.
+RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS_IPFP_results_ubuntu.xlsx")
 # New: Path to the Excel file with exact GED results (must contain columns "graph_id_1", "graph_id_2", and "min_ged")
 EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/AIDS/results.xlsx"
 
@@ -80,10 +81,11 @@ def compute_squared_error(pred, exact):
 
 
 def log_results(results):
-    """Log results into an Excel file after checking that data exists.
-       The resulting Excel file will contain only the following columns (in order):
+    """Log results into one or more Excel files after checking that data exists.
+       The resulting Excel file(s) will contain only the following columns (in order):
          method, ged, runtime, graph_id_1, graph_id_2, accuracy, absolute_error, squared_error,
          memory_usage_mb, graph1_n, graph1_density, graph2_n, graph2_density, scalability
+       If the number of rows exceeds 1,048,573, the results are split into multiple files.
        This function also checks for existing corrupted files and uses a fallback engine if needed.
     """
     if not results:
@@ -117,36 +119,69 @@ def log_results(results):
     df = df[desired_columns]
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
-    # Check if the final results file exists and whether it is corrupted.
-    if os.path.exists(RESULTS_FILE):
+    max_rows = 1048573
+    if len(df) > max_rows:
+        num_files = (len(df) + max_rows - 1) // max_rows
+        print(f"DataFrame has {len(df)} rows; splitting into {num_files} file(s).")
+        for part in range(num_files):
+            start = part * max_rows
+            end = start + max_rows
+            chunk = df.iloc[start:end]
+            if part == 0:
+                file_path = RESULTS_FILE
+            else:
+                base, ext = os.path.splitext(RESULTS_FILE)
+                file_path = f"{base}_part{part+1}{ext}"
+            if os.path.exists(file_path):
+                try:
+                    from openpyxl import load_workbook
+                    load_workbook(file_path)
+                except Exception as e:
+                    print(f"Existing results file {file_path} appears corrupted ({e}). Removing it.")
+                    os.remove(file_path)
+            temp_file = os.path.join(RESULTS_DIR, f"temp_results_part{part+1}.xlsx")
+            try:
+                chunk.to_excel(temp_file, index=False, engine='openpyxl')
+                os.replace(temp_file, file_path)
+                print(f"Intermediate results saved in {file_path} (rows: {len(chunk)}).")
+            except Exception as e:
+                print(f"Error writing Excel file with openpyxl for {file_path}:", e)
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+                try:
+                    chunk.to_excel(temp_file, index=False, engine='xlsxwriter')
+                    os.replace(temp_file, file_path)
+                    print(f"Intermediate results saved with fallback engine in {file_path} (rows: {len(chunk)}).")
+                except Exception as e2:
+                    print(f"Error writing Excel file with fallback engine for {file_path}:", e2)
+                    if os.path.exists(temp_file):
+                        os.remove(temp_file)
+    else:
+        file_path = RESULTS_FILE
+        if os.path.exists(file_path):
+            try:
+                from openpyxl import load_workbook
+                load_workbook(file_path)
+            except Exception as e:
+                print(f"Existing results file {file_path} appears corrupted ({e}). Removing it.")
+                os.remove(file_path)
+        temp_file = os.path.join(RESULTS_DIR, "temp_results.xlsx")
         try:
-            from openpyxl import load_workbook
-            # Attempt to load the file; if it fails, it may be corrupted.
-            load_workbook(RESULTS_FILE)
+            df.to_excel(temp_file, index=False, engine='openpyxl')
+            os.replace(temp_file, file_path)
+            print(f"Intermediate results saved in {file_path} (total rows: {len(df)}).")
         except Exception as e:
-            print(f"Existing results file {RESULTS_FILE} appears corrupted ({e}). Removing it.")
-            os.remove(RESULTS_FILE)
-
-    temp_file = os.path.join(RESULTS_DIR, "temp_results.xlsx")
-    try:
-        # Write to a temporary file first using openpyxl.
-        df.to_excel(temp_file, index=False, engine='openpyxl')
-        # Atomically replace the final file with the temp file.
-        os.replace(temp_file, RESULTS_FILE)
-        print(f"Intermediate results saved in {RESULTS_FILE} (total rows: {len(df)}).")
-    except Exception as e:
-        print("Error writing Excel file with openpyxl:", e)
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
-        # Attempt fallback: use xlsxwriter engine.
-        try:
-            df.to_excel(temp_file, index=False, engine='xlsxwriter')
-            os.replace(temp_file, RESULTS_FILE)
-            print(f"Intermediate results saved with fallback engine in {RESULTS_FILE} (total rows: {len(df)}).")
-        except Exception as e2:
-            print("Error writing Excel file with fallback engine:", e2)
+            print("Error writing Excel file with openpyxl:", e)
             if os.path.exists(temp_file):
                 os.remove(temp_file)
+            try:
+                df.to_excel(temp_file, index=False, engine='xlsxwriter')
+                os.replace(temp_file, file_path)
+                print(f"Intermediate results saved with fallback engine in {file_path} (total rows: {len(df)}).")
+            except Exception as e2:
+                print("Error writing Excel file with fallback engine:", e2)
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
 
 
 # Signal handler to flush current results before exiting.
