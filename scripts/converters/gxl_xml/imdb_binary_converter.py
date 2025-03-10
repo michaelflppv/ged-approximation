@@ -81,8 +81,8 @@ def main():
     args = parser.parse_args()
 
     input_dir = "../../../data/IMDB-BINARY/"
-    output_dir = "../../../processed_data/gxl/IMDB-BINARY/"
-    collection_file = "../../../processed_data/xml/IMDB-BINARY.xml"
+    output_dir = "/mnt/c/project_data/processed_data/gxl/IMDB-BINARY/"
+    collection_file = "/mnt/c/project_data/processed_data/xml/IMDB-BINARY.xml"
 
     os.makedirs(output_dir, exist_ok=True)
 

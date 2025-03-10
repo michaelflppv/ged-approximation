@@ -100,7 +100,7 @@ def calculate_accuracy(predicted, exact):
 def main():
     # Define paths
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    json_dir = os.path.join(base_dir, "../../processed_data/json_pairs/IMDB-BINARY")
+    json_dir = r"C:\project_data\processed_data\json_pairs\IMDB-BINARY"
     model_path = os.path.join(base_dir, "models/simgnn_model.h5")
     # Path to the Excel file with exact GED results (must contain a column "min_ged")
     exact_ged_path = os.path.join(base_dir, "../../processed_data/exact_ged.xlsx")
@@ -261,7 +261,7 @@ def main():
     df_pairs = pd.DataFrame(pair_results)[ordered_columns]
 
     # Define the directory for saving performance results.
-    results_dir = os.path.join(base_dir, "../../results/neural/IMDB-BINARY")
+    results_dir = r"C:\project_data\results\neural\IMDB-BINARY"
     os.makedirs(results_dir, exist_ok=True)
     save_path = os.path.join(results_dir, "performance.xlsx")
 

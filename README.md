@@ -156,7 +156,7 @@ results/gedlib/AIDS_results.xlsx
 ### **3️⃣ Train & Test SimGNN**
 ```bash
 python SimGNN/src/main.py --dataset AIDS
-python SimGNN/src/tester.py --dataset AIDS
+python SimGNN/src/simgnn_evaluator.py --dataset AIDS
 ```
 Saves:
 ```

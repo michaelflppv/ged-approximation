@@ -16,17 +16,18 @@ import pandas as pd
 import signal
 import sys
 from glob import glob
+import psutil  # For polling subprocess memory usage
 
 # Define relative paths (adjust these relative paths as needed)
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"
-DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/IMDB-BINARY"
-COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/IMDB-BINARY.xml"
-RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib"
+GED_EXECUTABLE = "PASTE HERE"
+DATASET_PATH = "PASTE HERE"
+COLLECTION_XML = "PASTE HERE"
+RESULTS_DIR = "PASTE HERE"
 RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY/IMDB-BINARY_IPFP_results.xlsx")
 # New: Path to the Excel file with exact GED results (must contain columns "graph_id_1", "graph_id_2", and "min_ged")
-EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/IMDB-BINARY/results.xlsx"
+EXACT_GED_FILE = "PASTE HERE"
 
 # Update method mapping according to new C++ enum values (adjust as needed)
 METHOD_NAMES = {
@@ -48,6 +49,7 @@ global_results = []  # This will be appended to as new lines are parsed.
 # Global lookup dictionary for exact GED results.
 exact_lookup = {}
 
+
 def load_exact_lookup(exact_file):
     """Load the exact GED results and return a lookup dict mapping (graph_id_1, graph_id_2) to min_ged."""
     try:
@@ -68,17 +70,21 @@ def load_exact_lookup(exact_file):
         print("Error loading exact GED file:", e)
         return {}
 
+
 def compute_absolute_error(pred, exact):
     return abs(pred - exact)
 
+
 def compute_squared_error(pred, exact):
     return (pred - exact) ** 2
+
 
 def log_results(results):
     """Log results into an Excel file after checking that data exists.
        The resulting Excel file will contain only the following columns (in order):
          method, ged, runtime, graph_id_1, graph_id_2, accuracy, absolute_error, squared_error,
          memory_usage_mb, graph1_n, graph1_density, graph2_n, graph2_density, scalability
+       This function also checks for existing corrupted files and uses a fallback engine if needed.
     """
     if not results:
         print("Warning: No results to log.")
@@ -110,17 +116,38 @@ def log_results(results):
     ]
     df = df[desired_columns]
     os.makedirs(RESULTS_DIR, exist_ok=True)
+
+    # Check if the final results file exists and whether it is corrupted.
+    if os.path.exists(RESULTS_FILE):
+        try:
+            from openpyxl import load_workbook
+            # Attempt to load the file; if it fails, it may be corrupted.
+            load_workbook(RESULTS_FILE)
+        except Exception as e:
+            print(f"Existing results file {RESULTS_FILE} appears corrupted ({e}). Removing it.")
+            os.remove(RESULTS_FILE)
+
     temp_file = os.path.join(RESULTS_DIR, "temp_results.xlsx")
     try:
-        # Write to a temporary file first.
+        # Write to a temporary file first using openpyxl.
         df.to_excel(temp_file, index=False, engine='openpyxl')
         # Atomically replace the final file with the temp file.
         os.replace(temp_file, RESULTS_FILE)
         print(f"Intermediate results saved in {RESULTS_FILE} (total rows: {len(df)}).")
     except Exception as e:
-        print("Error writing Excel file:", e)
+        print("Error writing Excel file with openpyxl:", e)
         if os.path.exists(temp_file):
             os.remove(temp_file)
+        # Attempt fallback: use xlsxwriter engine.
+        try:
+            df.to_excel(temp_file, index=False, engine='xlsxwriter')
+            os.replace(temp_file, RESULTS_FILE)
+            print(f"Intermediate results saved with fallback engine in {RESULTS_FILE} (total rows: {len(df)}).")
+        except Exception as e2:
+            print("Error writing Excel file with fallback engine:", e2)
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+
 
 # Signal handler to flush current results before exiting.
 def signal_handler(signum, frame):
@@ -128,11 +155,13 @@ def signal_handler(signum, frame):
     log_results(global_results)
     sys.exit(0)
 
+
 # Register signal handlers.
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 if hasattr(signal, "SIGHUP"):
     signal.signal(signal.SIGHUP, signal_handler)
+
 
 def preprocess_xml_file(xml_path):
     """Remove DOCTYPE declarations from the XML file and return path to a temporary file."""
@@ -148,6 +177,7 @@ def preprocess_xml_file(xml_path):
     with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
         f.writelines(filtered_lines)
     return temp_path
+
 
 def get_graph_properties(gxl_file):
     """
@@ -175,6 +205,7 @@ def get_graph_properties(gxl_file):
     e = len(edges)
     p = (2 * e) / (n * (n - 1)) if n > 1 else 0
     return n, e, p
+
 
 def get_first_two_graph_properties(dataset_path, collection_xml):
     """
@@ -205,6 +236,7 @@ def get_first_two_graph_properties(dataset_path, collection_xml):
     props2 = get_graph_properties(path2)
     return props1, props2
 
+
 def run_ged(dataset_path, collection_xml):
     """Run the GEDLIB executable and parse its output line-by-line, flushing intermediate results."""
     try:
@@ -223,6 +255,13 @@ def run_ged(dataset_path, collection_xml):
         os.remove(preprocessed_xml)
         return [{"error": str(e)}]
 
+    # Create a psutil Process object for the subprocess.
+    try:
+        ged_process = psutil.Process(process.pid)
+    except Exception as e:
+        print("Error creating psutil.Process for GEDLIB:", e)
+        ged_process = None
+
     # Get additional metrics from graph properties.
     props = get_first_two_graph_properties(dataset_path, collection_xml)
     if props is not None:
@@ -235,8 +274,9 @@ def run_ged(dataset_path, collection_xml):
         n1 = n2 = p1 = p2 = None
 
     # Define regex to match expected output lines.
+    # This regex no longer awaits any MEM field from the executable.
     regex = re.compile(
-        r"METHOD=(\d+)\s+GRAPH1=(\d+)\s+GRAPH2=(\d+)\s+PREDGED=([\d.]+)\s+GTGED=N/A\s+RUNTIME=([\d.]+)\s+MEM=([\d.]+)"
+        r"METHOD=(\d+)\s+GRAPH1=(\d+)\s+GRAPH2=(\d+)\s+PREDGED=([\d.]+)\s+GTGED=N/A\s+RUNTIME=([\d.]+).*"
     )
 
     line_count = 0
@@ -255,7 +295,11 @@ def run_ged(dataset_path, collection_xml):
             graph2 = int(match.group(3))
             pred_ged = float(match.group(4))
             runtime = float(match.group(5))
-            mem_usage = float(match.group(6))  # in MB as printed by the executable
+            # Poll current memory usage from the subprocess via psutil.
+            try:
+                memory_usage_mb = ged_process.memory_info().rss / (1024 * 1024)
+            except Exception:
+                memory_usage_mb = "N/A"
             method_name = METHOD_NAMES.get(method_id, f"Unknown Method {method_id}")
             result_entry = {
                 "method": method_name,
@@ -266,7 +310,7 @@ def run_ged(dataset_path, collection_xml):
                 "absolute_error": "N/A",  # Will be computed later.
                 "squared_error": "N/A",  # Will be computed later.
                 "runtime": runtime,
-                "memory_usage_mb": mem_usage,
+                "memory_usage_mb": memory_usage_mb,
                 "graph1_n": n1 if n1 is not None else "N/A",
                 "graph1_density": round(p1, 4) if p1 is not None else "N/A",
                 "graph2_n": n2 if n2 is not None else "N/A",
@@ -316,6 +360,7 @@ def run_ged(dataset_path, collection_xml):
             res["squared_error"] = "N/A"
 
     return global_results
+
 
 if __name__ == "__main__":
     # Load exact GED lookup table.
