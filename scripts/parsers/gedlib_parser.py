@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
 This script runs the GEDLIB executable and captures its output line-by-line,
-parses that output and writes the results to an Excel file as soon as possible.
-This way, if the process is terminated, the already computed results are saved.
-It includes extensive debug output and error checking.
+parses that output, and writes the results to an Excel file as soon as possible.
+Intermediate results are flushed frequently so that if the process is terminated
+(e.g. via Ctrl+C), the work done so far is saved. The Excel file is written using
+a fallback strategy and will be split into multiple files if the data exceeds Excel’s
+maximum row capacity.
 """
 
 import os
@@ -15,117 +17,85 @@ import platform
 import pandas as pd
 import signal
 import sys
-from glob import glob
 import psutil  # For polling subprocess memory usage
+from typing import Optional
 
-# Define relative paths (adjust these relative paths as needed)
-script_dir = os.path.dirname(os.path.abspath(__file__))
+if platform.system() != "Windows":
+    import resource
 
-GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"
-DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/AIDS"
-COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/AIDS.xml"
-RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib/AIDS"
-# Updated: Remove extra "AIDS/" from the file name.
-RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS_IPFP_results_ubuntu.xlsx")
-# New: Path to the Excel file with exact GED results (must contain columns "graph_id_1", "graph_id_2", and "min_ged")
-EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/AIDS/results.xlsx"
+# --------------------------
+# Global variables and settings
+# --------------------------
+global_results = []            # Intermediate results list.
+global_ged_process: Optional[subprocess.Popen] = None  # Handle to the GEDLIB subprocess.
+global_preprocessed_xml: Optional[str] = None          # Path to the temporary preprocessed XML.
 
-# Update method mapping according to new C++ enum values (adjust as needed)
+# Modify these paths as needed:
+GED_EXECUTABLE = "../../gedlib/build/main_exec"
+DATASET_PATH    = "/mnt/c/project_data/processed_data/gxl/AIDS"
+COLLECTION_XML  = "/mnt/c/project_data/processed_data/xml/AIDS.xml"
+RESULTS_DIR     = "/mnt/c/project_data/results/gedlib/AIDS"
+RESULTS_FILE    = os.path.join(RESULTS_DIR, "AIDS_IPFP_results_ubuntu.xlsx")
+EXACT_GED_FILE  = "/home/mfilippov/ged_data/results/exact_ged/AIDS/results.xlsx"  # Optional lookup file.
+# Mapping of method ID to method names.
 METHOD_NAMES = {
-    8: "Anchor Aware",
+    8:  "Anchor Aware",
     10: "IPFP",
     11: "BIPARTITE",
     16: "REFINE",
     19: "HED",
     20: "STAR (Exact)"
 }
+# Maximum number of rows per Excel file.
+EXCEL_MAX_ROWS = 1048573
 
-# Conditional import for resource module
-if platform.system() != "Windows":
-    import resource
-
-# Global variable to hold intermediate results.
-global_results = []  # This will be appended to as new lines are parsed.
-
-# Global lookup dictionary for exact GED results.
-exact_lookup = {}
-
-
-def load_exact_lookup(exact_file):
-    """Load the exact GED results and return a lookup dict mapping (graph_id_1, graph_id_2) to min_ged."""
-    try:
-        df_exact = pd.read_excel(exact_file)
-        df_exact["min_ged_numeric"] = pd.to_numeric(df_exact["min_ged"], errors="coerce")
-        df_exact = df_exact.dropna(subset=["min_ged_numeric"])
-        lookup = {}
-        for _, row in df_exact.iterrows():
-            try:
-                g1 = int(row["graph_id_1"])
-                g2 = int(row["graph_id_2"])
-            except Exception as e:
-                g1 = row["graph_id_1"]
-                g2 = row["graph_id_2"]
-            lookup[(g1, g2)] = row["min_ged_numeric"]
-        return lookup
-    except Exception as e:
-        print("Error loading exact GED file:", e)
-        return {}
-
-
-def compute_absolute_error(pred, exact):
-    return abs(pred - exact)
-
-
-def compute_squared_error(pred, exact):
-    return (pred - exact) ** 2
-
+# --------------------------
+# Utility Functions
+# --------------------------
+def set_unlimited():
+    """Set resource limits to unlimited (if supported)."""
+    if platform.system() != "Windows":
+        try:
+            resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+        except Exception as e:
+            print("Warning: could not set RLIMIT_AS unlimited:", e)
+        try:
+            resource.setrlimit(resource.RLIMIT_CPU, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+        except Exception as e:
+            print("Warning: could not set RLIMIT_CPU unlimited:", e)
 
 def log_results(results):
-    """Log results into one or more Excel files after checking that data exists.
-       The resulting Excel file(s) will contain only the following columns (in order):
-         method, ged, runtime, graph_id_1, graph_id_2, accuracy, absolute_error, squared_error,
-         memory_usage_mb, graph1_n, graph1_density, graph2_n, graph2_density, scalability
-       If the number of rows exceeds 1,048,573, the results are split into multiple files.
-       This function also checks for existing corrupted files and uses a fallback engine if needed.
+    """
+    Save the current results to Excel.
+    If the DataFrame exceeds Excel's maximum row limit, split the results across multiple files.
+    Uses openpyxl as the primary engine, with xlsxwriter as fallback.
     """
     if not results:
-        print("Warning: No results to log.")
-        return
-    df = pd.DataFrame(results)
-    if df.empty:
-        print("Warning: DataFrame is empty; nothing to write.")
+        print("No results to save.")
         return
 
-    # Rename graph1 and graph2 to graph_id_1 and graph_id_2.
+    df = pd.DataFrame(results)
+    if df.empty:
+        print("DataFrame is empty; nothing to write.")
+        return
+
+    # Standardize column names.
     df["graph_id_1"] = df["graph1"]
     df["graph_id_2"] = df["graph2"]
-    # Select and order the desired columns.
     desired_columns = [
-        "method",
-        "graph_id_1",
-        "graph_id_2",
-        "ged",
-        "accuracy",
-        "absolute_error",
-        "squared_error",
-        "runtime",
-        "memory_usage_mb",
-        "graph1_n",
-        "graph1_density",
-        "graph2_n",
-        "graph2_density",
-        "scalability"
+        "method", "graph_id_1", "graph_id_2", "ged", "accuracy",
+        "absolute_error", "squared_error", "runtime", "memory_usage_mb",
+        "graph1_n", "graph1_density", "graph2_n", "graph2_density", "scalability"
     ]
     df = df[desired_columns]
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
-    max_rows = 1048573
-    if len(df) > max_rows:
-        num_files = (len(df) + max_rows - 1) // max_rows
-        print(f"DataFrame has {len(df)} rows; splitting into {num_files} file(s).")
+    if len(df) > EXCEL_MAX_ROWS:
+        num_files = (len(df) + EXCEL_MAX_ROWS - 1) // EXCEL_MAX_ROWS
+        print(f"DataFrame has {len(df)} rows; splitting into {num_files} files.")
         for part in range(num_files):
-            start = part * max_rows
-            end = start + max_rows
+            start = part * EXCEL_MAX_ROWS
+            end = start + EXCEL_MAX_ROWS
             chunk = df.iloc[start:end]
             if part == 0:
                 file_path = RESULTS_FILE
@@ -137,23 +107,23 @@ def log_results(results):
                     from openpyxl import load_workbook
                     load_workbook(file_path)
                 except Exception as e:
-                    print(f"Existing results file {file_path} appears corrupted ({e}). Removing it.")
+                    print(f"Existing file {file_path} is corrupted ({e}). Removing it.")
                     os.remove(file_path)
             temp_file = os.path.join(RESULTS_DIR, f"temp_results_part{part+1}.xlsx")
             try:
                 chunk.to_excel(temp_file, index=False, engine='openpyxl')
                 os.replace(temp_file, file_path)
-                print(f"Intermediate results saved in {file_path} (rows: {len(chunk)}).")
+                print(f"Saved {len(chunk)} rows to {file_path}.")
             except Exception as e:
-                print(f"Error writing Excel file with openpyxl for {file_path}:", e)
+                print(f"Error writing {file_path} with openpyxl: {e}")
                 if os.path.exists(temp_file):
                     os.remove(temp_file)
                 try:
                     chunk.to_excel(temp_file, index=False, engine='xlsxwriter')
                     os.replace(temp_file, file_path)
-                    print(f"Intermediate results saved with fallback engine in {file_path} (rows: {len(chunk)}).")
+                    print(f"Saved with fallback engine: {len(chunk)} rows to {file_path}.")
                 except Exception as e2:
-                    print(f"Error writing Excel file with fallback engine for {file_path}:", e2)
+                    print(f"Failed to write {file_path} with fallback: {e2}")
                     if os.path.exists(temp_file):
                         os.remove(temp_file)
     else:
@@ -163,13 +133,13 @@ def log_results(results):
                 from openpyxl import load_workbook
                 load_workbook(file_path)
             except Exception as e:
-                print(f"Existing results file {file_path} appears corrupted ({e}). Removing it.")
+                print(f"Existing file {file_path} is corrupted ({e}). Removing it.")
                 os.remove(file_path)
         temp_file = os.path.join(RESULTS_DIR, "temp_results.xlsx")
         try:
             df.to_excel(temp_file, index=False, engine='openpyxl')
             os.replace(temp_file, file_path)
-            print(f"Intermediate results saved in {file_path} (total rows: {len(df)}).")
+            print(f"Saved {len(df)} rows to {file_path}.")
         except Exception as e:
             print("Error writing Excel file with openpyxl:", e)
             if os.path.exists(temp_file):
@@ -177,49 +147,59 @@ def log_results(results):
             try:
                 df.to_excel(temp_file, index=False, engine='xlsxwriter')
                 os.replace(temp_file, file_path)
-                print(f"Intermediate results saved with fallback engine in {file_path} (total rows: {len(df)}).")
+                print(f"Saved with fallback engine: {len(df)} rows to {file_path}.")
             except Exception as e2:
-                print("Error writing Excel file with fallback engine:", e2)
+                print("Failed to write Excel file with fallback engine:", e2)
                 if os.path.exists(temp_file):
                     os.remove(temp_file)
 
-
-# Signal handler to flush current results before exiting.
 def signal_handler(signum, frame):
-    print(f"\nSignal {signum} received. Saving intermediate results before exiting.")
+    """Handle termination signals by cleaning up and saving partial results."""
+    print(f"\nSignal {signum} received. Saving intermediate results and exiting.")
+    global global_ged_process, global_preprocessed_xml
+    if global_ged_process is not None:
+        try:
+            global_ged_process.terminate()
+            global_ged_process.wait(timeout=5)
+        except Exception as e:
+            print("Error terminating GED subprocess:", e)
+    if global_preprocessed_xml is not None and os.path.exists(global_preprocessed_xml):
+        try:
+            os.remove(global_preprocessed_xml)
+        except Exception as e:
+            print("Error removing temporary XML file:", e)
     log_results(global_results)
-    sys.exit(0)
+    sys.exit(1)
 
-
-# Register signal handlers.
+# Register signal handlers for graceful termination.
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 if hasattr(signal, "SIGHUP"):
     signal.signal(signal.SIGHUP, signal_handler)
 
-
-def preprocess_xml_file(xml_path):
-    """Remove DOCTYPE declarations from the XML file and return path to a temporary file."""
+def preprocess_xml_file(xml_path: str) -> str:
+    """
+    Remove any DOCTYPE declarations from the XML file to avoid parsing issues,
+    and return the path to a temporary file with the cleaned XML.
+    """
     try:
         with open(xml_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
     except Exception as e:
         print(f"Error reading XML file '{xml_path}': {e}")
         raise
-
     filtered_lines = [line for line in lines if not line.lstrip().startswith("<!DOCTYPE")]
     temp_fd, temp_path = tempfile.mkstemp(suffix=".xml")
     with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
         f.writelines(filtered_lines)
     return temp_path
 
-
-def get_graph_properties(gxl_file):
+def get_graph_properties(gxl_file: str):
     """
-    Parse the GXL file to compute:
+    Parse the given GXL file and compute:
       - number of nodes (n)
       - number of edges (e)
-      - density (p) = 2*e/(n*(n-1)) for undirected graphs (if n>1)
+      - density = 2*e / (n*(n-1)) for undirected graphs (if n > 1)
     """
     try:
         temp_path = preprocess_xml_file(gxl_file)
@@ -238,14 +218,13 @@ def get_graph_properties(gxl_file):
     edges = graph_elem.findall('edge')
     n = len(nodes)
     e = len(edges)
-    p = (2 * e) / (n * (n - 1)) if n > 1 else 0
-    return n, e, p
+    density = (2 * e) / (n * (n - 1)) if n > 1 else 0
+    return n, e, density
 
-
-def get_first_two_graph_properties(dataset_path, collection_xml):
+def get_first_two_graph_properties(dataset_path: str, collection_xml: str):
     """
-    Parse the collection XML (after removing DOCTYPE) to get the first two graph file names,
-    then compute and return their (n, e, p) properties.
+    Parse the collection XML (after cleaning) to retrieve the first two graph file names,
+    then compute and return their (n, edges, density) properties.
     """
     try:
         temp_xml = preprocess_xml_file(collection_xml)
@@ -271,11 +250,16 @@ def get_first_two_graph_properties(dataset_path, collection_xml):
     props2 = get_graph_properties(path2)
     return props1, props2
 
-
-def run_ged(dataset_path, collection_xml):
-    """Run the GEDLIB executable and parse its output line-by-line, flushing intermediate results."""
+def run_ged(dataset_path: str, collection_xml: str):
+    """
+    Run the GEDLIB executable with the given dataset and collection XML.
+    Parse its output line-by-line and flush intermediate results every few lines.
+    On termination or error, results are saved and temporary files are cleaned up.
+    """
+    global global_ged_process, global_preprocessed_xml
     try:
         preprocessed_xml = preprocess_xml_file(collection_xml)
+        global_preprocessed_xml = preprocessed_xml
     except Exception as e:
         print("Failed to preprocess collection XML:", e)
         return [{"error": "Preprocessing XML failed"}]
@@ -283,126 +267,117 @@ def run_ged(dataset_path, collection_xml):
     command = [GED_EXECUTABLE, dataset_path, preprocessed_xml]
     print("Running command:", " ".join(command))
     try:
-        # Use Popen to read output line-by-line.
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+            preexec_fn=set_unlimited if platform.system() != "Windows" else None
+        )
+        global_ged_process = process
     except Exception as e:
-        print("Error starting subprocess:", e)
+        print("Error starting GED subprocess:", e)
         os.remove(preprocessed_xml)
+        global_preprocessed_xml = None
         return [{"error": str(e)}]
 
-    # Create a psutil Process object for the subprocess.
     try:
-        ged_process = psutil.Process(process.pid)
+        ged_proc = psutil.Process(process.pid)
     except Exception as e:
         print("Error creating psutil.Process for GEDLIB:", e)
-        ged_process = None
+        ged_proc = None
 
-    # Get additional metrics from graph properties.
     props = get_first_two_graph_properties(dataset_path, collection_xml)
     if props is not None:
-        (n1, e1, p1), (n2, e2, p2) = props
-        avg_n = (n1 + n2) / 2
-        avg_p = (p1 + p2) / 2
+        (n1, _, d1), (n2, _, d2) = props
         scalability = max(n1, n2)
     else:
-        avg_n = avg_p = scalability = None
-        n1 = n2 = p1 = p2 = None
+        scalability = None
+        n1 = n2 = d1 = d2 = None
 
-    # Define regex to match expected output lines.
-    # This regex no longer awaits any MEM field from the executable.
+    # Regular expression to match expected output lines.
     regex = re.compile(
         r"METHOD=(\d+)\s+GRAPH1=(\d+)\s+GRAPH2=(\d+)\s+PREDGED=([\d.]+)\s+GTGED=N/A\s+RUNTIME=([\d.]+).*"
     )
 
     line_count = 0
-    flush_interval = 10  # flush every 10 lines
-
-    # Process GEDLIB stdout line-by-line.
-    for line in process.stdout:
-        line = line.strip()
-        line_count += 1
-        if not line:
-            continue
-        match = regex.search(line)
-        if match:
-            method_id = int(match.group(1))
-            graph1 = int(match.group(2))
-            graph2 = int(match.group(3))
-            pred_ged = float(match.group(4))
-            runtime = float(match.group(5))
-            # Poll current memory usage from the subprocess via psutil.
-            try:
-                memory_usage_mb = ged_process.memory_info().rss / (1024 * 1024)
-            except Exception:
-                memory_usage_mb = "N/A"
-            method_name = METHOD_NAMES.get(method_id, f"Unknown Method {method_id}")
-            result_entry = {
-                "method": method_name,
-                "graph1": graph1,
-                "graph2": graph2,
-                "ged": pred_ged,
-                "accuracy": "N/A",  # Will be computed later.
-                "absolute_error": "N/A",  # Will be computed later.
-                "squared_error": "N/A",  # Will be computed later.
-                "runtime": runtime,
-                "memory_usage_mb": memory_usage_mb,
-                "graph1_n": n1 if n1 is not None else "N/A",
-                "graph1_density": round(p1, 4) if p1 is not None else "N/A",
-                "graph2_n": n2 if n2 is not None else "N/A",
-                "graph2_density": round(p2, 4) if p2 is not None else "N/A",
-                "scalability": scalability if scalability is not None else "N/A",
-            }
-            global_results.append(result_entry)
-        else:
-            print("Warning: Line did not match expected format:", line)
-
-        # Periodically flush to Excel file.
-        if line_count % flush_interval == 0:
-            log_results(global_results)
-
-    # Close stdout and wait for process to finish.
-    process.stdout.close()
-    process.wait()
-
-    # Process any stderr output.
-    stderr = process.stderr.read()
-    if stderr:
-        print("Stderr output from GEDLIB:", stderr)
-    process.stderr.close()
-
-    # Final flush before finishing.
-    log_results(global_results)
-    os.remove(preprocessed_xml)
-
-    # Compute accuracy, absolute error, and squared error using exact GED values.
-    for res in global_results:
-        key = (res["graph1"], res["graph2"])
-        # Only compute errors if an exact GED value exists for this pair.
-        if key in exact_lookup:
-            exact_val = exact_lookup[key]
-            # If the exact value is not NA and prediction is nonzero, compute errors.
-            if pd.notna(exact_val) and res["ged"] != "N/A":
-                res["accuracy"] = round((exact_val / res["ged"]) * 100, 2)
-                res["absolute_error"] = round(compute_absolute_error(res["ged"], exact_val), 4)
-                res["squared_error"] = round(compute_squared_error(res["ged"], exact_val), 4)
+    flush_interval = 5  # Flush intermediate results every 5 lines.
+    try:
+        for line in process.stdout:
+            line = line.strip()
+            line_count += 1
+            if not line:
+                continue
+            match = regex.search(line)
+            if match:
+                method_id = int(match.group(1))
+                graph1 = int(match.group(2))
+                graph2 = int(match.group(3))
+                pred_ged = float(match.group(4))
+                runtime = float(match.group(5))
+                try:
+                    memory_usage_mb = ged_proc.memory_info().rss / (1024 * 1024) if ged_proc else "N/A"
+                except Exception:
+                    memory_usage_mb = "N/A"
+                method_name = METHOD_NAMES.get(method_id, f"Unknown Method {method_id}")
+                result_entry = {
+                    "method": method_name,
+                    "graph1": graph1,
+                    "graph2": graph2,
+                    "ged": pred_ged,
+                    "accuracy": "N/A",         # Optionally compute later using exact GED lookup.
+                    "absolute_error": "N/A",
+                    "squared_error": "N/A",
+                    "runtime": runtime,
+                    "memory_usage_mb": memory_usage_mb,
+                    "graph1_n": n1 if n1 is not None else "N/A",
+                    "graph1_density": round(d1, 4) if d1 is not None else "N/A",
+                    "graph2_n": n2 if n2 is not None else "N/A",
+                    "graph2_density": round(d2, 4) if d2 is not None else "N/A",
+                    "scalability": scalability if scalability is not None else "N/A"
+                }
+                global_results.append(result_entry)
             else:
-                res["accuracy"] = "N/A"
-                res["absolute_error"] = "N/A"
-                res["squared_error"] = "N/A"
-        else:
-            res["accuracy"] = "N/A"
-            res["absolute_error"] = "N/A"
-            res["squared_error"] = "N/A"
+                print("Warning: Unmatched line:", line)
 
+            if line_count % flush_interval == 0:
+                log_results(global_results)
+    except Exception as e:
+        print("Error while processing GED output:", e)
+    finally:
+        try:
+            process.stdout.close()
+        except Exception:
+            pass
+        process.wait()
+        try:
+            stderr = process.stderr.read()
+            if stderr:
+                print("GEDLIB stderr:", stderr)
+        except Exception:
+            pass
+        try:
+            process.stderr.close()
+        except Exception:
+            pass
+        log_results(global_results)
+        if global_preprocessed_xml is not None and os.path.exists(global_preprocessed_xml):
+            try:
+                os.remove(global_preprocessed_xml)
+                global_preprocessed_xml = None
+            except Exception as e:
+                print("Error removing temporary XML file:", e)
     return global_results
 
-
 if __name__ == "__main__":
-    # Load exact GED lookup table.
-    exact_lookup = load_exact_lookup(EXACT_GED_FILE)
-    results = run_ged(DATASET_PATH, COLLECTION_XML)
-    if results:
-        print(f"Parsed {len(results)} result(s).")
-    else:
-        print("No results parsed.")
-    # Final log is already done during run_ged.
+    try:
+        results = run_ged(DATASET_PATH, COLLECTION_XML)
+        if results:
+            print(f"Finished processing {len(results)} result(s).")
+        else:
+            print("No results processed.")
+    except Exception as e:
+        print("Unexpected error:", e)
+        log_results(global_results)
+        sys.exit(1)
