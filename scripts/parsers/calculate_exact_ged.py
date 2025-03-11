@@ -287,7 +287,7 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
     print(f"Total graph pairs available: {total_pairs_initial}")
 
     # Skip the first N pairs if needed
-    skip_first = 10850
+    skip_first = 47737
     if skip_first < len(graph_pairs):
         graph_pairs = graph_pairs[skip_first:]
     else:
@@ -356,12 +356,12 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
 
 if __name__ == "__main__":
     # Specify parameters here
-    txt_dir = "/home/mfilippov/ged_data/processed_data/txt/AIDS"
+    txt_dir = "/home/mfilippov/ged_data/processed_data/txt/PROTEINS"
     ged_executable = "/home/mfilippov/CLionProjects/Graph_Edit_Distance/ged"
-    output_excel = "/home/mfilippov/ged_data/results/exact_ged/AIDS/results_2.xlsx"
+    output_excel = "/home/mfilippov/ged_data/results/exact_ged/PROTEINS/results_3_ubuntu.xlsx"
     workers = 8
-    dataset = "AIDS"
-    lb_folder = "/home/mfilippov/ged_data/results/lower_bound/AIDS"
+    dataset = "PROTEINS"
+    lb_folder = "/home/mfilippov/ged_data/results/lower_bound/PROTEINS"
     test_heuristics = False
 
     main(txt_dir, ged_executable, output_excel, workers, dataset, lb_folder, test_heuristics)

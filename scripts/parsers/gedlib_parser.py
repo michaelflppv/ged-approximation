@@ -34,8 +34,8 @@ global_preprocessed_xml: Optional[str] = None          # Path to the temporary p
 GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"
 DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/AIDS"
 COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/AIDS.xml"
-RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib/AIDS"
-RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS_IPFP_results_ubuntu.xlsx")
+RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib/AIDS/IPFP"
+RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS_IPFP_results_ubuntu_2.xlsx")
 EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/AIDS/results.xlsx"
 
 # Mapping of method ID to method names.
@@ -49,6 +49,9 @@ METHOD_NAMES = {
 }
 # Maximum number of rows per Excel file.
 EXCEL_MAX_ROWS = 1048573
+
+# Number of graph pairs to skip.
+SKIP_PAIRS = 27098
 
 # --------------------------
 # Utility Functions
@@ -254,7 +257,7 @@ def get_first_two_graph_properties(dataset_path: str, collection_xml: str):
 def run_ged(dataset_path: str, collection_xml: str):
     """
     Run the GEDLIB executable with the given dataset and collection XML.
-    Parse its output line-by-line and flush intermediate results every few lines.
+    Parse its output line-by-line and flush intermediate results every few pairs.
     On termination or error, results are saved and temporary files are cleaned up.
     """
     global global_ged_process, global_preprocessed_xml
@@ -302,16 +305,21 @@ def run_ged(dataset_path: str, collection_xml: str):
         r"METHOD=(\d+)\s+GRAPH1=(\d+)\s+GRAPH2=(\d+)\s+PREDGED=([\d.]+)\s+GTGED=N/A\s+RUNTIME=([\d.]+).*"
     )
 
-    line_count = 0
-    flush_interval = 5  # Flush intermediate results every 5 lines.
+    line_count = 0       # Total lines read.
+    processed_count = 0  # Count of graph pairs processed (after skipping).
+    flush_interval = 5   # Flush intermediate results every 5 processed pairs.
     try:
         for line in process.stdout:
             line = line.strip()
-            line_count += 1
             if not line:
+                continue
+            line_count += 1
+            # Skip the first SKIP_PAIRS graph pairs.
+            if line_count <= SKIP_PAIRS:
                 continue
             match = regex.search(line)
             if match:
+                processed_count += 1
                 method_id = int(match.group(1))
                 graph1 = int(match.group(2))
                 graph2 = int(match.group(3))
@@ -342,7 +350,7 @@ def run_ged(dataset_path: str, collection_xml: str):
             else:
                 print("Warning: Unmatched line:", line)
 
-            if line_count % flush_interval == 0:
+            if processed_count % flush_interval == 0 and processed_count != 0:
                 log_results(global_results)
     except Exception as e:
         print("Error while processing GED output:", e)
