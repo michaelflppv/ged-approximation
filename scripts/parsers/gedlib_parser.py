@@ -31,12 +31,13 @@ global_ged_process: Optional[subprocess.Popen] = None  # Handle to the GEDLIB su
 global_preprocessed_xml: Optional[str] = None          # Path to the temporary preprocessed XML.
 
 # Modify these paths as needed:
-GED_EXECUTABLE = "../../gedlib/build/main_exec"
-DATASET_PATH    = "/mnt/c/project_data/processed_data/gxl/AIDS"
-COLLECTION_XML  = "/mnt/c/project_data/processed_data/xml/AIDS.xml"
-RESULTS_DIR     = "/mnt/c/project_data/results/gedlib/AIDS"
-RESULTS_FILE    = os.path.join(RESULTS_DIR, "AIDS_IPFP_results_ubuntu.xlsx")
-EXACT_GED_FILE  = "/home/mfilippov/ged_data/results/exact_ged/AIDS/results.xlsx"  # Optional lookup file.
+GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"
+DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/AIDS"
+COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/AIDS.xml"
+RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib/AIDS"
+RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS_IPFP_results_ubuntu.xlsx")
+EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/AIDS/results.xlsx"
+
 # Mapping of method ID to method names.
 METHOD_NAMES = {
     8:  "Anchor Aware",
