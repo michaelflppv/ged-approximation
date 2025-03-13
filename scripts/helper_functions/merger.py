@@ -78,9 +78,9 @@ def merge_excel_files(input_dir, output_file):
 
     # Remove rows where all specified columns equal "N/A"
     # Uncomment the following block to enable this filtering:
-    cols_to_check = ["min_ged", "max_ged", "runtime", "candidates", "matches"]
-    condition = ((merged_df[cols_to_check].isna()) | (merged_df[cols_to_check] == "N/A") | (merged_df[cols_to_check] == "")).all(axis=1)
-    merged_df = merged_df[~condition]
+    #cols_to_check = ["min_ged", "max_ged", "runtime", "candidates", "matches"]
+    #condition = ((merged_df[cols_to_check].isna()) | (merged_df[cols_to_check] == "N/A") | (merged_df[cols_to_check] == "")).all(axis=1)
+    #merged_df = merged_df[~condition]
 
     # Ensure the output directory exists; if not, create it
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -92,8 +92,8 @@ def merge_excel_files(input_dir, output_file):
 
 if __name__ == "__main__":
     # Define the input directory and output file path
-    input_directory = "/home/mfilippov/ged_data/results/exact_ged/PROTEINS"  # Update as needed
-    output_file_path = "/home/mfilippov/ged_data/results/exact_ged/PROTEINS/merged/results.xlsx"  # Update as needed
+    input_directory = "/home/mfilippov/ged_data/results/gedlib/AIDS/IPFP"  # Update as needed
+    output_file_path = "/home/mfilippov/ged_data/results/gedlib/AIDS/AIDS_IPFP_results.xlsx"  # Update as needed
 
     try:
         merge_excel_files(input_directory, output_file_path)

@@ -32,11 +32,11 @@ global_preprocessed_xml: Optional[str] = None          # Path to the temporary p
 
 # Modify these paths as needed:
 GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"
-DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/AIDS"
-COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/AIDS.xml"
-RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib/AIDS/IPFP"
-RESULTS_FILE = os.path.join(RESULTS_DIR, "AIDS_IPFP_results_ubuntu_2.xlsx")
-EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/AIDS/results.xlsx"
+DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/IMDB-BINARY"
+COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/IMDB-BINARY.xml"
+RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib/IMDB-BINARY/IPFP"
+RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY_IPFP_results_1.xlsx")
+EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/IMDB-BINARY/results.xlsx"
 
 # Mapping of method ID to method names.
 METHOD_NAMES = {
@@ -51,7 +51,7 @@ METHOD_NAMES = {
 EXCEL_MAX_ROWS = 1048573
 
 # Number of graph pairs to skip.
-SKIP_PAIRS = 27098
+SKIP_PAIRS = 37632
 
 # --------------------------
 # Utility Functions
@@ -68,32 +68,44 @@ def set_unlimited():
         except Exception as e:
             print("Warning: could not set RLIMIT_CPU unlimited:", e)
 
-def log_results(results):
+def save_results(excel_file, results_list):
     """
-    Save the current results to Excel.
-    If the DataFrame exceeds Excel's maximum row limit, split the results across multiple files.
-    Uses openpyxl as the primary engine, with xlsxwriter as fallback.
+    Save the results list to an Excel file.
+    This function attempts to save using openpyxl first and falls back to xlsxwriter.
+    If both fail, it falls back to saving as CSV.
+    Splitting into multiple files is performed if the DataFrame exceeds Excel's row limit.
+    Any errors (such as "I/O operation on closed file") are caught and handled.
     """
-    if not results:
-        print("No results to save.")
+    try:
+        df = pd.DataFrame(results_list)
+        # Standardize column names.
+        df["graph_id_1"] = df["graph1"]
+        df["graph_id_2"] = df["graph2"]
+        desired_columns = [
+            "method", "graph_id_1", "graph_id_2", "ged", "accuracy",
+            "absolute_error", "squared_error", "runtime", "memory_usage_mb",
+            "graph1_n", "graph1_density", "graph2_n", "graph2_density", "scalability"
+        ]
+        df = df[desired_columns]
+        os.makedirs(os.path.dirname(excel_file), exist_ok=True)
+    except Exception as e:
+        print("Error building DataFrame:", e)
         return
 
-    df = pd.DataFrame(results)
-    if df.empty:
-        print("DataFrame is empty; nothing to write.")
-        return
+    def attempt_save(engine, file_path):
+        temp_file = os.path.join(os.path.dirname(file_path), "temp_results.xlsx")
+        try:
+            df.to_excel(temp_file, index=False, engine=engine)
+            os.replace(temp_file, file_path)
+            print(f"Results saved to {file_path} using {engine}.")
+            return True
+        except Exception as ex:
+            print(f"Error saving with {engine}: {ex}")
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+            return False
 
-    # Standardize column names.
-    df["graph_id_1"] = df["graph1"]
-    df["graph_id_2"] = df["graph2"]
-    desired_columns = [
-        "method", "graph_id_1", "graph_id_2", "ged", "accuracy",
-        "absolute_error", "squared_error", "runtime", "memory_usage_mb",
-        "graph1_n", "graph1_density", "graph2_n", "graph2_density", "scalability"
-    ]
-    df = df[desired_columns]
-    os.makedirs(RESULTS_DIR, exist_ok=True)
-
+    # Split into multiple files if needed.
     if len(df) > EXCEL_MAX_ROWS:
         num_files = (len(df) + EXCEL_MAX_ROWS - 1) // EXCEL_MAX_ROWS
         print(f"DataFrame has {len(df)} rows; splitting into {num_files} files.")
@@ -102,36 +114,23 @@ def log_results(results):
             end = start + EXCEL_MAX_ROWS
             chunk = df.iloc[start:end]
             if part == 0:
-                file_path = RESULTS_FILE
+                file_path = excel_file
             else:
-                base, ext = os.path.splitext(RESULTS_FILE)
+                base, ext = os.path.splitext(excel_file)
                 file_path = f"{base}_part{part+1}{ext}"
             if os.path.exists(file_path):
                 try:
                     from openpyxl import load_workbook
                     load_workbook(file_path)
-                except Exception as e:
-                    print(f"Existing file {file_path} is corrupted ({e}). Removing it.")
+                except Exception as ex:
+                    print(f"Existing file {file_path} is corrupted ({ex}). Removing it.")
                     os.remove(file_path)
-            temp_file = os.path.join(RESULTS_DIR, f"temp_results_part{part+1}.xlsx")
-            try:
-                chunk.to_excel(temp_file, index=False, engine='openpyxl')
-                os.replace(temp_file, file_path)
-                print(f"Saved {len(chunk)} rows to {file_path}.")
-            except Exception as e:
-                print(f"Error writing {file_path} with openpyxl: {e}")
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
-                try:
-                    chunk.to_excel(temp_file, index=False, engine='xlsxwriter')
-                    os.replace(temp_file, file_path)
-                    print(f"Saved with fallback engine: {len(chunk)} rows to {file_path}.")
-                except Exception as e2:
-                    print(f"Failed to write {file_path} with fallback: {e2}")
-                    if os.path.exists(temp_file):
-                        os.remove(temp_file)
+            if not attempt_save("openpyxl", file_path):
+                if not attempt_save("xlsxwriter", file_path):
+                    print(f"Failed to save {file_path} using both engines.")
+        return
     else:
-        file_path = RESULTS_FILE
+        file_path = excel_file
         if os.path.exists(file_path):
             try:
                 from openpyxl import load_workbook
@@ -139,23 +138,15 @@ def log_results(results):
             except Exception as e:
                 print(f"Existing file {file_path} is corrupted ({e}). Removing it.")
                 os.remove(file_path)
-        temp_file = os.path.join(RESULTS_DIR, "temp_results.xlsx")
-        try:
-            df.to_excel(temp_file, index=False, engine='openpyxl')
-            os.replace(temp_file, file_path)
-            print(f"Saved {len(df)} rows to {file_path}.")
-        except Exception as e:
-            print("Error writing Excel file with openpyxl:", e)
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
-            try:
-                df.to_excel(temp_file, index=False, engine='xlsxwriter')
-                os.replace(temp_file, file_path)
-                print(f"Saved with fallback engine: {len(df)} rows to {file_path}.")
-            except Exception as e2:
-                print("Failed to write Excel file with fallback engine:", e2)
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
+        if not attempt_save("openpyxl", file_path):
+            if not attempt_save("xlsxwriter", file_path):
+                print("Failed to save Excel file using both engines. Attempting to save as CSV.")
+                try:
+                    csv_file = os.path.splitext(file_path)[0] + ".csv"
+                    df.to_csv(csv_file, index=False)
+                    print(f"Results saved to {csv_file} as CSV fallback.")
+                except Exception as ex:
+                    print(f"Failed to save results as CSV: {ex}")
 
 def signal_handler(signum, frame):
     """Handle termination signals by cleaning up and saving partial results."""
@@ -172,7 +163,7 @@ def signal_handler(signum, frame):
             os.remove(global_preprocessed_xml)
         except Exception as e:
             print("Error removing temporary XML file:", e)
-    log_results(global_results)
+    save_results(RESULTS_FILE, global_results)
     sys.exit(1)
 
 # Register signal handlers for graceful termination.
@@ -301,6 +292,7 @@ def run_ged(dataset_path: str, collection_xml: str):
         n1 = n2 = d1 = d2 = None
 
     # Regular expression to match expected output lines.
+    # No MEM field is expected from the executable.
     regex = re.compile(
         r"METHOD=(\d+)\s+GRAPH1=(\d+)\s+GRAPH2=(\d+)\s+PREDGED=([\d.]+)\s+GTGED=N/A\s+RUNTIME=([\d.]+).*"
     )
@@ -326,6 +318,7 @@ def run_ged(dataset_path: str, collection_xml: str):
                 pred_ged = float(match.group(4))
                 runtime = float(match.group(5))
                 try:
+                    # Calculate memory usage internally using psutil.
                     memory_usage_mb = ged_proc.memory_info().rss / (1024 * 1024) if ged_proc else "N/A"
                 except Exception:
                     memory_usage_mb = "N/A"
@@ -351,7 +344,7 @@ def run_ged(dataset_path: str, collection_xml: str):
                 print("Warning: Unmatched line:", line)
 
             if processed_count % flush_interval == 0 and processed_count != 0:
-                log_results(global_results)
+                save_results(RESULTS_FILE, global_results)
     except Exception as e:
         print("Error while processing GED output:", e)
     finally:
@@ -370,7 +363,7 @@ def run_ged(dataset_path: str, collection_xml: str):
             process.stderr.close()
         except Exception:
             pass
-        log_results(global_results)
+        save_results(RESULTS_FILE, global_results)
         if global_preprocessed_xml is not None and os.path.exists(global_preprocessed_xml):
             try:
                 os.remove(global_preprocessed_xml)
@@ -388,5 +381,5 @@ if __name__ == "__main__":
             print("No results processed.")
     except Exception as e:
         print("Unexpected error:", e)
-        log_results(global_results)
+        save_results(RESULTS_FILE, global_results)
         sys.exit(1)

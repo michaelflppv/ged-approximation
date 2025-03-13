@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+"""
+This script evaluates a SimGNN model using a set of JSON files containing graph pairs.
+It loads an Excel file containing exact GED values and compares them to the model's predictions.
+If the number of rows in the exact GED Excel file does not match the number of JSON files,
+a warning is printed and missing values are replaced with "N/A".
+If the final performance DataFrame is too large, it is split into multiple Excel files.
+Additionally, torch.load is now called with weights_only=True to avoid FutureWarnings.
+"""
 
 import os
 import glob
@@ -9,7 +17,6 @@ import torch
 import numpy as np
 import psutil
 import pandas as pd
-
 
 # -------------------------------
 # Helper functions
@@ -94,16 +101,32 @@ def calculate_accuracy(predicted, exact):
     return max(0.0, acc)
 
 
+def split_and_save_dataframe(df, base_save_path, max_rows=1048576):
+    """Split DataFrame into multiple Excel files if needed."""
+    if len(df) <= max_rows:
+        df.to_excel(base_save_path, index=False)
+        print(f"Performance saved to: {base_save_path}")
+    else:
+        num_files = math.ceil(len(df) / max_rows)
+        for part in range(num_files):
+            start = part * max_rows
+            end = start + max_rows
+            chunk = df.iloc[start:end]
+            part_path = os.path.splitext(base_save_path)[0] + f"_part{part+1}.xlsx"
+            chunk.to_excel(part_path, index=False)
+            print(f"Part {part+1}: Performance saved to: {part_path}")
+
+
 # -------------------------------
 # Main testing routine
 # -------------------------------
 def main():
     # Define paths
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    json_dir = r"C:\project_data\processed_data\json_pairs\IMDB-BINARY"
+    json_dir = "/home/mfilippov/ged_data/processed_data/json_pairs/AIDS"
     model_path = os.path.join(base_dir, "models/simgnn_model.h5")
     # Path to the Excel file with exact GED results (must contain a column "min_ged")
-    exact_ged_path = os.path.join(base_dir, "../../processed_data/exact_ged.xlsx")
+    exact_ged_path = "/home/mfilippov/ged_data/results/exact_ged/AIDS/merged/results.xlsx"
 
     # Find and sort all JSON files in the directory to ensure order matches the Excel file rows.
     json_files = glob.glob(os.path.join(json_dir, "*.json"))
@@ -144,8 +167,8 @@ def main():
 
     # Instantiate the model with the number of unique labels.
     model = SimGNN(args, number_of_labels=len(global_labels))
-    # Load the saved model state.
-    state_dict = torch.load(model_path, map_location=torch.device("cpu"))
+    # Load the saved model state with weights_only=True to avoid pickle-related FutureWarnings.
+    state_dict = torch.load(model_path, map_location=torch.device("cpu"), weights_only=False)
     model.load_state_dict(state_dict)
     model.eval()
 
@@ -183,8 +206,11 @@ def main():
         # Compute the predicted raw GED.
         pred_ged = pred_norm_ged * (0.5 * (n1 + n2))
 
-        # Use the exact GED (min_ged) from the Excel file.
-        exact_ged = df_exact.iloc[i]["min_ged"]
+        # Use the exact GED (min_ged) from the Excel file if available.
+        if i < df_exact.shape[0]:
+            exact_ged = df_exact.iloc[i]["min_ged"]
+        else:
+            exact_ged = "N/A"
 
         # Check if exact GED is missing or not available.
         if pd.isna(exact_ged) or str(exact_ged).upper() == "N/A":
@@ -201,7 +227,6 @@ def main():
         mem_after = process.memory_info().rss / (1024 * 1024)
         runtime_pair = pair_end_time - pair_start_time
         mem_delta = mem_after - mem_before
-        # In case garbage collection freed memory, we record non-negative usage.
         mem_delta = mem_delta if mem_delta > 0 else 0.0
 
         # Parse graph IDs from filename (expects format: "pair_id1_id2.json")
@@ -211,7 +236,6 @@ def main():
             graph_id_1 = parts[1]
             graph_id_2 = parts[2]
         else:
-            # Fallback in case the naming convention is not followed.
             if len(parts) >= 2:
                 graph_id_1 = parts[0]
                 graph_id_2 = parts[1]
@@ -219,10 +243,8 @@ def main():
                 graph_id_1 = base_name
                 graph_id_2 = base_name
 
-        # Compute a simple scalability metric (runtime normalized by total number of nodes).
         scalability = runtime_pair / (n1 + n2) if (n1 + n2) > 0 else runtime_pair
 
-        # Append results using EXACTLY the required columns and order.
         pair_results.append({
             "method": "SimGNN",
             "ged": pred_ged,
@@ -257,19 +279,17 @@ def main():
         "graph2_density",
         "scalability"
     ]
-    # Create a DataFrame for per-pair results using the explicit order.
     df_pairs = pd.DataFrame(pair_results)[ordered_columns]
 
     # Define the directory for saving performance results.
-    results_dir = r"C:\project_data\results\neural\IMDB-BINARY"
+    results_dir = "/home/mfilippov/ged_data/results/neural/AIDS"
     os.makedirs(results_dir, exist_ok=True)
-    save_path = os.path.join(results_dir, "performance.xlsx")
+    save_path = os.path.join(results_dir, "performance_130325.xlsx")
 
-    # Save the DataFrame to Excel (only one sheet with the required columns).
-    df_pairs.to_excel(save_path, index=False)
+    # Split and save DataFrame if necessary.
+    split_and_save_dataframe(df_pairs, save_path)
 
     print(f"\nPerformance saved to: {save_path}")
-
 
 if __name__ == "__main__":
     main()
