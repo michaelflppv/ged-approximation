@@ -26,7 +26,7 @@ def main():
     if not os.path.exists(models_dir):
         os.makedirs(models_dir)
     if not args.save_path:
-        args.save_path = os.path.join(models_dir, "simgnn_model.pth")
+        args.save_path = os.path.join(models_dir, "simgnn_model.h5")
 
     trainer.save()
 

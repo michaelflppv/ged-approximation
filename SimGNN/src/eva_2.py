@@ -124,10 +124,10 @@ def split_and_save_dataframe(df, base_save_path, max_rows=1048576):
 def main():
     # Define paths
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    json_dir = "/home/mfilippov/ged_data/processed_data/json_pairs/IMDB-BINARY"
+    json_dir = "/home/mfilippov/ged_data/processed_data/json_pairs/AIDS"
     model_path = os.path.join(base_dir, "models/simgnn_model.h5")
     # Path to the Excel file with exact GED results (must contain a column "min_ged")
-    exact_ged_path = "/home/mfilippov/ged_data/results/exact_ged/IMDB-BINARY/merged/results.xlsx"
+    exact_ged_path = "/home/mfilippov/ged_data/results/exact_ged/AIDS/merged/results.xlsx"
 
     # Find and sort all JSON files in the directory to ensure order matches the Excel file rows.
     json_files = glob.glob(os.path.join(json_dir, "*.json"))
@@ -255,6 +255,8 @@ def main():
 
         scalability = runtime_pair / (n1 + n2) if (n1 + n2) > 0 else runtime_pair
 
+        print("Pair processed:", graph_id_1, graph_id_2)
+
         pair_results.append({
             "method": "SimGNN",
             "ged": pred_ged,
@@ -292,7 +294,7 @@ def main():
     df_pairs = pd.DataFrame(pair_results)[ordered_columns]
 
     # Define the directory for saving performance results.
-    results_dir = "/home/mfilippov/ged_data/results/neural/IMDB-BINARY"
+    results_dir = "/home/mfilippov/ged_data/results/neural/AIDS"
     os.makedirs(results_dir, exist_ok=True)
     save_path = os.path.join(results_dir, "performance_180325.xlsx")
 

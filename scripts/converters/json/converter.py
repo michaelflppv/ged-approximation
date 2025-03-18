@@ -47,28 +47,23 @@ def main():
 
     # Build the relative paths.
     dataset_dir = os.path.join(script_dir, "..", "..", "..", "data", DATASET)
-    output_dir = r"C:\project_data\processed_data\json_pairs\AIDS"
-    ged_excel_path = os.path.join(script_dir, "..", "..", "..", "results", "gedlib", f"{DATASET}_results.xlsx")
+    output_dir = "/home/mfilippov/ged_data/processed_data/json_pairs/AIDS"
+    ged_excel_path = "/home/mfilippov/ged_data/results/exact_ged/AIDS/merged/results.xlsx"
 
     # --- Read GED values from the Excel file ---
     ged_dict = {}
     if os.path.exists(ged_excel_path):
         try:
             ged_df = pd.read_excel(ged_excel_path)
-            # Filter rows where the method is "STAR (Exact)" if the column exists.
-            if "method" in ged_df.columns:
-                ged_df = ged_df[ged_df["method"] == "STAR (Exact)"]
-
             # Build a dictionary with key: (graph1, graph2) and value: ged.
             for _, row in ged_df.iterrows():
                 try:
-                    g1 = int(row["graph1"])
-                    g2 = int(row["graph2"])
-                    ged_val = int(row["ged"])
+                    g1 = int(row["graph_id_1"])
+                    g2 = int(row["graph_id_2"])
+                    ged_val = int(row["min_ged"])
                     ged_dict[(g1, g2)] = ged_val
                 except Exception:
                     continue
-
         except Exception as e:
             print(f"Error reading GED values from Excel: {e}")
             ged_dict = {}
@@ -147,7 +142,8 @@ def main():
             line = line.strip()
             if not line:
                 continue
-            parts = line.split(',')
+            # Split by comma and remove any empty strings (this handles potential trailing commas).
+            parts = [p.strip() for p in line.split(',') if p.strip()]
             if len(parts) < 2:
                 continue
             try:
@@ -170,7 +166,6 @@ def main():
             graph_edges[graph_id].append([local_u, local_v])
 
     # --- Step 4: Build local node label lists for each graph ---
-    # Use the node_labels list (which is now guaranteed to be non-None) to build local labels.
     graph_local_node_labels = {graph_id: [node_labels[global_id - 1] for global_id in nodes]
                                for graph_id, nodes in graph_nodes.items()}
 
@@ -200,8 +195,9 @@ def main():
             json_filename = f"pair_{g1}_{g2}.json"
             json_filepath = os.path.join(output_dir, json_filename)
 
+            # Write JSON file with indentation for readability.
             with open(json_filepath, 'w') as json_file:
-                json.dump(json_data, json_file)
+                json.dump(json_data, json_file, indent=4)
             pair_count += 1
 
             if pair_count % 1000 == 0:
