@@ -49,6 +49,7 @@ def transfer_to_torch(data, global_labels):
     """
     Convert the raw JSON data into torch tensors.
     This function mimics the conversion in SimGNNTrainer.transfer_to_torch.
+    It assumes that the JSON contains keys "graph_1", "graph_2", "labels_1", "labels_2", and "ged".
     """
     new_data = dict()
 
@@ -180,11 +181,16 @@ def main():
 
     # Process each JSON file.
     for i, filepath in enumerate(json_files):
+        try:
+            data = load_json(filepath)
+        except Exception as e:
+            print(f"Skipping {filepath} due to error in loading JSON: {e}")
+            continue
+
         # Measure per-pair runtime and memory usage.
         pair_start_time = time.time()
         mem_before = process.memory_info().rss / (1024 * 1024)
 
-        data = load_json(filepath)
         n1 = len(data["labels_1"])
         n2 = len(data["labels_2"])
 
@@ -193,7 +199,11 @@ def main():
         density2 = compute_density(data["graph_2"], n2)
 
         # Convert raw data to torch tensors.
-        torch_data = transfer_to_torch(data, global_labels)
+        try:
+            torch_data = transfer_to_torch(data, global_labels)
+        except Exception as e:
+            print(f"Skipping pair {filepath} due to error in transfer_to_torch: {e}")
+            continue
 
         # Get model prediction (a similarity score).
         with torch.no_grad():
