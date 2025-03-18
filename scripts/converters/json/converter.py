@@ -47,8 +47,8 @@ def main():
 
     # Build the relative paths.
     dataset_dir = os.path.join(script_dir, "..", "..", "..", "data", DATASET)
-    output_dir = "/home/mfilippov/ged_data/processed_data/json_pairs/AIDS"
-    ged_excel_path = "/home/mfilippov/ged_data/results/exact_ged/AIDS/merged/results.xlsx"
+    output_dir = "/mnt/c/project_data/processed_data/json_pairs/AIDS"
+    ged_excel_path = "/mnt/c/project_data/results/exact_ged/AIDS/merged/results.xlsx"
 
     # --- Read GED values from the Excel file ---
     ged_dict = {}
@@ -202,6 +202,12 @@ def main():
 
             if pair_count % 1000 == 0:
                 print(f"Processed {pair_count}/{total_pairs} pairs...")
+
+            if pair_count == 100000:
+                break
+
+        if pair_count == 100000:
+            break
 
     print(f"Finished processing {pair_count} graph pairs.")
 

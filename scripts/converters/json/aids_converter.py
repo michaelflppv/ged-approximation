@@ -126,16 +126,11 @@ def convert_aids_to_json_files(input_dir, prefix, output_dir):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Convert AIDS dataset txt files into JSON files (each containing 2 graphs).")
-    parser.add_argument("prefix", nargs="?", default="AIDS",
-                        help="Prefix for the dataset files (default: 'AIDS')")
-    parser.add_argument("--input_dir", default=DEFAULT_INPUT_DIR,
-                        help=f"Directory containing the AIDS txt files (default: {DEFAULT_INPUT_DIR})")
-    parser.add_argument("--output_dir", default=DEFAULT_OUTPUT_DIR,
-                        help=f"Directory to save the JSON files (default: {DEFAULT_OUTPUT_DIR})")
-    args = parser.parse_args()
+    input_dir = r"C:\Users\mikef\PycharmProjects\ged-approximation\data\AIDS"
+    prefix = "AIDS"
+    output_dir = r"C:\project_data\processed_data\json_pairs\AIDS"
 
-    convert_aids_to_json_files(args.input_dir, args.prefix, args.output_dir)
+    convert_aids_to_json_files(input_dir, prefix, output_dir)
 
 
 if __name__ == "__main__":
