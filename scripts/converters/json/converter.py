@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 DS_converter.py
 
@@ -48,7 +47,7 @@ def main():
 
     # Build the relative paths.
     dataset_dir = os.path.join(script_dir, "..", "..", "..", "data", DATASET)
-    output_dir = os.path.join(script_dir, "..", "..", "..", "processed_data", "json_pairs", DATASET)
+    output_dir = r"C:\project_data\processed_data\json_pairs\AIDS"
     ged_excel_path = os.path.join(script_dir, "..", "..", "..", "results", "gedlib", f"{DATASET}_results.xlsx")
 
     # --- Read GED values from the Excel file ---
@@ -119,8 +118,9 @@ def main():
                           for graph_id, nodes in graph_nodes.items()}
 
     # --- Step 2: Parse DS_node_labels.txt (optional) ---
-    node_labels = []
+    # If the optional file is not found, fill with dummy labels (here, 0) for each node.
     if os.path.exists(file_node_labels):
+        node_labels = []
         with open(file_node_labels, 'r') as f:
             for line in f:
                 line = line.strip()
@@ -134,10 +134,10 @@ def main():
                     except ValueError:
                         label = line  # Keep as string if neither int nor float.
                 node_labels.append(label)
-
     else:
-        print(f"Optional file '{file_node_labels}' not found. Node labels will be empty.")
-        node_labels = None
+        print(f"Optional file '{file_node_labels}' not found. Filling node labels with dummy values.")
+        # Use dummy label 0 for each node; number of nodes equals length of global_indicator.
+        node_labels = [0] * len(global_indicator)
 
     # --- Step 3: Parse DS_A.txt and build edge lists for each graph ---
     graph_edges = {graph_id: [] for graph_id in graph_nodes.keys()}
@@ -170,11 +170,9 @@ def main():
             graph_edges[graph_id].append([local_u, local_v])
 
     # --- Step 4: Build local node label lists for each graph ---
-    if node_labels is not None:
-        graph_local_node_labels = {graph_id: [node_labels[global_id - 1] for global_id in nodes]
-                                   for graph_id, nodes in graph_nodes.items()}
-    else:
-        graph_local_node_labels = {graph_id: [] for graph_id in graph_nodes.keys()}
+    # Use the node_labels list (which is now guaranteed to be non-None) to build local labels.
+    graph_local_node_labels = {graph_id: [node_labels[global_id - 1] for global_id in nodes]
+                               for graph_id, nodes in graph_nodes.items()}
 
     # --- Step 5: Produce JSON files for every unordered pair of graphs ---
     sorted_graph_ids = sorted(graph_nodes.keys())
@@ -192,7 +190,6 @@ def main():
                 "graph_2": graph_edges[g2],
                 "labels_1": graph_local_node_labels[g1],
                 "labels_2": graph_local_node_labels[g2],
-
             }
 
             # Look up the GED value for this pair (assumes g1 and g2 are in sorted order).
