@@ -92,8 +92,8 @@ def merge_excel_files(input_dir, output_file):
 
 if __name__ == "__main__":
     # Define the input directory and output file path
-    input_directory = "/home/mfilippov/ged_data/results/gedlib/AIDS/IPFP"  # Update as needed
-    output_file_path = "/home/mfilippov/ged_data/results/gedlib/AIDS/AIDS_IPFP_results.xlsx"  # Update as needed
+    input_directory = r"C:\project_data\results\exact_ged\PROTEINS"  # Update as needed
+    output_file_path = r"C:\project_data\results\exact_ged\PROTEINS\merged\results.xlsx"  # Update as needed
 
     try:
         merge_excel_files(input_directory, output_file_path)

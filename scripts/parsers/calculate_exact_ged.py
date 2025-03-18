@@ -356,12 +356,12 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
 
 if __name__ == "__main__":
     # Specify parameters here
-    txt_dir = "/home/mfilippov/ged_data/processed_data/txt/IMDB-BINARY"
-    ged_executable = "/home/mfilippov/CLionProjects/Graph_Edit_Distance/ged"
-    output_excel = "/home/mfilippov/ged_data/results/exact_ged/IMDB-BINARY/results_3_ubuntu.xlsx"
+    txt_dir = "/mnt/c/project_data/processed_data/txt/AIDS"
+    ged_executable = "/mnt/c/Users/mikef/CLionProjects/Graph_Edit_Distance/ged"
+    output_excel = "/mnt/c/project_data/results/exact_ged/AIDS/results_3_ubuntu.xlsx"
     workers = 8
-    dataset = "IMDB-BINARY"
-    lb_folder = "/home/mfilippov/ged_data/results/lower_bound/IMDB-BINARY"
+    dataset = "AIDS"
+    lb_folder = "/mnt/c/project_data/results/lower_bound/AIDS"
     test_heuristics = False
 
     main(txt_dir, ged_executable, output_excel, workers, dataset, lb_folder, test_heuristics)

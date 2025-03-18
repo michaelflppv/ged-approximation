@@ -2,7 +2,7 @@
 """
 This script evaluates a SimGNN model using a set of JSON files containing graph pairs.
 It loads an Excel file containing exact GED values and compares them to the model's predictions.
-If the number of rows in the exact GED Excel file does not match the number of JSON files,
+If the number of rows in the exact GED Excel file does not match number of JSON files,
 a warning is printed and missing values are replaced with "N/A".
 If the final performance DataFrame is too large, it is split into multiple Excel files.
 Additionally, torch.load is now called with weights_only=True to avoid FutureWarnings.
@@ -22,9 +22,12 @@ import pandas as pd
 # Helper functions
 # -------------------------------
 def load_json(filepath):
-    """Load a JSON file and return the data."""
+    """Load a JSON file and return the data. Raises ValueError if file is empty."""
     with open(filepath, "r") as f:
-        return json.load(f)
+        content = f.read().strip()
+        if not content:
+            raise ValueError(f"Empty JSON file: {filepath}")
+        return json.loads(content)
 
 
 def compute_density(edge_list, num_nodes):
@@ -124,10 +127,10 @@ def split_and_save_dataframe(df, base_save_path, max_rows=1048576):
 def main():
     # Define paths
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    json_dir = "/home/mfilippov/ged_data/processed_data/json_pairs/IMDB-BINARY"
+    json_dir = r"C:\project_data\processed_data\json_pairs\AIDS"
     model_path = os.path.join(base_dir, "models/simgnn_model.h5")
     # Path to the Excel file with exact GED results (must contain a column "min_ged")
-    exact_ged_path = "/home/mfilippov/ged_data/results/exact_ged/IMDB-BINARY/merged/results.xlsx"
+    exact_ged_path = r"C:\project_data\results\exact_ged\AIDS\merged\results.xlsx"
 
     # Find and sort all JSON files in the directory to ensure order matches the Excel file rows.
     json_files = glob.glob(os.path.join(json_dir, "*.json"))
@@ -144,7 +147,11 @@ def main():
     # Build a global mapping of unique node labels across all graph pairs.
     global_labels_set = set()
     for filepath in json_files:
-        data = load_json(filepath)
+        try:
+            data = load_json(filepath)
+        except Exception as e:
+            print(f"Skipping {filepath} due to error in loading JSON: {e}")
+            continue
         global_labels_set.update([str(label) for label in data["labels_1"]])
         global_labels_set.update([str(label) for label in data["labels_2"]])
     sorted_labels = sorted(global_labels_set, key=lambda x: x)
@@ -168,7 +175,6 @@ def main():
 
     # Instantiate the model with the number of unique labels.
     model = SimGNN(args, number_of_labels=len(global_labels))
-    # Load the saved model state with weights_only=True to avoid pickle-related FutureWarnings.
     state_dict = torch.load(model_path, map_location=torch.device("cpu"), weights_only=False)
     model.load_state_dict(state_dict)
     model.eval()
@@ -255,6 +261,8 @@ def main():
 
         scalability = runtime_pair / (n1 + n2) if (n1 + n2) > 0 else runtime_pair
 
+        print("Pair: " + graph_id_1 + " " + graph_id_2)
+
         pair_results.append({
             "method": "SimGNN",
             "ged": pred_ged,
@@ -292,9 +300,9 @@ def main():
     df_pairs = pd.DataFrame(pair_results)[ordered_columns]
 
     # Define the directory for saving performance results.
-    results_dir = "/home/mfilippov/ged_data/results/neural/IMDB-BINARY"
+    results_dir = r"C:\project_data\results\neural\AIDS"
     os.makedirs(results_dir, exist_ok=True)
-    save_path = os.path.join(results_dir, "performance_180325.xlsx")
+    save_path = os.path.join(results_dir, "performance.xlsx")
 
     # Split and save DataFrame if necessary.
     split_and_save_dataframe(df_pairs, save_path)
