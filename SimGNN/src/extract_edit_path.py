@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 extract_edit_path.py
 
@@ -7,7 +6,7 @@ It computes node embeddings for both graphs (using the model's convolutional lay
 and then uses the Hungarian algorithm to derive an approximate alignment between nodes.
 Based on this alignment (and comparing node labels), the script outputs a sequence of
 approximate edit operations (matches, substitutions, deletions, insertions) that describe
-an edit path from graph_1 to graph_2.
+an edit path from graph_1 to graph_2 in machine-readable JSON format.
 
 Usage (from SimGNN/src directory):
     python extract_edit_path.py --json_file ../../processed_data/json_pairs/PROTEINS/pair_1_2.json [--model_path <relative_model_path>] [--dummy_cost 1.0]
@@ -18,6 +17,7 @@ By default, if --model_path is not provided, the model at ../models/simgnn_model
 import os
 import sys
 import argparse
+import json
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
@@ -90,7 +90,7 @@ def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
     as edit operations.
 
     Returns:
-        List of strings, each describing one edit operation.
+        List of dictionaries, each describing one edit operation in machine-readable format.
     """
     # Convert embeddings to numpy arrays.
     emb1_np = emb1.detach().cpu().numpy()
@@ -108,15 +108,34 @@ def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
     for i, j in zip(row_ind, col_ind):
         if i < n1 and j < n2:
             if labels1[i] == labels2[j]:
-                op = f"Match: Graph1 node {i} -> Graph2 node {j} (label {labels1[i]})"
+                op = {
+                    "op": "match",
+                    "graph1_node": i,
+                    "graph2_node": j,
+                    "label": labels1[i]
+                }
             else:
-                op = f"Substitute: Graph1 node {i} (label {labels1[i]}) -> Graph2 node {j} (label {labels2[j]})"
+                op = {
+                    "op": "substitute",
+                    "graph1_node": i,
+                    "graph1_label": labels1[i],
+                    "graph2_node": j,
+                    "graph2_label": labels2[j]
+                }
             edit_operations.append(op)
         elif i < n1 and j >= n2:
-            op = f"Delete: Graph1 node {i} (label {labels1[i]})"
+            op = {
+                "op": "delete",
+                "graph1_node": i,
+                "graph1_label": labels1[i]
+            }
             edit_operations.append(op)
         elif i >= n1 and j < n2:
-            op = f"Insert: Graph2 node {j} (label {labels2[j]})"
+            op = {
+                "op": "insert",
+                "graph2_node": j,
+                "graph2_label": labels2[j]
+            }
             edit_operations.append(op)
     return edit_operations
 
@@ -143,7 +162,7 @@ def main():
     # Compute node embeddings.
     emb1, emb2 = get_node_embeddings(trainer, data)
 
-    # Extract edit operations.
+    # Extract edit operations in machine-readable format.
     labels1 = data["labels_1"]
     labels2 = data["labels_2"]
     edit_ops = extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=custom_args.dummy_cost)
@@ -153,15 +172,15 @@ def main():
     results_dir = os.path.join(project_root, 'results', 'extracted_paths')
     os.makedirs(results_dir, exist_ok=True)
 
-    output_file = os.path.join(results_dir, 'edit_path.txt')
+    output_file = os.path.join(results_dir, 'edit_path.json')
+    # Write the machine-readable edit path as JSON.
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write('Extracted approximate edit path:\n')
-        for op in edit_ops:
-            f.write(op + '\n')
+        json.dump({"edit_path": edit_ops}, f, indent=2)
 
-    print("Extracted approximate edit path:")
-    for op in edit_ops:
-        print(op)
+    print("Extracted machine-readable edit path saved to:")
+    print(output_file)
+    # Optionally, also print the JSON to the console.
+    print(json.dumps({"edit_path": edit_ops}, indent=2))
 
 
 if __name__ == "__main__":

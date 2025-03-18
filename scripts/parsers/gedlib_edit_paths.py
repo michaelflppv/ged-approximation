@@ -4,12 +4,12 @@ import json
 
 def main():
     # Specify your parameters here:
-    dataset_path = "/home/mfilippov/ged_data/processed_data/gxl/PROTEINS"          # Replace with your dataset directory path
-    collection_xml = "/home/mfilippov/ged_data/processed_data/xml/PROTEINS.xml" # Replace with your collection XML file path
+    dataset_path = "/home/mfilippov/ged_data/processed_data/gxl/PROTEINS"          # Update as needed
+    collection_xml = "/home/mfilippov/ged_data/processed_data/xml/PROTEINS.xml"      # Update as needed
     idx1 = 0                                   # Graph index 1 (zero-based)
     idx2 = 1                                   # Graph index 2 (zero-based)
-    executable = "/home/mfilippov/CLionProjects/gedlib/build/edit_path_exec"            # Path to the GEDLIB executable
-    output_file = "/home/mfilippov/ged_data/results/extracted_paths/ipfp_edit_path.json"           # Name of the output JSON file
+    executable = "/home/mfilippov/CLionProjects/gedlib/build/edit_path_exec"         # Path to the executable
+    output_file = "/home/mfilippov/ged_data/results/extracted_paths/ipfp_edit_path.json"  # Output JSON file
 
     # Build the command with required arguments.
     command = [
@@ -32,33 +32,18 @@ def main():
         print("stderr:", e.stderr)
         return
 
-    output_lines = result.stdout.strip().splitlines()
-    if not output_lines:
-        print("No output received from the executable.")
-        return
-
-    # The first line is expected to be "Approximate Graph Edit Distance = <value>"
+    # Instead of parsing human-readable output, we expect the executable to output a JSON string.
     try:
-        cost_line = output_lines[0]
-        parts = cost_line.split("=")
-        if len(parts) < 2:
-            raise ValueError("Invalid output format for GED cost.")
-        ged_cost = float(parts[1].strip())
+        output_json = json.loads(result.stdout)
     except Exception as e:
-        print("Error parsing GED cost:", e)
+        print("Error parsing JSON output:", e)
+        print("Output was:", result.stdout)
         return
 
-    # Remaining lines are the edit operations.
-    edit_operations = output_lines[1:]
-
-    results = {
-        "graph_edit_distance": ged_cost,
-        "edit_operations": edit_operations
-    }
-
+    # Save the JSON to the specified output file.
     try:
         with open(output_file, "w") as f:
-            json.dump(results, f, indent=4)
+            json.dump(output_json, f, indent=4)
         print(f"Results saved to {output_file}")
     except Exception as e:
         print("Error saving results:", e)
