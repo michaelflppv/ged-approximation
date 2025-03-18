@@ -8,57 +8,56 @@ Based on this alignment (and comparing node labels), the script outputs a sequen
 approximate edit operations (matches, substitutions, deletions, insertions) that describe
 an edit path from graph_1 to graph_2 in machine-readable JSON format.
 
-Usage (from SimGNN/src directory):
-    python extract_edit_path.py --json_file ../../processed_data/json_pairs/PROTEINS/pair_1_2.json [--model_path <relative_model_path>] [--dummy_cost 1.0]
-
-By default, if --model_path is not provided, the model at ../models/simgnn_model.pth is used.
+Paths for the JSON file, model file, and output directory are specified directly in the code.
 """
 
 import os
 import sys
-import argparse
 import json
 import numpy as np
 from scipy.optimize import linear_sum_assignment
+import torch
+from torch.serialization import safe_globals
+from torch.nn.parameter import UninitializedParameter
 
 # Import SimGNN modules
 from param_parser import parameter_parser  # Provided param_parser.py (does not accept argument list)
 from simgnn import SimGNNTrainer
 from utils import process_pair
 
+# ============================================================================
+# Specify your file paths here:
+# ============================================================================
+JSON_PATH   = r"C:\project_data\processed_data\json_pairs\PROTEINS\pair_1000_1003.json"
+MODEL_PATH  = r"C:\Users\mikef\PycharmProjects\ged-approximation\SimGNN\models\simgnn_model.pth"  # update this path if necessary
+OUTPUT_DIR  = r"C:\project_data\results\extracted_paths"   # update this path if necessary
+DUMMY_COST  = 1.0
+# ============================================================================
 
-def parse_custom_args():
-    """
-    Parse custom arguments (like --json_file, --model_path, and --dummy_cost)
-    and remove them from sys.argv before invoking the SimGNN parameter parser.
-    """
-    custom_parser = argparse.ArgumentParser(add_help=False)
-    custom_parser.add_argument("--json_file", type=str, required=True,
-                               help="Relative path to a JSON file with a graph pair (e.g., ../../processed_data/json_pairs/PROTEINS/pair_1_2.json).")
-    custom_parser.add_argument("--model_path", type=str, default=None,
-                               help="Relative path to a saved SimGNN model. Default: ../models/simgnn_model.pth")
-    custom_parser.add_argument("--dummy_cost", type=float, default=1.0,
-                               help="Cost for insertions/deletions when padding the cost matrix.")
-    custom_args, remaining_args = custom_parser.parse_known_args()
-    # Replace sys.argv with the leftover arguments so that parameter_parser() doesn't see our custom ones.
-    sys.argv = [sys.argv[0]] + remaining_args
-    return custom_args
+# Define a custom JSON encoder to handle NumPy types.
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NumpyEncoder, self).default(obj)
 
-
-def load_model(custom_args, simgnn_args):
+def load_model(simgnn_args):
     """
     Load a pretrained SimGNN model using the SimGNN parameters.
-    If the custom --model_path argument is provided, it overrides the default load path.
+    The model path is specified by the MODEL_PATH constant.
+    The model is loaded within a safe_globals context so that the uninitialized parameter
+    global is allowed.
     """
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    if custom_args.model_path:
-        simgnn_args.load_path = os.path.normpath(os.path.join(script_dir, custom_args.model_path))
-    else:
-        simgnn_args.load_path = os.path.normpath(os.path.join(script_dir, "..", "models", "simgnn_model.pth"))
+    simgnn_args.load_path = MODEL_PATH
     trainer = SimGNNTrainer(simgnn_args)
-    trainer.load()
+    # Wrap the load() call in a safe_globals context manager to allow UninitializedParameter.
+    with safe_globals([UninitializedParameter]):
+        trainer.load()
     return trainer
-
 
 def get_node_embeddings(trainer, data):
     """
@@ -71,7 +70,6 @@ def get_node_embeddings(trainer, data):
     emb2 = trainer.model.convolutional_pass(data_torch["edge_index_2"], data_torch["features_2"])
     return emb1, emb2
 
-
 def pad_cost_matrix(cost_matrix, n_rows, n_cols, dummy_cost):
     """
     Pad a non-square cost matrix to a square one by adding extra rows or columns
@@ -81,7 +79,6 @@ def pad_cost_matrix(cost_matrix, n_rows, n_cols, dummy_cost):
     padded = np.full((n, n), dummy_cost)
     padded[:n_rows, :n_cols] = cost_matrix
     return padded
-
 
 def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
     """
@@ -110,54 +107,47 @@ def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
             if labels1[i] == labels2[j]:
                 op = {
                     "op": "match",
-                    "graph1_node": i,
-                    "graph2_node": j,
+                    "graph1_node": int(i),
+                    "graph2_node": int(j),
                     "label": labels1[i]
                 }
             else:
                 op = {
                     "op": "substitute",
-                    "graph1_node": i,
+                    "graph1_node": int(i),
                     "graph1_label": labels1[i],
-                    "graph2_node": j,
+                    "graph2_node": int(j),
                     "graph2_label": labels2[j]
                 }
             edit_operations.append(op)
         elif i < n1 and j >= n2:
             op = {
                 "op": "delete",
-                "graph1_node": i,
+                "graph1_node": int(i),
                 "graph1_label": labels1[i]
             }
             edit_operations.append(op)
         elif i >= n1 and j < n2:
             op = {
                 "op": "insert",
-                "graph2_node": j,
+                "graph2_node": int(j),
                 "graph2_label": labels2[j]
             }
             edit_operations.append(op)
     return edit_operations
 
-
 def main():
-    # First, parse our custom arguments.
-    custom_args = parse_custom_args()
-
-    # Now parse SimGNN parameters (leftover command-line arguments).
+    # Parse SimGNN parameters (from the command line or defaults)
     simgnn_args = parameter_parser()
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    json_path = os.path.normpath(os.path.join(script_dir, custom_args.json_file))
-    if not os.path.exists(json_path):
-        print(f"Error: JSON file '{json_path}' does not exist.")
+    # Load the graph pair using the specified JSON_PATH.
+    if not os.path.exists(JSON_PATH):
+        print(f"Error: JSON file '{JSON_PATH}' does not exist.")
         sys.exit(1)
-
-    # Load the graph pair.
-    data = process_pair(json_path)
+    data = process_pair(JSON_PATH)
 
     # Load the pretrained model.
-    trainer = load_model(custom_args, simgnn_args)
+    trainer = load_model(simgnn_args)
 
     # Compute node embeddings.
     emb1, emb2 = get_node_embeddings(trainer, data)
@@ -165,23 +155,19 @@ def main():
     # Extract edit operations in machine-readable format.
     labels1 = data["labels_1"]
     labels2 = data["labels_2"]
-    edit_ops = extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=custom_args.dummy_cost)
+    edit_ops = extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=DUMMY_COST)
 
-    # Prepare the results directory relative to this script's location.
-    project_root = os.path.normpath(os.path.join(script_dir, '..', '..'))
-    results_dir = os.path.join(project_root, 'results', 'extracted_paths')
-    os.makedirs(results_dir, exist_ok=True)
-
-    output_file = os.path.join(results_dir, 'edit_path.json')
-    # Write the machine-readable edit path as JSON.
+    # Prepare the results directory.
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    output_file = os.path.join(OUTPUT_DIR, 'simgnn_edit_path.json')
+    # Write the machine-readable edit path as JSON using the custom encoder.
     with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump({"edit_path": edit_ops}, f, indent=2)
+        json.dump({"edit_path": edit_ops}, f, indent=2, cls=NumpyEncoder)
 
     print("Extracted machine-readable edit path saved to:")
     print(output_file)
     # Optionally, also print the JSON to the console.
-    print(json.dumps({"edit_path": edit_ops}, indent=2))
-
+    print(json.dumps({"edit_path": edit_ops}, indent=2, cls=NumpyEncoder))
 
 if __name__ == "__main__":
     main()
