@@ -185,6 +185,7 @@ def main():
     # Get process handle.
     process = psutil.Process(os.getpid())
 
+    counter = 0
     # Process each JSON file.
     for i, filepath in enumerate(json_files):
         try:
@@ -193,6 +194,9 @@ def main():
             print(f"Skipping {filepath} due to error in loading JSON: {e}")
             continue
 
+        counter += 1
+        if counter == 1048574:
+            break
         # Measure per-pair runtime and memory usage.
         pair_start_time = time.time()
         mem_before = process.memory_info().rss / (1024 * 1024)
