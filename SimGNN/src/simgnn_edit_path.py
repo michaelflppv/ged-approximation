@@ -1,5 +1,5 @@
 """
-extract_edit_path.py
+simgnn_edit_path.py
 
 This script loads a saved SimGNN model and a JSON file representing a pair of graphs.
 It computes node embeddings for both graphs (using the model's convolutional layers)
@@ -17,6 +17,7 @@ import json
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 import torch
+import torch.serialization
 from torch.serialization import safe_globals
 from torch.nn.parameter import UninitializedParameter
 
