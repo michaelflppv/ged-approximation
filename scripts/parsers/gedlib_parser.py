@@ -51,7 +51,7 @@ METHOD_NAMES = {
 EXCEL_MAX_ROWS = 1048573
 
 # Number of graph pairs to skip.
-SKIP_PAIRS = 37632
+SKIP_PAIRS = 0
 
 # --------------------------
 # Utility Functions
@@ -291,10 +291,11 @@ def run_ged(dataset_path: str, collection_xml: str):
         scalability = None
         n1 = n2 = d1 = d2 = None
 
-    # Regular expression to match expected output lines.
-    # No MEM field is expected from the executable.
+    # Define a regex pattern for a floating point number or "inf"
+    float_re = r"([+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?|inf)"
+    # Updated regex pattern to match the executable's output line
     regex = re.compile(
-        r"METHOD=(\d+)\s+GRAPH1=(\d+)\s+GRAPH2=(\d+)\s+PREDGED=([\d.]+)\s+GTGED=N/A\s+RUNTIME=([\d.]+).*"
+        rf"METHOD=(\d+)\s+GRAPH1=(\d+)\s+GRAPH2=(\d+)\s+PREDGED={float_re}\s+GTGED=N/A\s+RUNTIME={float_re}(?:\s+MEM=\S+)?"
     )
 
     line_count = 0       # Total lines read.
