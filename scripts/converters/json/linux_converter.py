@@ -30,7 +30,7 @@ def process_graph(data):
 
 def main():
     # Root directory where GED datasets will be stored.
-    root_dir = '../../../data/ged'
+    root_dir = '../../../data/ged/'
     # Check if the processed folder exists.
     processed_dir = os.path.join(root_dir, "processed")
     if not os.path.exists(processed_dir) or len(os.listdir(processed_dir)) == 0:
