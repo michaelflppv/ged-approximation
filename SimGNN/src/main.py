@@ -1,5 +1,3 @@
-"""SimGNN runner."""
-
 import os
 from utils import tab_printer
 from simgnn import SimGNNTrainer
@@ -11,14 +9,14 @@ def main():
     Fitting and scoring a SimGNN model.
     """
     args = parameter_parser()
-    tab_printer(args)
+    # tab_printer(args)
     trainer = SimGNNTrainer(args)
 
     if args.load_path:
         trainer.load()
     else:
         trainer.fit()
-    #trainer.score()
+    # trainer.score()
 
     # Set default save path relative to the src folder if not provided.
     script_dir = os.path.dirname(os.path.abspath(__file__))
