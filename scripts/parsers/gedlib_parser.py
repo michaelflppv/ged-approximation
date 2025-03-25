@@ -34,9 +34,9 @@ global_preprocessed_xml: Optional[str] = None          # Path to the temporary p
 GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"
 DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/IMDB-BINARY"
 COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/IMDB-BINARY.xml"
-RESULTS_DIR = "/home/mfilippov/ged_data/results/gedlib/IMDB-BINARY/IPFP"
-RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY_IPFP_results_1.xlsx")
-EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/IMDB-BINARY/results.xlsx"
+RESULTS_DIR = "/home/mfilippov/ged_data/results/HED"
+RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY_HED_results.xlsx")
+EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/IMDB-BINARY/merged/results.xlsx"
 
 # Mapping of method ID to method names.
 METHOD_NAMES = {
@@ -97,7 +97,7 @@ def save_results(excel_file, results_list):
         try:
             df.to_excel(temp_file, index=False, engine=engine)
             os.replace(temp_file, file_path)
-            print(f"Results saved to {file_path} using {engine}.")
+            #print(f"Results saved to {file_path} using {engine}.")
             return True
         except Exception as ex:
             print(f"Error saving with {engine}: {ex}")
@@ -300,7 +300,7 @@ def run_ged(dataset_path: str, collection_xml: str):
 
     line_count = 0       # Total lines read.
     processed_count = 0  # Count of graph pairs processed (after skipping).
-    flush_interval = 5   # Flush intermediate results every 5 processed pairs.
+    flush_interval = 10   # Flush intermediate results every 5 processed pairs.
     try:
         for line in process.stdout:
             line = line.strip()
@@ -308,8 +308,8 @@ def run_ged(dataset_path: str, collection_xml: str):
                 continue
             line_count += 1
             # Skip the first SKIP_PAIRS graph pairs.
-            if line_count <= SKIP_PAIRS:
-                continue
+            #if line_count <= SKIP_PAIRS:
+            #    continue
             match = regex.search(line)
             if match:
                 processed_count += 1
@@ -346,6 +346,7 @@ def run_ged(dataset_path: str, collection_xml: str):
 
             if processed_count % flush_interval == 0 and processed_count != 0:
                 save_results(RESULTS_FILE, global_results)
+                print(f"{processed_count} lines processed and saved.")
     except Exception as e:
         print("Error while processing GED output:", e)
     finally:
