@@ -1,5 +1,3 @@
-"""SimGNN class and runner."""
-
 import glob
 import torch
 import random
@@ -28,7 +26,7 @@ class SimGNN(torch.nn.Module):
         """
         Deciding the shape of the bottleneck layer.
         """
-        if self.args.histogram == True:
+        if self.args.histogram:
             self.feature_count = self.args.tensor_neurons + self.args.bins
         else:
             self.feature_count = self.args.tensor_neurons
@@ -50,9 +48,6 @@ class SimGNN(torch.nn.Module):
     def calculate_histogram(self, abstract_features_1, abstract_features_2):
         """
         Calculate histogram from similarity matrix.
-        :param abstract_features_1: Feature matrix for graph 1.
-        :param abstract_features_2: Feature matrix for graph 2.
-        :return hist: Histogram of similarity scores.
         """
         scores = torch.mm(abstract_features_1, abstract_features_2).detach()
         scores = scores.view(-1, 1)
@@ -64,9 +59,6 @@ class SimGNN(torch.nn.Module):
     def convolutional_pass(self, edge_index, features):
         """
         Making convolutional pass.
-        :param edge_index: Edge indices.
-        :param features: Feature matrix.
-        :return features: Abstract feature matrix.
         """
         features = self.convolution_1(features, edge_index)
         features = torch.nn.functional.relu(features)
@@ -86,8 +78,6 @@ class SimGNN(torch.nn.Module):
     def forward(self, data):
         """
         Forward pass with graphs.
-        :param data: Data dictionary.
-        :return score: Similarity score.
         """
         edge_index_1 = data["edge_index_1"]
         edge_index_2 = data["edge_index_2"]
@@ -97,7 +87,7 @@ class SimGNN(torch.nn.Module):
         abstract_features_1 = self.convolutional_pass(edge_index_1, features_1)
         abstract_features_2 = self.convolutional_pass(edge_index_2, features_2)
 
-        if self.args.histogram == True:
+        if self.args.histogram:
             hist = self.calculate_histogram(abstract_features_1,
                                             torch.t(abstract_features_2))
 
@@ -106,7 +96,7 @@ class SimGNN(torch.nn.Module):
         scores = self.tensor_network(pooled_features_1, pooled_features_2)
         scores = torch.t(scores)
 
-        if self.args.histogram == True:
+        if self.args.histogram:
             scores = torch.cat((scores, hist), dim=1).view(1, -1)
 
         scores = torch.nn.functional.relu(self.fully_connected_first(scores))
@@ -136,42 +126,37 @@ class SimGNNTrainer(object):
         Collecting the unique node identifiers.
         """
         print("\nEnumerating unique labels.\n")
-        self.training_graphs = glob.glob(self.args.training_graphs + "*.json")
-        self.testing_graphs = glob.glob(self.args.testing_graphs + "*.json")
+        # Fixing path concatenation using os.path.join would be ideal.
+        self.training_graphs = glob.glob(self.args.training_graphs + r"\*.json")
+        self.testing_graphs = glob.glob(self.args.testing_graphs + r"\*.json")
         graph_pairs = self.training_graphs + self.testing_graphs
         self.global_labels = set()
         for graph_pair in tqdm(graph_pairs):
             data = process_pair(graph_pair)
-            # Convert labels to strings to ensure consistent comparison and sorting
             labels_1 = {str(label) for label in data["labels_1"]}
             labels_2 = {str(label) for label in data["labels_2"]}
             self.global_labels = self.global_labels.union(labels_1)
             self.global_labels = self.global_labels.union(labels_2)
-        # Sorting based on the string representation
         self.global_labels = sorted(self.global_labels, key=lambda x: x)
         self.global_labels = {val: index for index, val in enumerate(self.global_labels)}
         self.number_of_labels = len(self.global_labels)
 
-    def create_batches(self):
+    def create_batches_from(self, graph_list):
         """
-        Creating batches from the training graph list.
-        :return batches: List of lists with batches.
+        Creating batches from a provided list of graph file paths.
         """
-        random.shuffle(self.training_graphs)
+        random.shuffle(graph_list)
         batches = []
-        for i in range(0, len(self.training_graphs), self.args.batch_size):
-            batches.append(self.training_graphs[i:i+self.args.batch_size])
+        for i in range(0, len(graph_list), self.args.batch_size):
+            batches.append(graph_list[i:i+self.args.batch_size])
         return batches
 
     def transfer_to_torch(self, data):
         """
         Transferring the data to torch and creating a hash table.
-        Including the indices, features and target.
-        :param data: Data dictionary.
-        :return new_data: Dictionary of Torch Tensors.
         """
         new_data = dict()
-        # Create undirected edges by adding the reverse edge.
+        # Create undirected edges by adding reverse edges.
         edges_1 = data["graph_1"] + [[y, x] for x, y in data["graph_1"]]
         edges_2 = data["graph_2"] + [[y, x] for x, y in data["graph_2"]]
 
@@ -180,7 +165,6 @@ class SimGNNTrainer(object):
 
         features_1, features_2 = [], []
 
-        # In order to ensure consistency, convert each label to string when doing lookups.
         for n in data["labels_1"]:
             n_str = str(n)
             features_1.append([1.0 if self.global_labels[n_str] == i else 0.0
@@ -206,8 +190,6 @@ class SimGNNTrainer(object):
     def process_batch(self, batch):
         """
         Forward pass with a batch of data.
-        :param batch: Batch of graph pair locations.
-        :return loss: Loss on the batch.
         """
         self.optimizer.zero_grad()
         losses = 0
@@ -216,32 +198,69 @@ class SimGNNTrainer(object):
             data = self.transfer_to_torch(data)
             target = data["target"]
             prediction = self.model(data)
-            losses = losses + torch.nn.functional.mse_loss(target, prediction)
+            losses += torch.nn.functional.mse_loss(target, prediction)
         losses.backward(retain_graph=True)
         self.optimizer.step()
         loss = losses.item()
         return loss
 
+    def validate(self):
+        """
+        Evaluate the model on the validation set.
+        """
+        self.model.eval()
+        losses = []
+        for graph_pair in self.val_graphs:
+            data = process_pair(graph_pair)
+            data = self.transfer_to_torch(data)
+            target = data["target"]
+            prediction = self.model(data)
+            loss_val = torch.nn.functional.mse_loss(target, prediction).item()
+            losses.append(loss_val)
+        avg_loss = np.mean(losses)
+        self.model.train()
+        return avg_loss
+
     def fit(self):
         """
-        Fitting a model.
+        Iteration-based training with validation.
         """
         print("\nModel training.\n")
         self.optimizer = torch.optim.Adam(self.model.parameters(),
                                           lr=self.args.learning_rate,
                                           weight_decay=self.args.weight_decay)
         self.model.train()
-        epochs = trange(self.args.epochs, leave=True, desc="Epoch")
-        for epoch in epochs:
-            batches = self.create_batches()
-            self.loss_sum = 0
-            main_index = 0
-            for index, batch in tqdm(enumerate(batches), total=len(batches), desc="Batches"):
+
+        # Split the training graphs into training and validation sets (80/20 split)
+        random.shuffle(self.training_graphs)
+        num_val = int(0.2 * len(self.training_graphs))
+        self.val_graphs = self.training_graphs[:num_val]
+        self.train_graphs = self.training_graphs[num_val:]
+
+        total_iterations = self.args.iterations
+        val_interval = self.args.val_interval
+        iteration = 0
+        best_val_loss = float('inf')
+        best_model_state = None
+
+        pbar = trange(total_iterations, desc="Training Iterations")
+        while iteration < total_iterations:
+            batches = self.create_batches_from(self.train_graphs)
+            for batch in batches:
                 loss_score = self.process_batch(batch)
-                main_index += len(batch)
-                self.loss_sum += loss_score * len(batch)
-                loss = self.loss_sum / main_index
-                epochs.set_description("Epoch (Loss=%g)" % round(loss, 5))
+                iteration += 1
+                pbar.update(1)
+                if iteration % val_interval == 0:
+                    val_loss = self.validate()
+                    pbar.set_description(f"Iter {iteration} | Val Loss: {val_loss:.5f}")
+                    if val_loss < best_val_loss:
+                        best_val_loss = val_loss
+                        best_model_state = self.model.state_dict()
+                if iteration >= total_iterations:
+                    break
+        pbar.close()
+        if best_model_state is not None:
+            self.model.load_state_dict(best_model_state)
 
     def score(self):
         """
