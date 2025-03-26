@@ -39,7 +39,7 @@ from collections import defaultdict
 import pandas as pd
 
 # Set the dataset name (manually specify the dataset)
-DATASET = "AIDS"
+DATASET = "IMDB-MULTI"
 
 def main():
     # Determine the directory of this script.
@@ -47,8 +47,8 @@ def main():
 
     # Build the relative paths.
     dataset_dir = os.path.join(script_dir, "..", "..", "..", "data", DATASET)
-    output_dir = "/mnt/c/project_data/processed_data/json_pairs/AIDS"
-    ged_excel_path = "/mnt/c/project_data/results/exact_ged/AIDS/merged/results.xlsx"
+    output_dir = r"C:\project_data\simgnn_data\IMDB-MULTI"
+    ged_excel_path = r"C:\project_data\results\exact_ged\IMDB-BINARY\merged\results.xlsx"
 
     # --- Read GED values from the Excel file ---
     ged_dict = {}
@@ -202,12 +202,6 @@ def main():
 
             if pair_count % 1000 == 0:
                 print(f"Processed {pair_count}/{total_pairs} pairs...")
-
-            if pair_count == 100000:
-                break
-
-        if pair_count == 100000:
-            break
 
     print(f"Finished processing {pair_count} graph pairs.")
 
