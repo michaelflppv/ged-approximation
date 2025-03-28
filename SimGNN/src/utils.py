@@ -7,7 +7,7 @@ from texttable import Texttable
 def tab_printer(args):
     """
     Function to print the logs in a nice tabular format.
-    :param args: Parameters used for the models.
+    :param args: Parameters used for the model.
     """
     args = vars(args)
     keys = sorted(args.keys())
@@ -18,7 +18,7 @@ def tab_printer(args):
 
 def process_pair(path):
     """
-    Reading a AIDS file with a pair of graphs.
+    Reading a json file with a pair of graphs.
     :param path: Path to a JSON file.
     :return data: Dictionary with data.
     """
@@ -34,7 +34,7 @@ def calculate_loss(prediction, target):
     """
     prediction = -math.log(prediction)
     target = -math.log(target)
-    score = (prediction - target) ** 2
+    score = (prediction-target)**2
     return score
 
 def calculate_normalized_ged(data):

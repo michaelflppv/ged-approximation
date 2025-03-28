@@ -16,7 +16,7 @@ def main():
         trainer.load()
     else:
         trainer.fit()
-    # trainer.score()
+    trainer.score()
 
     # Set default save path relative to the src folder if not provided.
     script_dir = os.path.dirname(os.path.abspath(__file__))
