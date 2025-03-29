@@ -126,7 +126,7 @@ Modify `GED_EXECUTABLE` in `scripts/gedlib_parser.py` to point to the compiled b
 ### **1️⃣ Convert Datasets**
 #### **For GEDLIB:**
 ```bash
-python scripts/gxl_xml/aids_converter.py
+python scripts/gxl_xml/preprocess_aids.py
 python scripts/generate_xml.py --dataset AIDS
 ```
 Generates:
@@ -137,7 +137,7 @@ processed_data/xml/AIDS.xml
 
 #### **For SimGNN:**
 ```bash
-python scripts/json/aids_converter.py
+python scripts/json/preprocess_aids.py
 ```
 Generates:
 ```
