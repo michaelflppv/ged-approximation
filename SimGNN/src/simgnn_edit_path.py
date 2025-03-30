@@ -15,16 +15,15 @@ import os
 import sys
 import json
 import numpy as np
+import math
 from scipy.optimize import linear_sum_assignment
-import torch
-import torch.serialization
 from torch.serialization import safe_globals
 from torch.nn.parameter import UninitializedParameter
 
 # Import SimGNN modules
 from param_parser import parameter_parser  # Provided param_parser.py (does not accept argument list)
 from simgnn import SimGNNTrainer
-from utils import process_pair
+from utils import process_pair, calculate_normalized_ged
 
 # ============================================================================
 # Specify the graph IDs for the pair of graphs you want to process.
@@ -266,6 +265,26 @@ def main():
     except ValueError as e:
         print("Error during edit path validation:", e)
         sys.exit(1)
+
+    # Convert raw data to torch tensors.
+    try:
+        torch_data = trainer.transfer_to_torch(data)
+    except Exception as e:
+        print(f"Skipping pair {JSON_PATH} due to error in transfer_to_torch: {e}")
+
+    # Calculate the graph sizes.
+    n1 = len(data["labels_1"])
+    n2 = len(data["labels_2"])
+
+    # Compute the prediction using the model.
+    trainer.model.eval()
+    data = trainer.transfer_to_torch(data)
+    prediction = trainer.model(data)
+    prediction = -math.log(prediction)
+
+    # Calculate the normalized GED.
+    prediction = prediction * (n1 + n2)
+    print("Prediction:", prediction)
 
     # Prepare the results directory.
     os.makedirs(OUTPUT_DIR, exist_ok=True)
