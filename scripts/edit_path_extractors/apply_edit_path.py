@@ -5,7 +5,6 @@ import os
 import networkx as nx
 import matplotlib.pyplot as plt
 
-
 def load_pair_graph(pair_file):
     """
     Load the graph pair from a JSON file.
@@ -29,7 +28,6 @@ def load_pair_graph(pair_file):
             G.add_edge(u, v)
     return G
 
-
 def apply_edit_operation(G, op, next_node_id):
     """
     Apply one edit operation to graph G.
@@ -42,16 +40,13 @@ def apply_edit_operation(G, op, next_node_id):
     Returns:
       Updated graph G and next_node_id.
 
-    Supported operations (by op["op"]):
+    Supported operations:
       - "match": do nothing.
-      - "substitute": update an existing node's label (uses "graph1_node" and "graph2_label").
-      - "delete": remove a node (specified by "graph1_node").
+      - "substitute": update an existing node's label.
+      - "delete": remove a node.
       - "insert": add a new node with label from "graph2_label".
 
-      - "match_edge": do nothing.
-      - "substitute_edge": update an edge attribute (uses "graph1_edge" and "graph2_label").
-      - "delete_edge": remove an edge (uses "graph1_edge").
-      - "insert_edge": add an edge (uses "graph2_edge").
+      Additionally, edge operations are supported.
     """
     op_type = op.get("op", "").lower()
     # --- Node operations ---
@@ -97,16 +92,32 @@ def apply_edit_operation(G, op, next_node_id):
                 G.add_edge(u, v)
     return G, next_node_id
 
-
-def visualize_graph(G, title, output_path=None):
+def update_layout(G, layout):
     """
-    Visualize graph G with node labels.
+    Update the layout dictionary with positions for any new nodes added to G.
+    Existing node positions remain fixed.
+    """
+    new_nodes = [n for n in G.nodes if n not in layout]
+    if not new_nodes:
+        return layout
+    # Fix positions for nodes already in the layout.
+    fixed_nodes = list(layout.keys())
+    # Compute positions for new nodes using spring_layout with fixed positions.
+    new_layout = nx.spring_layout(G, pos=layout, fixed=fixed_nodes, seed=42)
+    layout.update(new_layout)
+    return layout
+
+def visualize_graph(G, title, pos, output_path=None):
+    """
+    Visualize graph G with node labels using a fixed layout.
     If output_path is provided, the image is saved to that file.
     """
     plt.figure(figsize=(5, 5))
-    pos = nx.spring_layout(G, seed=42)
+    # Draw nodes and edges without labels.
+    nx.draw_networkx_nodes(G, pos, node_color="lightblue", node_size=500)
+    nx.draw_networkx_edges(G, pos, edge_color="gray")
+    # Draw labels separately to avoid duplicates.
     node_labels = nx.get_node_attributes(G, "label")
-    nx.draw(G, pos, with_labels=True, node_color="lightblue", edge_color="gray", node_size=500)
     nx.draw_networkx_labels(G, pos, labels=node_labels)
     plt.title(title)
     if output_path:
@@ -114,38 +125,37 @@ def visualize_graph(G, title, output_path=None):
     plt.show()
     plt.close()
 
-
 def main():
-    parser = argparse.ArgumentParser(
-        description="Apply a machine-readable edit path to the query graph (graph_1 from a JSON pair) to simulate its transformation to the target graph."
-    )
-    parser.add_argument("--pair_file", type=str, required=True,
-                        help="Path to the JSON pair file (with 'graph_1' and 'labels_1').")
-    parser.add_argument("--edit_path", type=str, required=True,
-                        help="Path to the machine-readable edit path JSON file.")
-    parser.add_argument("--output_dir", type=str, default="output_graphs",
-                        help="Directory to save intermediate graph images.")
-    args = parser.parse_args()
+    # Specify the graph IDs for the pair of graphs you want to process.
+    graph_id_1 = 1000
+    graph_id_2 = 1003
 
-    os.makedirs(args.output_dir, exist_ok=True)
+    # Specify your file paths here:
+    pair_file = r'C:\project_data\processed_data\json_pairs\PROTEINS\pair_{}_{}.json'.format(graph_id_1, graph_id_2)
+    edit_path = r'C:\project_data\results\extracted_paths\simgnn_edit_path_pair_{}_{}.json'.format(graph_id_1, graph_id_2)
+    output_dir = r'C:\project_data\results\extracted_paths\recreated_graphs\PROTEINS\pair_{}_{}'.format(graph_id_1, graph_id_2)
+    os.makedirs(output_dir, exist_ok=True)
 
     # Load the query graph from the JSON pair file.
     try:
-        G = load_pair_graph(args.pair_file)
+        G = load_pair_graph(pair_file)
     except Exception as e:
         print("Error loading query graph:", e)
         return
 
+    # Compute an initial layout for the query graph.
+    layout = nx.spring_layout(G, seed=42)
+
     # Visualize the initial (query) graph.
     step = 0
-    initial_img = os.path.join(args.output_dir, f"graph_{step}_query.png")
-    visualize_graph(G, "Query Graph", initial_img)
+    initial_img = os.path.join(output_dir, f"graph_{step}_query.png")
+    visualize_graph(G, "Query Graph", layout, initial_img)
 
     # Set next available node id (for insertions).
     next_node_id = max(G.nodes) + 1 if G.nodes else 0
 
     # Load the edit path JSON.
-    with open(args.edit_path, "r") as f:
+    with open(edit_path, "r") as f:
         edit_data = json.load(f)
     # The edit operations might be under "edit_operations" or "edit_path"
     edit_ops = edit_data.get("edit_operations") or edit_data.get("edit_path")
@@ -156,9 +166,11 @@ def main():
     # Apply each edit operation in sequence and visualize the intermediate graph.
     for i, op in enumerate(edit_ops, start=1):
         G, next_node_id = apply_edit_operation(G, op, next_node_id)
+        # Update the layout: keep existing positions fixed; compute positions for new nodes.
+        layout = update_layout(G, layout)
         title = f"Step {i}: {op.get('op', 'unknown')}"
-        img_path = os.path.join(args.output_dir, f"graph_{i}.png")
-        visualize_graph(G, title, img_path)
+        img_path = os.path.join(output_dir, f"graph_{i}.png")
+        visualize_graph(G, title, layout, img_path)
         print(f"Applied operation {i}: {op}")
 
     # Optionally, save the final graph structure to a JSON file.
@@ -166,11 +178,10 @@ def main():
         "nodes": [{"id": n, "label": G.nodes[n].get("label")} for n in G.nodes],
         "edges": list(G.edges())
     }
-    final_file = os.path.join(args.output_dir, "final_graph.json")
+    final_file = os.path.join(output_dir, "final_graph.json")
     with open(final_file, "w") as f:
         json.dump(final_graph, f, indent=4)
     print("Transformation complete. Final graph saved to", final_file)
-
 
 if __name__ == "__main__":
     main()

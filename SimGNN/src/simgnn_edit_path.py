@@ -27,11 +27,18 @@ from simgnn import SimGNNTrainer
 from utils import process_pair
 
 # ============================================================================
+# Specify the graph IDs for the pair of graphs you want to process.
+# These IDs should correspond to the graphs in the dataset.
+# ============================================================================
+graph_id_1 = 1000
+graph_id_2 = 1003
+
+# ============================================================================
 # Specify your file paths here:
 # ============================================================================
-JSON_PATH   = r"C:\project_data\processed_data\json_pairs\PROTEINS\pair_1000_1003.json"
-MODEL_PATH  = r"C:\Users\mikef\PycharmProjects\ged-approximation\SimGNN\models\simgnn_model.pth"  # update this path if necessary
-OUTPUT_DIR  = r"C:\project_data\results\extracted_paths"   # update this path if necessary
+JSON_PATH   = r"C:\project_data\processed_data\json_pairs\PROTEINS\pair_{}_{}.json".format(graph_id_1, graph_id_2)
+MODEL_PATH  = r"C:\Users\mikef\PycharmProjects\ged-approximation\SimGNN\models\simgnn_model.h5"
+OUTPUT_DIR  = r"C:\project_data\results\extracted_paths"
 DUMMY_COST  = 1.0
 # ============================================================================
 
@@ -137,6 +144,101 @@ def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
             edit_operations.append(op)
     return edit_operations
 
+def validate_and_order_edit_path(edit_ops, labels1, labels2):
+    """
+    Validate that each edit operation can be applied sequentially starting from graph_1,
+    and order the operations into a valid sequence (adding an "order" field).
+
+    The simulation assumes:
+      - The initial state is graph_1 represented as a dictionary with keys "n<i>".
+      - For match/substitute operations, the node (named "n<i>") exists.
+      - For deletions, the node must exist and is then removed.
+      - For insertions, new nodes (named "t<j>") are added.
+
+    After applying all operations, the multiset of node labels in the final state
+    must match that of graph_2 (considering matched/substituted nodes and inserted nodes).
+    """
+    # Group operations by type.
+    modifications = []  # match and substitute ops (operating on existing nodes)
+    deletions = []
+    insertions = []
+
+    for op in edit_ops:
+        if op["op"] in ["match", "substitute"]:
+            modifications.append(op)
+        elif op["op"] == "delete":
+            deletions.append(op)
+        elif op["op"] == "insert":
+            insertions.append(op)
+
+    # Order modifications by graph1_node, deletions by graph1_node, and insertions by graph2_node.
+    modifications.sort(key=lambda op: op["graph1_node"])
+    deletions.sort(key=lambda op: op["graph1_node"])
+    insertions.sort(key=lambda op: op["graph2_node"])
+
+    ordered_ops = []
+    order_index = 0
+    for op in modifications:
+        op["order"] = order_index
+        order_index += 1
+        ordered_ops.append(op)
+    for op in deletions:
+        op["order"] = order_index
+        order_index += 1
+        ordered_ops.append(op)
+    for op in insertions:
+        op["order"] = order_index
+        order_index += 1
+        ordered_ops.append(op)
+
+    # Simulation: start with graph_1's nodes.
+    current_state = {f"n{i}": labels1[i] for i in range(len(labels1))}
+
+    # Apply each operation sequentially.
+    for op in ordered_ops:
+        if op["op"] == "match":
+            node_id = f"n{op['graph1_node']}"
+            if node_id not in current_state:
+                raise ValueError(f"Match op error: node {node_id} does not exist in current state.")
+            # For a match, we expect the label to be correct.
+            if current_state[node_id] != op["label"]:
+                raise ValueError(f"Match op error: label mismatch for node {node_id} (expected {op['label']}, got {current_state[node_id]}).")
+        elif op["op"] == "substitute":
+            node_id = f"n{op['graph1_node']}"
+            if node_id not in current_state:
+                raise ValueError(f"Substitute op error: node {node_id} does not exist in current state.")
+            # Update the node's label.
+            current_state[node_id] = op["graph2_label"]
+        elif op["op"] == "delete":
+            node_id = f"n{op['graph1_node']}"
+            if node_id not in current_state:
+                raise ValueError(f"Delete op error: node {node_id} does not exist in current state.")
+            del current_state[node_id]
+        elif op["op"] == "insert":
+            node_id = f"t{op['graph2_node']}"
+            if node_id in current_state:
+                raise ValueError(f"Insert op error: node {node_id} already exists in current state.")
+            current_state[node_id] = op["graph2_label"]
+
+    # Build the target state from the edit operations:
+    # For match/substitute, the node remains as "n<i>"; for insert, we use "t<j>".
+    target_state = {}
+    for op in modifications:
+        node_id = f"n{op['graph1_node']}"
+        if op["op"] == "match":
+            target_state[node_id] = op["label"]
+        elif op["op"] == "substitute":
+            target_state[node_id] = op["graph2_label"]
+    for op in insertions:
+        node_id = f"t{op['graph2_node']}"
+        target_state[node_id] = op["graph2_label"]
+
+    # Verify that the final state (current_state) has the same multiset of labels as the target state.
+    if sorted(list(current_state.values())) != sorted(list(target_state.values())):
+        raise ValueError(f"Final state does not match target graph.\nCurrent state: {current_state}\nTarget state: {target_state}")
+
+    return ordered_ops
+
 def main():
     # Parse SimGNN parameters (from the command line or defaults)
     simgnn_args = parameter_parser()
@@ -153,22 +255,29 @@ def main():
     # Compute node embeddings.
     emb1, emb2 = get_node_embeddings(trainer, data)
 
-    # Extract edit operations in machine-readable format.
+    # Extract raw edit operations in machine-readable format.
     labels1 = data["labels_1"]
     labels2 = data["labels_2"]
     edit_ops = extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=DUMMY_COST)
 
+    # Validate and order the edit operations to produce an optimal (sequential) edit path.
+    try:
+        ordered_edit_ops = validate_and_order_edit_path(edit_ops, labels1, labels2)
+    except ValueError as e:
+        print("Error during edit path validation:", e)
+        sys.exit(1)
+
     # Prepare the results directory.
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    output_file = os.path.join(OUTPUT_DIR, 'simgnn_edit_path.json')
-    # Write the machine-readable edit path as JSON using the custom encoder.
+    output_file = os.path.join(OUTPUT_DIR, f'simgnn_edit_path_pair_{graph_id_1}_{graph_id_2}.json')
+    # Write the machine-readable (and validated) edit path as JSON using the custom encoder.
     with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump({"edit_path": edit_ops}, f, indent=2, cls=NumpyEncoder)
+        json.dump({"edit_path": ordered_edit_ops}, f, indent=2, cls=NumpyEncoder)
 
-    print("Extracted machine-readable edit path saved to:")
+    print("Extracted and validated machine-readable edit path saved to:")
     print(output_file)
     # Optionally, also print the JSON to the console.
-    print(json.dumps({"edit_path": edit_ops}, indent=2, cls=NumpyEncoder))
+    print(json.dumps({"edit_path": ordered_edit_ops}, indent=2, cls=NumpyEncoder))
 
 if __name__ == "__main__":
     main()
