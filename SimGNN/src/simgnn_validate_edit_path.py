@@ -13,9 +13,10 @@ from simgnn import SimGNNTrainer
 from utils import process_pair
 
 # File and directory constants
-JSON_DIR = r"C:\project_data\processed_data\json_pairs\IMDB-BINARY"
+JSON_DIR = r"C:\project_data\processed_data\generated\json"
 MODEL_PATH = r"C:\Users\mikef\PycharmProjects\ged-approximation\SimGNN\models\simgnn_model.h5"
 DUMMY_COST = 1.0
+THRESHOLD = 0.05  # 5% tolerance
 
 # Define a custom JSON encoder to handle NumPy types.
 class NumpyEncoder(json.JSONEncoder):
@@ -100,6 +101,7 @@ def validate_and_order_edit_path(edit_ops, labels1, labels2):
         op["order"] = order_index
         order_index += 1
         ordered_ops.append(op)
+    # Validate the edit path by simulating the modifications on graph1
     current_state = {f"n{i}": labels1[i] for i in range(len(labels1))}
     for op in ordered_ops:
         if op["op"] == "match":
@@ -121,6 +123,7 @@ def validate_and_order_edit_path(edit_ops, labels1, labels2):
             if node_id in current_state:
                 raise ValueError(f"Insert op error at node {node_id}.")
             current_state[node_id] = op["graph2_label"]
+    # Build the target state from the edit operations (as recorded by matches/substitutions and insertions)
     target_state = {}
     for op in modifications:
         node_id = f"n{op['graph1_node']}"
@@ -139,42 +142,94 @@ def process_pair_json(json_path, trainer):
     labels2 = data["labels_2"]
     emb1, emb2 = get_node_embeddings(trainer, data)
     edit_ops = extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=DUMMY_COST)
+    # Validate and order the edit path (will raise an error if invalid)
     ordered_edit_ops = validate_and_order_edit_path(edit_ops, labels1, labels2)
     final_number_ops = len(ordered_edit_ops)
-    # Compute prediction using model
-    torch_data = trainer.transfer_to_torch(data)
-    trainer.model.eval()
-    prediction = trainer.model(torch_data)
-    prediction = -math.log(prediction)
-    prediction = prediction * (0.5 * (len(labels1) + len(labels2)))
-    return final_number_ops, prediction
+    # Instead of model prediction, use the true GED from the JSON file
+    true_ged = data["ged"]
+    return final_number_ops, true_ged
 
 def main():
     simgnn_args = parameter_parser()
     trainer = load_model(simgnn_args)
+
+    # Statistics counters
+    total_pairs = 0
+    valid_pairs = 0
+    invalid_pairs = 0
+    optimal_pairs = 0
+    total_diff = 0.0  # Sum of absolute differences between edit path cost and true GED
+
+    # Number of samples and pairs per sample for evaluation
     total_samples = 3
-    pairs_per_sample = 2000
-    # For each sample, count how many pairs satisfy the prediction match condition.
+    pairs_per_sample = 2000  # Adjust as needed
+
+    # For each sample, randomly pick pairs from the JSON directory.
+    # (Assuming 100 graphs were used to generate JSON pairs, indices should be 0 to 99.)
     for sample in range(total_samples):
-        count_match = 0
-        processed = 0
+        sample_processed = 0
+        sample_valid = 0
+        sample_optimal = 0
+        sample_total_diff = 0.0
+
         for _ in range(pairs_per_sample):
-            # Randomly select two graph indices (0 to 999)
-            g1 = random.randint(0, 999)
-            g2 = random.randint(0, 999)
+            # Randomly select two graph indices (from 0 to 99)
+            g1 = random.randint(0, 99)
+            g2 = random.randint(0, 99)
+            # Ensure g1 < g2 to match generation of unique pairs
+            if g1 >= g2:
+                continue
             json_file = os.path.join(JSON_DIR, f"pair_{g1}_{g2}.json")
             if not os.path.exists(json_file):
                 continue
+            total_pairs += 1
+            sample_processed += 1
             try:
-                final_ops, prediction = process_pair_json(json_file, trainer)
-                processed += 1
-                # Check if prediction and final number of operations match within 5%
-                if abs(final_ops - prediction) / final_ops <= 0.3:
-                    count_match += 1
+                final_ops, true_ged = process_pair_json(json_file, trainer)
+                # If we reached here, the edit path is valid.
+                valid_pairs += 1
+                sample_valid += 1
+                diff = abs(final_ops - true_ged)
+                sample_total_diff += diff
+                total_diff += diff
+                # Check optimality: if the edit path cost is within THRESHOLD tolerance of true GED.
+                if final_ops == 0:
+                    is_optimal = (true_ged == 0)
+                else:
+                    is_optimal = (diff / final_ops <= THRESHOLD)
+                if is_optimal:
+                    optimal_pairs += 1
+                    sample_optimal += 1
             except Exception as e:
-                # Skip pairs that raise errors
+                # If an error is raised, the edit path is invalid.
+                invalid_pairs += 1
                 continue
-        print(f"Sample {sample + 1}: Processed {processed} pairs, {count_match} pairs match within 30% uncertainty.")
+
+        # Print sample-level statistics
+        if sample_valid > 0:
+            avg_diff_sample = sample_total_diff / sample_valid
+        else:
+            avg_diff_sample = float('nan')
+        print(f"Sample {sample + 1}: Processed {sample_processed} pairs; "
+              f"Valid: {sample_valid}; Invalid: {sample_processed - sample_valid}; "
+              f"Optimal (within {THRESHOLD*100:.1f}%): {sample_optimal}; "
+              f"Average absolute difference: {avg_diff_sample:.2f}")
+
+    # Print overall statistics
+    if valid_pairs > 0:
+        avg_diff = total_diff / valid_pairs
+        optimal_percentage = 100.0 * optimal_pairs / valid_pairs
+    else:
+        avg_diff = float('nan')
+        optimal_percentage = 0.0
+
+    print("\n=== Overall Statistics ===")
+    print(f"Total pairs processed: {total_pairs}")
+    print(f"Valid edit paths: {valid_pairs}")
+    print(f"Invalid edit paths: {invalid_pairs}")
+    print(f"Optimal edit paths (within {THRESHOLD*100:.1f}% tolerance): {optimal_pairs}")
+    print(f"Optimality percentage (among valid pairs): {optimal_percentage:.2f}%")
+    print(f"Average absolute difference between edit path cost and true GED: {avg_diff:.2f}")
 
 if __name__ == "__main__":
     main()
