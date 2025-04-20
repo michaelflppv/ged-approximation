@@ -126,8 +126,8 @@ Modify `GED_EXECUTABLE` in `scripts/gedlib_parser.py` to point to the compiled b
 ### **1️⃣ Convert Datasets**
 #### **For GEDLIB:**
 ```bash
-python scripts/gxl_xml/preprocess_aids.py
-python scripts/generate_xml.py --dataset AIDS
+python src/gxl_xml/preprocess_aids.py
+python src/generate_xml.py --dataset AIDS
 ```
 Generates:
 ```
@@ -137,7 +137,7 @@ processed_data/xml/AIDS.xml
 
 #### **For SimGNN:**
 ```bash
-python scripts/json/preprocess_aids.py
+python src/json/preprocess_aids.py
 ```
 Generates:
 ```
@@ -146,7 +146,7 @@ processed_data/json_pairs/AIDS/
 
 ### **2️⃣ Run GEDLIB Experiments**
 ```bash
-python scripts/gedlib_parser.py --dataset AIDS
+python src/gedlib_parser.py --dataset AIDS
 ```
 Results stored in:
 ```
@@ -156,7 +156,7 @@ results/gedlib/AIDS_results.xlsx
 ### **3️⃣ Train & Test SimGNN**
 ```bash
 python SimGNN/src/main.py --dataset AIDS
-python SimGNN/src/simgnn_evaluator.py --dataset AIDS
+python SimGNN/src/simgnn_evaluate.py --dataset AIDS
 ```
 Saves:
 ```
@@ -166,8 +166,8 @@ results/neural/AIDS_predictions.json
 
 ### **4️⃣ Analyze & Visualize**
 ```bash
-python scripts/analyze_results.py
-python scripts/visualize_lower_bound.py
+python src/analyze_results.py
+python src/visualize_lower_bound.py
 ```
 
 ---

@@ -26,11 +26,10 @@
       <excludeFolder url="file://$MODULE_DIR$/gedlib/tests/unit_tests/bin" />
       <excludeFolder url="file://$MODULE_DIR$/gedlib/tests/vldbj2020/bin" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.9" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="SimGNN" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PackageRequirementsSettings">
-    <option name="versionSpecifier" value="Greater or equal (&gt;=x.y.z)" />
     <option name="removeUnused" value="true" />
   </component>
 </module>
