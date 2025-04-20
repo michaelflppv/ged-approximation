@@ -6,16 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-# Ignore JSON files
-*.json
-
-# Ignore GXL files
-*.gxl
-
-# Ignore Excel files
-*.xlsx
-*.xls
-
 # Distribution / packaging
 .Python
 build/
