@@ -1,14 +1,28 @@
-# **Graph Edit Distance Approximation - Experimental Repository**  
+# **Approximation Algorithms for Graph Edit Distance (GED)**  
 
 
 This repository contains all code used for the **experimental work** in my Bachelor thesis on **Approximation Algorithms for Graph Edit Distance (GED)**. The experiments focus on benchmarking approximation methods against exact GED computations, using **GEDLIB** as the primary backend.
 
 ---
 
+## **📌 Repository Overview**
+- **Graph Edit Distance (GED) Evaluation**: Compare multiple GED approximation algorithms.
+- **Dataset Processing & Conversion**: Convert datasets to different formats (TXT → GXL/XML, JSON).
+- **GEDLIB Benchmarking**: Execute and log results from GEDLIB-based algorithms.
+- **SimGNN Model Training & Evaluation**: Train and test a neural network-based GED predictor.
+- **Results Analysis & Visualization**: Compare accuracy, runtime, and scalability across methods.
+
+To get started with this project, clone the repository to your local machine using [git](https://git-scm.com/):
+
+```bash
+git clone https://github.com/michaelflppv/ged-approximation.git
+cd ged-approximation
+```
+
 ## **📌 Important Notice: Using Precompiled Data**
 This repository includes **precompiled datasets** and large files (e.g., GXL/XML files, JSON graph pairs, and pre-trained models).  
-To ensure these files are correctly downloaded, **Git LFS (Large File Storage)** must be installed.
-1. Download and install Git LFS from: https://git-lfs.github.com/
+To ensure these files are correctly downloaded, [Git LFS (Large File Storage)](https://git-lfs.github.com/) must be installed.
+1. Download and install [Git LFS](https://git-lfs.github.com/).
 2. Run the setup command:
 ```bash
 git lfs install
@@ -17,13 +31,6 @@ git lfs install
 ```bash
 git lfs pull
 ```
-
-## **📌 Repository Overview**
-- **Graph Edit Distance (GED) Evaluation**: Compare multiple GED approximation algorithms.
-- **Dataset Processing & Conversion**: Convert datasets to different formats (TXT → GXL/XML, JSON).
-- **GEDLIB Benchmarking**: Execute and log results from GEDLIB-based algorithms.
-- **SimGNN Model Training & Evaluation**: Train and test a neural network-based GED predictor.
-- **Results Analysis & Visualization**: Compare accuracy, runtime, and scalability across methods.
 
 ---
 
@@ -110,7 +117,8 @@ pip install -r requirements.txt
 ```
 
 ### **2️⃣ Clone & Compile GEDLIB**
-This repository partially relies on GEDLIB for GED computation:
+This repository partially relies on GEDLIB for GED computation. The required repository should already be installed within this poject. If not, refer to the [GEDLIB](https://github.com/dbblumenthal/gedlib) for more information.
+Initial setup:
 ```bash
 git clone https://github.com/dbblumenthal/gedlib.git
 cd gedlib
@@ -118,59 +126,8 @@ mkdir build && cd build
 cmake ..
 make
 ```
-Modify `GED_EXECUTABLE` in `scripts/gedlib_parser.py` to point to the compiled binary. See [GEDLIB](https://github.com/dbblumenthal/gedlib) for more information.
 
----
-
-## **🛠 Running Experiments**
-### **1️⃣ Convert Datasets**
-#### **For GEDLIB:**
-```bash
-python scripts/gxl_xml/preprocess_aids.py
-python scripts/generate_xml.py --dataset AIDS
-```
-Generates:
-```
-processed_data/gxl/AIDS/
-processed_data/xml/AIDS.xml
-```
-
-#### **For SimGNN:**
-```bash
-python scripts/json/preprocess_aids.py
-```
-Generates:
-```
-processed_data/json_pairs/AIDS/
-```
-
-### **2️⃣ Run GEDLIB Experiments**
-```bash
-python scripts/gedlib_parser.py --dataset AIDS
-```
-Results stored in:
-```
-results/gedlib/AIDS_results.xlsx
-```
-
-### **3️⃣ Train & Test SimGNN**
-```bash
-python SimGNN/src/main.py --dataset AIDS
-python SimGNN/src/simgnn_evaluator.py --dataset AIDS
-```
-Saves:
-```
-SimGNN/src/models/simgnn_model_aids.pth
-results/neural/AIDS_predictions.json
-```
-
-### **4️⃣ Analyze & Visualize**
-```bash
-python scripts/analyze_results.py
-python scripts/visualize_lower_bound.py
-```
-
----
+My repostory called **[mixup](https://github.com/michaelflppv/mixup.git)** contains a backup copy of GEDLIB with the source code, required to compile this project.
 
 ### **📌 External Dependencies**
 This project also relies on the **[Graph Edit Distance (GED) repository by Lijun Chang](https://github.com/LijunChang/Graph_Edit_Distance.git)** for **exact GED computation**.  
@@ -181,10 +138,7 @@ To use this repository:
    git clone https://github.com/LijunChang/Graph_Edit_Distance.git
    cd Graph_Edit_Distance
    ```
-2. **Follow the build instructions** provided in the repository to compile and set up the exact GED computation framework.
-
-Make sure to integrate the results from this repository when comparing **approximate vs. exact GED values** in your experiments.
-
+2. **Follow the build instructions** provided in the [repository]((https://github.com/LijunChang/Graph_Edit_Distance.git)) to compile and set up the exact GED computation framework.
 ---
 
 
@@ -193,7 +147,7 @@ If you use this code in your work, please cite:
 ```
 @misc{Filippov2025,
   author = {Mikhail Filippov},
-  title = {Graph Edit Distance Approximation - Experimental Repository},
+  title = {Approximation Algorithms for Graph Edit Distance (GED)},
   year = {2025},
   url = {https://github.com/michaelflppv/ged-approximation},
   note = {Bachelor Thesis, University of Mannheim}
