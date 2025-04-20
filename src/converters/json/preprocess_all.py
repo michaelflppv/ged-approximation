@@ -39,7 +39,7 @@ from collections import defaultdict
 import pandas as pd
 
 # Set the dataset name (manually specify the dataset)
-DATASET = "IMDB-MULTI"
+DATASET = "AIDS"
 
 def main():
     # Determine the directory of this script.
@@ -47,8 +47,8 @@ def main():
 
     # Build the relative paths.
     dataset_dir = os.path.join(script_dir, "..", "..", "..", "data", DATASET)
-    output_dir = r"C:\project_data\simgnn_data\IMDB-MULTI"
-    ged_excel_path = r"C:\project_data\results\exact_ged\IMDB-BINARY\merged\results.xlsx"
+    output_dir = "../../../processed_data/json_pairs/AIDS"
+    ged_excel_path = "../../../results/exact_ged/AIDS/results.xlsx"
 
     # --- Read GED values from the Excel file ---
     ged_dict = {}

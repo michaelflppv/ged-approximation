@@ -133,7 +133,7 @@ def main():
         variants.append(variant)
 
     # Prepare output directory for JSON files
-    output_dir = "json_pairs"
+    output_dir = "../../../processed_data/synthetic_graphs/json"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 

@@ -128,7 +128,7 @@ def compute_node_edge_label_diversities(dataset_dir):
     dataset_name = os.path.basename(os.path.normpath(dataset_dir))
 
     # 4) Save Excel file(s) to "C:\project_data\results\label_diversity"
-    output_dir = r"C:\project_data\results\label_diversity"
+    output_dir = "../../results/label_diversity"
     os.makedirs(output_dir, exist_ok=True)
 
     # If the DataFrame fits into one sheet, save directly.
@@ -158,5 +158,5 @@ def compute_node_edge_label_diversities(dataset_dir):
 
 
 if __name__ == "__main__":
-    dataset_dir = r"C:\project_data\processed_data\gxl\PROTEINS"
+    dataset_dir = "../../processed_data/gxl/PROTEINS"
     compute_node_edge_label_diversities(dataset_dir)

@@ -59,11 +59,11 @@ def main():
     parser = argparse.ArgumentParser(
         description="Convert IMDB-BINARY from PyTorch Geometric into GXL graph files and an XML collection file."
     )
-    parser.add_argument("--tud_root", type=str, default="../../../data/ged",
+    parser.add_argument("--tud_root", type=str, default="../../../data/IMDB-BINARY/",
                         help="Root directory for downloading/saving the TUDataset (default: ./data)")
-    parser.add_argument("--output_dir", type=str, default="/mnt/c/project_data/processed_data/IMDB-BINARY/gxl",
+    parser.add_argument("--output_dir", type=str, default="../../../processed_data/gxl/IMDB-BINARY",
                         help="Output directory for GXL files (default: gxl/IMDB-BINARY)")
-    parser.add_argument("--collection_file", type=str, default="/mnt/c/project_data/processed_data/IMDB-BINARY/xml/IMDB-BINARY.xml",
+    parser.add_argument("--collection_file", type=str, default="../../../processed_data/xml/IMDB-BINARY.xml",
                         help="Output XML collection file (default: IMDB-BINARY.xml)")
     args = parser.parse_args()
 

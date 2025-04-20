@@ -14,9 +14,13 @@ import json
 import time
 import math
 import torch
-import numpy as np
 import psutil
 import pandas as pd
+from tqdm import tqdm
+from utils import process_pair
+from simgnn import SimGNNTrainer
+from param_parser import parameter_parser
+
 
 # -------------------------------
 # Helper functions
@@ -46,52 +50,6 @@ def compute_density(edge_list, num_nodes):
     if num_nodes <= 1:
         return 0.0
     return (2 * len(unique_edges)) / (num_nodes * (num_nodes - 1))
-
-
-def transfer_to_torch(data, global_labels):
-    """
-    Convert the raw JSON data into torch tensors.
-    This function mimics the conversion in SimGNNTrainer.transfer_to_torch.
-    It assumes that the JSON contains keys "graph_1", "graph_2", "labels_1", "labels_2", and "ged".
-    """
-    new_data = dict()
-
-    # Create undirected edges by adding reverse edges.
-    edges_1 = data["graph_1"] + [[y, x] for x, y in data["graph_1"]]
-    edges_2 = data["graph_2"] + [[y, x] for x, y in data["graph_2"]]
-
-    edges_1 = torch.tensor(np.array(edges_1).T, dtype=torch.long)
-    edges_2 = torch.tensor(np.array(edges_2).T, dtype=torch.long)
-
-    features_1, features_2 = [], []
-    # One-hot encode the node labels based on the global_labels mapping.
-    for label in data["labels_1"]:
-        label_str = str(label)
-        one_hot = [1.0 if global_labels[label_str] == i else 0.0 for i in range(len(global_labels))]
-        features_1.append(one_hot)
-    for label in data["labels_2"]:
-        label_str = str(label)
-        one_hot = [1.0 if global_labels[label_str] == i else 0.0 for i in range(len(global_labels))]
-        features_2.append(one_hot)
-
-    features_1 = torch.FloatTensor(np.array(features_1))
-    features_2 = torch.FloatTensor(np.array(features_2))
-
-    new_data["edge_index_1"] = edges_1
-    new_data["edge_index_2"] = edges_2
-    new_data["features_1"] = features_1
-    new_data["features_2"] = features_2
-
-    # Calculate normalized GED as in training:
-    norm_ged = data["ged"] / (0.5 * (len(data["labels_1"]) + len(data["labels_2"])))
-    new_data["target"] = torch.tensor(np.exp(-norm_ged), dtype=torch.float32).view(1)
-    # Also keep the raw GED and graph sizes for evaluation:
-    new_data["raw_ged"] = data["ged"]
-    new_data["num_nodes_1"] = len(data["labels_1"])
-    new_data["num_nodes_2"] = len(data["labels_2"])
-
-    return new_data
-
 
 def calculate_accuracy(predicted, exact):
     """
@@ -127,10 +85,10 @@ def split_and_save_dataframe(df, base_save_path, max_rows=1048576):
 def main():
     # Define paths
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    json_dir = r"C:\project_data\processed_data\json_pairs\AIDS"
-    model_path = os.path.join(base_dir, "models/simgnn_model.h5")
+    json_dir = "../../processed_data/json_pairs/AIDS"
+    model_path = "../models/simgnn_model.h5"
     # Path to the Excel file with exact GED results (must contain a column "min_ged")
-    exact_ged_path = r"C:\project_data\results\exact_ged\AIDS\merged\results.xlsx"
+    exact_ged_path = "../../results/exact_ged/AIDS/results.xlsx"
 
     # Find and sort all JSON files in the directory to ensure order matches the Excel file rows.
     json_files = glob.glob(os.path.join(json_dir, "*.json"))
@@ -144,39 +102,17 @@ def main():
     if df_exact.shape[0] != len(json_files):
         print("Warning: Number of rows in exact GED Excel file does not match number of JSON files.")
 
-    # Build a global mapping of unique node labels across all graph pairs.
-    global_labels_set = set()
-    for filepath in json_files:
-        try:
-            data = load_json(filepath)
-        except Exception as e:
-            print(f"Skipping {filepath} due to error in loading JSON: {e}")
-            continue
-        global_labels_set.update([str(label) for label in data["labels_1"]])
-        global_labels_set.update([str(label) for label in data["labels_2"]])
-    sorted_labels = sorted(global_labels_set, key=lambda x: x)
-    global_labels = {label: idx for idx, label in enumerate(sorted_labels)}
-
     # Create a dummy args namespace required for model instantiation.
-    from argparse import Namespace
-    args = Namespace(
-        filters_1=128,
-        filters_2=64,
-        filters_3=32,
-        tensor_neurons=16,
-        bottle_neck_neurons=16,
-        bins=16,
-        dropout=0.5,
-        histogram=False  # Change to True if your model was trained with histogram features.
-    )
+    args = parameter_parser()
+    args.load_path = model_path
+    args.histogram = False
 
-    # Import the SimGNN model (assumes simgnn.py is in the same folder)
-    from simgnn import SimGNN
-
-    # Instantiate the model with the number of unique labels.
-    model = SimGNN(args, number_of_labels=len(global_labels))
+    # Create device and move model to device.
+    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = SimGNNTrainer(args).model
     state_dict = torch.load(model_path, map_location=torch.device("cpu"), weights_only=False)
     model.load_state_dict(state_dict)
+    #model.to(device)
     model.eval()
 
     # List to store per-pair results.
@@ -187,15 +123,11 @@ def main():
 
     counter = 0
     # Process each JSON file.
-    for i, filepath in enumerate(json_files):
-        try:
-            data = load_json(filepath)
-        except Exception as e:
-            print(f"Skipping {filepath} due to error in loading JSON: {e}")
-            continue
+    for graph_pair in tqdm(json_files):
+        data = process_pair(graph_pair)
 
         counter += 1
-        if counter == 1048574:
+        if counter == 200000:
             break
         # Measure per-pair runtime and memory usage.
         pair_start_time = time.time()
@@ -210,9 +142,9 @@ def main():
 
         # Convert raw data to torch tensors.
         try:
-            torch_data = transfer_to_torch(data, global_labels)
+            torch_data = model.transfer_to_torch(data)
         except Exception as e:
-            print(f"Skipping pair {filepath} due to error in transfer_to_torch: {e}")
+            print(f"Skipping pair due to error in transfer_to_torch: {e}")
             continue
 
         # Get model prediction (a similarity score).
@@ -226,22 +158,6 @@ def main():
         # Compute the predicted raw GED.
         pred_ged = pred_norm_ged * (0.5 * (n1 + n2))
 
-        # Use the exact GED (min_ged) from the Excel file if available.
-        if i < df_exact.shape[0]:
-            exact_ged = df_exact.iloc[i]["min_ged"]
-        else:
-            exact_ged = "N/A"
-
-        # Check if exact GED is missing or not available.
-        if pd.isna(exact_ged) or str(exact_ged).upper() == "N/A":
-            acc = "N/A"
-            abs_error = "N/A"
-            squared_error = "N/A"
-        else:
-            abs_error = abs(pred_ged - exact_ged)
-            squared_error = (pred_ged - exact_ged) ** 2
-            acc = calculate_accuracy(pred_ged, exact_ged)
-
         # Measure per-pair runtime and memory after processing.
         pair_end_time = time.time()
         mem_after = process.memory_info().rss / (1024 * 1024)
@@ -250,7 +166,7 @@ def main():
         mem_delta = mem_delta if mem_delta > 0 else 0.0
 
         # Parse graph IDs from filename (expects format: "pair_id1_id2.json")
-        base_name = os.path.splitext(os.path.basename(filepath))[0]
+        base_name = os.path.splitext(os.path.basename(graph_pair))[0]
         parts = base_name.split('_')
         if len(parts) >= 3 and parts[0] == "pair":
             graph_id_1 = parts[1]
@@ -273,9 +189,9 @@ def main():
             "runtime": runtime_pair,
             "graph_id_1": graph_id_1,
             "graph_id_2": graph_id_2,
-            "accuracy": acc,
-            "absolute_error": abs_error,
-            "squared_error": squared_error,
+            "accuracy": "",
+            "absolute_error": "",
+            "squared_error": "",
             "memory_usage_mb": mem_delta,
             "graph1_n": n1,
             "graph1_density": density1,
@@ -304,7 +220,7 @@ def main():
     df_pairs = pd.DataFrame(pair_results)[ordered_columns]
 
     # Define the directory for saving performance results.
-    results_dir = r"C:\project_data\results\neural\AIDS"
+    results_dir = "../../results/simgnn/AIDS"
     os.makedirs(results_dir, exist_ok=True)
     save_path = os.path.join(results_dir, "performance.xlsx")
 

@@ -109,7 +109,7 @@ def main():
     args = parser.parse_args()
 
     input_dir = "../../../data/PROTEINS/"
-    output_dir = "../../../processed_data/gxl/PROTEINS/"
+    output_dir = "../../../processed_data/gxl/PROTEINS"
     collection_file = "../../../processed_data/xml/PROTEINS.xml"
 
     os.makedirs(output_dir, exist_ok=True)
@@ -159,7 +159,7 @@ def main():
                                                  edges_for_graph, node_labels, gl,
                                                  node_attributes)
 
-        graph_filename = f"graph_{g_id}.gxl"
+        graph_filename = f"{g_id}.gxl"
         graph_filepath = os.path.join(output_dir, graph_filename)
         doctype_gxl = '<!DOCTYPE gxl SYSTEM "http://www.gupro.de/GXL/gxl-1.0.dtd">'
         write_xml_with_doctype(gxl_tree, graph_filepath, doctype_gxl)

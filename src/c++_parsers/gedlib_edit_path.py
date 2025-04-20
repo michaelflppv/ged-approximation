@@ -5,12 +5,12 @@ import json
 def main():
     # Specify your parameters here:
     dataset = "PROTEINS"
-    dataset_path = f"/home/mfilippov/ged_data/processed_data/gxl/{dataset}"          # Update as needed
-    collection_xml = f"/home/mfilippov/ged_data/processed_data/xml/{dataset}.xml"      # Update as needed
+    dataset_path = f"../../processed_data/gxl/{dataset}"          # Update as needed
+    collection_xml = f"../../processed_data/xml/{dataset}.xml"      # Update as needed
     idx1 = 0                                   # Graph index 1 (zero-based)
     idx2 = 305                                 # Graph index 2 (zero-based)
-    executable = "/home/mfilippov/CLionProjects/gedlib/build/edit_path_exec"         # Path to the executable
-    output_file = f"/home/mfilippov/ged_data/results/extracted_paths/ipfp_{dataset}_edit_path_for_{idx1}_{idx2}.json"  # Output JSON file
+    executable = "../../gedlib/build/edit_path_exec"         # Path to the executable
+    output_file = f"../../results/extracted_paths/ipfp_{dataset}_edit_path_for_{idx1}_{idx2}.json"  # Output JSON file
 
     # Build the command with required arguments.
     command = [

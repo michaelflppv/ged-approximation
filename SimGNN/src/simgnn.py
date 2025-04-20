@@ -276,4 +276,5 @@ class SimGNNTrainer(object):
         torch.save(checkpoint, self.args.save_path)
 
     def load(self):
-        self.model.load_state_dict(torch.load(self.args.load_path))
+        checkpoint = torch.load(self.args.load_path)
+        self.model.load_state_dict(checkpoint["model_state_dict"])

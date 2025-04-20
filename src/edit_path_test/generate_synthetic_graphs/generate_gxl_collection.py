@@ -122,7 +122,7 @@ def save_xml_collection(graph_files, collection_filename):
 def main():
     random.seed(42)  # For reproducibility
     num_graphs = 100
-    output_dir = "gxl_graphs"
+    output_dir = "../../../processed_data/synthetic_graphs/gxl"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -141,7 +141,7 @@ def main():
         # In the XML collection, we reference only the file name (without the directory).
         graph_files_info.append((f"{i}.gxl", cls))
 
-    collection_filename = "collection.xml"
+    collection_filename = "../../../processed_data/synthetic_graphs/xml/collection.xml"
     save_xml_collection(graph_files_info, collection_filename)
     print(f"Generated {num_graphs} GXL graph files in '{output_dir}' and collection file '{collection_filename}'.")
 

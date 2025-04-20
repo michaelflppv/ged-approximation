@@ -11,17 +11,17 @@ def parameter_parser():
 
     parser.add_argument("--training-graphs",
                         nargs="?",
-                        default=r"C:\project_data\simgnn_data\train",
+                        default="/dataset/train",
 	                help="Folder with training graph pair jsons.")
 
     parser.add_argument("--testing-graphs",
                         nargs="?",
-                        default=r"C:\project_data\processed_data\json_pairs\AIDS",
+                        default="/dataset/train",
 	                help="Folder with testing graph pair jsons.")
 
     parser.add_argument("--epochs",
                         type=int,
-                        default=300,
+                        default=100,
 	                help="Number of training epochs. Default is 5.")
 
     parser.add_argument("--filters-1",

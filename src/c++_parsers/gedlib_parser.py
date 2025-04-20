@@ -31,12 +31,11 @@ global_ged_process: Optional[subprocess.Popen] = None  # Handle to the GEDLIB su
 global_preprocessed_xml: Optional[str] = None          # Path to the temporary preprocessed XML.
 
 # Modify these paths as needed:
-GED_EXECUTABLE = "/home/mfilippov/CLionProjects/gedlib/build/main_exec"
-DATASET_PATH = "/home/mfilippov/ged_data/processed_data/gxl/IMDB-BINARY"
-COLLECTION_XML = "/home/mfilippov/ged_data/processed_data/xml/IMDB-BINARY.xml"
-RESULTS_DIR = "/home/mfilippov/ged_data/results/HED"
-RESULTS_FILE = os.path.join(RESULTS_DIR, "IMDB-BINARY_HED_results.xlsx")
-EXACT_GED_FILE = "/home/mfilippov/ged_data/results/exact_ged/IMDB-BINARY/merged/results.xlsx"
+GED_EXECUTABLE = "../../gedlib/build/main_exec"
+DATASET_PATH = "../../processed_data/gxl/AIDS"
+COLLECTION_XML = "../../processed_data/xml/AIDS.xml"
+RESULTS_FILE = "../../results/gedlib/AIDS/AIDS_IPFP_results.xlsx"
+EXACT_GED_FILE = ""
 
 # Mapping of method ID to method names.
 METHOD_NAMES = {
@@ -259,7 +258,7 @@ def run_ged(dataset_path: str, collection_xml: str):
         print("Failed to preprocess collection XML:", e)
         return [{"error": "Preprocessing XML failed"}]
 
-    command = [GED_EXECUTABLE, dataset_path, preprocessed_xml]
+    command = [GED_EXECUTABLE, dataset_path, preprocessed_xml, "IPFP"]
     print("Running command:", " ".join(command))
     try:
         process = subprocess.Popen(

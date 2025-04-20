@@ -1,5 +1,5 @@
 """
-simgnn_edit_path.py
+simgnn_extract_edit_path.py
 
 This script loads a saved SimGNN model and a JSON file representing a pair of graphs.
 It computes node embeddings for both graphs (using the model's convolutional layers)
@@ -35,9 +35,9 @@ graph_id_2 = 1003
 # ============================================================================
 # Specify your file paths here:
 # ============================================================================
-JSON_PATH   = r"C:\project_data\processed_data\json_pairs\PROTEINS\pair_{}_{}.json".format(graph_id_1, graph_id_2)
-MODEL_PATH  = r"C:\Users\mikef\PycharmProjects\ged-approximation\SimGNN\models\simgnn_model.h5"
-OUTPUT_DIR  = r"C:\project_data\results\extracted_paths"
+JSON_PATH   = "../../processed_data/json_pairs/PROTEINS/pair_{}_{}.json".format(graph_id_1, graph_id_2)
+MODEL_PATH  = "../models/simgnn_model.h5"
+OUTPUT_DIR  = "../../results/extracted_paths"
 DUMMY_COST  = 1.0
 # ============================================================================
 
@@ -283,8 +283,12 @@ def main():
     prediction = -math.log(prediction)
 
     # Calculate the normalized GED.
-    prediction = prediction * (n1 + n2)
+    prediction = prediction * (0.5 * (n1 + n2))
     print("Prediction:", prediction)
+
+    # Print the final number of edit operations after ordering.
+    final_number_ops = len(ordered_edit_ops)
+    print("Final number of edit operations:", final_number_ops)
 
     # Prepare the results directory.
     os.makedirs(OUTPUT_DIR, exist_ok=True)

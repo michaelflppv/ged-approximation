@@ -4,6 +4,7 @@ import json
 import math
 import random
 import numpy as np
+import pandas as pd
 from scipy.optimize import linear_sum_assignment
 from torch.serialization import safe_globals
 from torch.nn.parameter import UninitializedParameter
@@ -13,8 +14,9 @@ from simgnn import SimGNNTrainer
 from utils import process_pair
 
 # File and directory constants
-JSON_DIR = r"C:\project_data\processed_data\generated\json"
-MODEL_PATH = r"C:\Users\mikef\PycharmProjects\ged-approximation\SimGNN\models\simgnn_model.h5"
+JSON_DIR = "../../processed_data/json_pairs/PROTEINS"
+MODEL_PATH = "../models/simgnn_model.h5"
+EXCEL_PATH = "../../results/exact_ged/PROTEINS/results.xlsx"  # Path to the Excel file with min_ged values
 DUMMY_COST = 1.0
 THRESHOLD = 0.05  # 5% tolerance
 
@@ -135,7 +137,32 @@ def validate_and_order_edit_path(edit_ops, labels1, labels2):
         raise ValueError("Final state does not match target state.")
     return ordered_ops
 
-def process_pair_json(json_path, trainer):
+def load_exact_ged_data():
+    """
+    Load the exact GED values from the Excel file
+    """
+    try:
+        df = pd.read_excel(EXCEL_PATH)
+        # Create a dictionary with pair keys and min_ged values
+        ged_dict = {}
+        for _, row in df.iterrows():
+            g1 = int(row['graph_id_1'])
+            g2 = int(row['graph_id_2'])
+            if g1 > g2:  # Ensure consistent ordering
+                g1, g2 = g2, g1
+            pair_key = f"{g1}_{g2}"
+            ged_dict[pair_key] = int(row['min_ged'])
+        return ged_dict
+    except Exception as e:
+        print(f"Error loading exact GED data from Excel: {e}")
+        return {}
+
+def process_pair_json(json_path, trainer, exact_ged_dict):
+    # Extract graph indices from filename
+    filename = os.path.basename(json_path)
+    g1, g2 = map(int, filename.replace("pair_", "").replace(".json", "").split('_'))
+    pair_key = f"{g1}_{g2}"
+
     # Load data from json file
     data = process_pair(json_path)
     labels1 = data["labels_1"]
@@ -145,53 +172,83 @@ def process_pair_json(json_path, trainer):
     # Validate and order the edit path (will raise an error if invalid)
     ordered_edit_ops = validate_and_order_edit_path(edit_ops, labels1, labels2)
     final_number_ops = len(ordered_edit_ops)
-    # Instead of model prediction, use the true GED from the JSON file
-    true_ged = data["ged"]
+
+    # Use the exact GED from Excel file instead of JSON
+    true_ged = exact_ged_dict.get(pair_key)
+    if true_ged is None:
+        # Fallback to JSON value if not found in Excel
+        true_ged = data["ged"]
+        #print(f"Warning: Exact GED not found in Excel for pair {pair_key}, using JSON value: {true_ged}")
+
     return final_number_ops, true_ged
 
 def main():
     simgnn_args = parameter_parser()
     trainer = load_model(simgnn_args)
 
+    # Load exact GED values from Excel
+    exact_ged_dict = load_exact_ged_data()
+    print(f"Loaded {len(exact_ged_dict)} exact GED values from Excel")
+
     # Statistics counters
     total_pairs = 0
     valid_pairs = 0
     invalid_pairs = 0
     optimal_pairs = 0
-    total_diff = 0.0  # Sum of absolute differences between edit path cost and true GED
+    exact_match_pairs = 0
+    total_diff = 0.0
 
-    # Number of samples and pairs per sample for evaluation
+    # Target total number of valid pairs to process
+    target_valid_pairs = 5000
     total_samples = 3
-    pairs_per_sample = 2000  # Adjust as needed
+    pairs_per_sample = target_valid_pairs // total_samples
 
-    # For each sample, randomly pick pairs from the JSON directory.
-    # (Assuming 100 graphs were used to generate JSON pairs, indices should be 0 to 99.)
+    # For each sample, pick pairs from the JSON directory until we reach the target
     for sample in range(total_samples):
         sample_processed = 0
         sample_valid = 0
         sample_optimal = 0
+        sample_exact = 0
         sample_total_diff = 0.0
+        attempts = 0
+        max_attempts = pairs_per_sample * 10  # Safety limit to prevent infinite loops
 
-        for _ in range(pairs_per_sample):
+        while sample_valid < pairs_per_sample and attempts < max_attempts:
+            attempts += 1
             # Randomly select two graph indices (from 0 to 99)
             g1 = random.randint(0, 99)
             g2 = random.randint(0, 99)
             # Ensure g1 < g2 to match generation of unique pairs
             if g1 >= g2:
                 continue
+
+            # Create pair key to check if it exists in our exact GED dictionary
+            pair_key = f"{g1}_{g2}"
+            if pair_key not in exact_ged_dict:
+                # Skip pairs that don't have exact GED values in Excel
+                continue
+
             json_file = os.path.join(JSON_DIR, f"pair_{g1}_{g2}.json")
             if not os.path.exists(json_file):
                 continue
+
             total_pairs += 1
             sample_processed += 1
+
             try:
-                final_ops, true_ged = process_pair_json(json_file, trainer)
+                final_ops, true_ged = process_pair_json(json_file, trainer, exact_ged_dict)
                 # If we reached here, the edit path is valid.
                 valid_pairs += 1
                 sample_valid += 1
                 diff = abs(final_ops - true_ged)
                 sample_total_diff += diff
                 total_diff += diff
+
+                # Check exact match (truly optimal)
+                if final_ops == true_ged:
+                    exact_match_pairs += 1
+                    sample_exact += 1
+
                 # Check optimality: if the edit path cost is within THRESHOLD tolerance of true GED.
                 if final_ops == 0:
                     is_optimal = (true_ged == 0)
@@ -208,28 +265,39 @@ def main():
         # Print sample-level statistics
         if sample_valid > 0:
             avg_diff_sample = sample_total_diff / sample_valid
+            exact_percentage_sample = 100.0 * sample_exact / sample_valid
         else:
             avg_diff_sample = float('nan')
+            exact_percentage_sample = 0.0
+
         print(f"Sample {sample + 1}: Processed {sample_processed} pairs; "
               f"Valid: {sample_valid}; Invalid: {sample_processed - sample_valid}; "
               f"Optimal (within {THRESHOLD*100:.1f}%): {sample_optimal}; "
+              f"Exactly Optimal: {sample_exact} ({exact_percentage_sample:.2f}%); "
               f"Average absolute difference: {avg_diff_sample:.2f}")
+
+        # Check if we've reached the overall target
+        if valid_pairs >= target_valid_pairs:
+            break
 
     # Print overall statistics
     if valid_pairs > 0:
         avg_diff = total_diff / valid_pairs
         optimal_percentage = 100.0 * optimal_pairs / valid_pairs
+        exact_match_percentage = 100.0 * exact_match_pairs / valid_pairs
     else:
         avg_diff = float('nan')
         optimal_percentage = 0.0
+        exact_match_percentage = 0.0
 
     print("\n=== Overall Statistics ===")
     print(f"Total pairs processed: {total_pairs}")
-    print(f"Valid edit paths: {valid_pairs}")
+    print(f"Valid edit paths: {valid_pairs} (target: {target_valid_pairs})")
     print(f"Invalid edit paths: {invalid_pairs}")
     print(f"Optimal edit paths (within {THRESHOLD*100:.1f}% tolerance): {optimal_pairs}")
     print(f"Optimality percentage (among valid pairs): {optimal_percentage:.2f}%")
+    print(f"Truly optimal edit paths (exact GED match): {exact_match_pairs}")
+    print(f"Truly optimal percentage (among valid pairs): {exact_match_percentage:.2f}%")
     print(f"Average absolute difference between edit path cost and true GED: {avg_diff:.2f}")
-
 if __name__ == "__main__":
     main()

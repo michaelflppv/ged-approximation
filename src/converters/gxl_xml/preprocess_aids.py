@@ -140,8 +140,8 @@ def main():
     args = parser.parse_args()
 
     input_dir = "../../../data/AIDS/"
-    output_dir = "/mnt/c/project_data/processed_data/gxl/AIDS"
-    collection_file = "/mnt/c/project_data/processed_data/xml/AIDS.xml"
+    output_dir = "../../../processed_data/gxl/AIDS"
+    collection_file = "../../../processed_data/xml/AIDS.xml"
 
     os.makedirs(output_dir, exist_ok=True)
 
