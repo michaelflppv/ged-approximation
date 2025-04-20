@@ -30,74 +30,74 @@ git lfs pull
 ## **📂 Project Structure**
 ```
 📦 ged-approximation
-├── 📜 README.md                           # Documentation
-├── 📜 requirements.txt                     # Dependencies
-├── 📂 data/                                # Raw datasets (original txt files)
+├── 📜 README.md                       # Project documentation
+├── 📂 data/                           # Raw graph datasets (AIDS, IMDB, etc.)
 │   ├── 📂 AIDS/
 │   ├── 📂 IMDB-BINARY/
 │   ├── 📂 PROTEINS/
-│   ├── 📂 MUTAG/
-│   ├── ...                                 # Additional datasets
-├── 📂 processed_data/                       # Preprocessed versions of datasets
-│   ├── 📂 gxl/                              # Converted files for GEDLIB
-│   │   ├── 📂 AIDS/
-│   │   ├── 📂 IMDB-BINARY/
-│   │   ├── 📂 PROTEINS/
-│   │   ├── 📂 MUTAG/
-│   ├── 📂 xml/                              # GEDLIB-compatible collection files
-│   │   ├── AIDS.xml
-│   │   ├── IMDB-BINARY.xml
-│   │   ├── PROTEINS.xml
-│   │   ├── MUTAG.xml
-│   ├── 📂 json_pairs/                       # Converted graph pairs for SimGNN
-│   │   ├── 📂 AIDS/
-│   │   ├── 📂 IMDB-BINARY/
-│   │   ├── 📂 PROTEINS/
-│   │   ├── 📂 MUTAG/
-├── 📂 scripts/                              # Code for data processing and execution
-│   ├── 📂 convert_to_gxl_xml/               # TXT to GXL/XML converters
-│   │   ├── aids_converter.py
-│   │   ├── imdb_binary_converter.py
-│   │   ├── proteins_converter.py
-│   │   ├── mutag_converter.py
-│   ├── 📂 convert_to_json/                  # TXT to JSON converters
-│   │   ├── aids_converter.py
-│   │   ├── imdb_binary_converter.py
-│   │   ├── proteins_converter.py
-│   │   ├── mutag_converter.py
-│   ├── 📜 gedlib_parser.py                  # Runs GEDLIB and logs results
-│   ├── 📜 analyze_results.py                 # Evaluates experiment results
-│   ├── 📜 visualize_results.py               # Plots comparisons
-├── 📂 results/                               # Stores experiment results
-│   ├── 📂 gedlib/                            # GEDLIB method results
-│   │   ├── AIDS_results.xlsx
-│   │   ├── IMDB-BINARY_results.xlsx
-│   │   ├── PROTEINS_results.xlsx
-│   │   ├── MUTAG_results.xlsx
-│   ├── 📂 neural/                            # SimGNN results
-│   │   ├── AIDS_predictions.json
-│   │   ├── IMDB-BINARY_predictions.json
-│   │   ├── PROTEINS_predictions.json
-│   │   ├── MUTAG_predictions.json
-├── 📂 SimGNN/                                # Organized SimGNN implementation
-│   ├── 📜 README.md                          # SimGNN-specific documentation
-│   ├── 📜 architecture.png                   # Image explaining SimGNN model
-│   ├── 📜 training_process.png               # Training visualization
-│   ├── 📂 src/                               # Source code
-│   │   ├── 📂 dataset/                       # Stores json data needed for training
-│   │   │   ├── train/
-│   │   │   ├── test/
-│   │   ├── 📂 models/                        # Stores trained models
-│   │   │   ├── simgnn_model_aids.pth
-│   │   │   ├── simgnn_model_imdb.pth
-│   │   │   ├── simgnn_model_proteins.pth
-│   │   │   ├── simgnn_model_mutag.pth
-│   │   ├── 📜 layers.py                      # Neural network layers for SimGNN
-│   │   ├── 📜 main.py                        # Main training script
-│   │   ├── 📜 param_parser.py                # Parses hyperparameters
-│   │   ├── 📜 simgnn.py                      # SimGNN model definition
-│   │   ├── 📜 tester.py                      # Testing SimGNN on JSON graph pairs
-│   │   ├── 📜 utils.py                       # Utility functions
+│   └── ...
+├── 📂 processed_data/                # Preprocessed data for different tools
+│   ├── 📂 gxl/                        # GXL graphs for GEDLIB
+│   ├── 📂 json_pairs/                # JSON graph pairs for SimGNN
+│   ├── 📂 synthetic_graphs/          # Synthetic graphs for experiments
+│   ├── 📂 txt/                       # TXT graph pairs for AStar-BMao
+│   ├── 📂 xml/                       # XML graph pair collections
+├── 📂 results/                       # Stores output of GED computations
+│   ├── 📂 exact_ged/                 # Ground truth edit distances
+│   ├── 📂 extracted_paths/          # Edit paths from GEDLIB
+│   ├── 📂 lower_bound/              # Lower bound estimations
+│   ├── 📂 simgnn/                   # SimGNN predictions
+│   ├── 📂 gedlib/                   # GEDLIB results
+│   └── 📂 label_diversity/         # Label diversity stats
+├── 📂 heuristics/                   # Heuristic lower bound estimations
+│   ├── 📂 plots/                    # Visualizations of lower bounds
+│   ├── 📜 estimate_lower_bound.py
+│   └── 📜 validate_lower_bounds.py
+├── 📂 SimGNN/                       # Neural GED model (SimGNN)
+│   ├── 📂 assets/                   
+│   ├── 📂 dataset/                 # Train/test data in JSON format
+│   ├── 📂 models/                  # Saved PyTorch models
+│   └── 📂 src/                     # Model code (SimGNN, training, eval)
+│       ├── layers.py, simgnn.py, ...
+│       └── simgnn_extract_edit_path.py, ...
+📂 src/                                  # Main processing and analysis scripts
+├── 📂 analysis/                         # Scripts and notebooks for analyzing GED results
+│   ├── 📂 notebooks/                   # Jupyter Notebooks for visual exploration
+│   │   ├── lower_bound_analysis.ipynb     # Analyze lower bound estimations
+│   │   ├── plot_analysis.ipynb            # Plot comparison metrics
+│   │   └── statistics_analysis.ipynb      # General dataset statistics
+│   ├── 📂 C++_parsers/                 # Python wrappers for C++ GED results
+│   │   ├── astar_exact_ged.py             # Parse A* GED output
+│   │   ├── gedlib_edit_path.py            # Extract GEDLIB edit paths
+│   │   └── gedlib_parser.py               # General GEDLIB result parser
+├── 📂 converters/                      # Convert original TXT datasets into structured formats
+│   ├── 📂 gxl_xml/                     # Convert to GXL/XML for GEDLIB
+│   │   ├── preprocess_aids.py
+│   │   ├── preprocess_imdb.py
+│   │   ├── preprocess_proteins.py
+│   │   └── preprocess_mutag.py
+│   ├── 📂 json/                        # Convert to JSON for SimGNN
+│   │   └── preprocess_all.py             
+│   ├── 📂 txt/                         # TXT conversion handling
+│   │   └── preprocess_all.py
+├── 📂 edit_path_test/                 # Tools for evaluating edit paths (ground-truth vs predicted)
+│   ├── 📂 generate_synthetic_graphs/  # Scripts for generating synthetic test data
+│   │   ├── generate_gxl_collection.py     
+│   │   └── generate_json_pairs.py         
+│   ├── 📂 test/                       # Edit path validation utilities
+│   │   └── gedlib_validate_edit_path.py   # Validate GEDLIB paths
+│   └── 📜 apply_edit_path.py         # Apply and simulate edit path execution
+├── 📂 helper_functions/              # Miscellaneous utility scripts
+│   └── 📜 label_diversity_calculator.py   # Computes label diversity in datasets
+├── 📂 gedlib/                      # GEDLIB C++ source and interface
+│   ├── 📂 src/, include/, lib/     # C++ logic and libraries
+│   ├── 📜 main.cpp, CMakeLists.txt # Entry and build files
+│   └── 📜 install.py               # Installation script
+├── 📂 median/                      # Placeholder (possibly for GED median)
+├── 📂 tests/                       # Unit and functional tests
+├── 📂 venv/                        # Python virtual environment (optional)
+└── 📜 LICENSE, .gitignore, ...     # Meta files
+
 ```
 
 ---
