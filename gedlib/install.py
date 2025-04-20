@@ -33,8 +33,8 @@
 
 '''Installs GEDLIB and its dependencies.'''
 
-from subprocess import call
-from subprocess import check_output
+import subprocess
+from subprocess import check_output, call
 import argparse
 import shutil
 import os.path
@@ -144,7 +144,7 @@ def build_external_libraries():
 		call(commands, shell=True)
 		f = open("ext/.INSTALLED", "w")
 		f.close()
-		
+
 def determine_gurobi_dylib(gurobi_root):
 	if not os.path.isdir(gurobi_root):
 		raise Exception("Invalid argument \"" + gurobi_root + "\" for option gurobi: not a directory. Usage: python install.py [--gurobi <path-to-root-directory-of-Gurobi>] [...]")
@@ -156,7 +156,7 @@ def determine_gurobi_statlib(gurobi_root):
 		info = {item.split(":\t")[0] : item.split(":\t")[1] for item in subprocess.check_output("lsb_release -a", shell=True).decode("utf-8").split("\n")[:-1]}
 		if info["Distributor ID"] == "Ubuntu" and (info["Release"] == "16.04" or info["Release"] == "18.04"):
 			statlib = "gurobi_g++5.2"
-	return statlib	
+	return statlib
 
 def build_gedlib(args):
 	identifier = "gxl"
