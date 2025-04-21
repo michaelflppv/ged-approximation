@@ -1,16 +1,16 @@
 # **Approximation Algorithms for Graph Edit Distance (GED)**  
 
 
-This repository contains all code used for the **experimental work** in my Bachelor thesis on **Approximation Algorithms for Graph Edit Distance (GED)**. The experiments focus on benchmarking approximation methods against exact GED computations, using **GEDLIB** as the primary backend.
+This repository contains all code used for the **experimental work** in my Bachelor thesis on **Approximation Algorithms for Graph Edit Distance (GED)**. The experiments focus on benchmarking approximation methods against exact GED computations, using **AStar-BMao, GEDLIB** and **SimGNN** as the primary backend.
 
 ---
 
-## **📌 Repository Overview**
+## **Repository Overview**
 - **Graph Edit Distance (GED) Evaluation**: Compare multiple GED approximation algorithms.
 - **Dataset Processing & Conversion**: Convert datasets to different formats (TXT → GXL/XML, JSON).
-- **GEDLIB Benchmarking**: Execute and log results from GEDLIB-based algorithms.
+- **GEDLIB Benchmarking**: Execute and log results from AStar- and GEDLIB-based algorithms.
 - **SimGNN Model Training & Evaluation**: Train and test a neural network-based GED predictor.
-- **Results Analysis & Visualization**: Compare accuracy, runtime, and scalability across methods.
+- **Results Analysis & Visualization**: Compare accuracy, runtime, and memory usage across methods.
 
 To get started with this project, clone the repository to your local machine using [git](https://git-scm.com/):
 
@@ -117,7 +117,7 @@ pip install -r requirements.txt
 ```
 
 ### **2️⃣ Clone & Compile GEDLIB**
-This repository partially relies on GEDLIB for GED computation. The required repository should already be installed within this poject. If not, refer to the [GEDLIB](https://github.com/dbblumenthal/gedlib) for more information.
+This repository partially relies on GEDLIB for GED computation. The required repository and its external libraries should already be installed within this project. If not, refer to the [GEDLIB](https://github.com/dbblumenthal/gedlib) for more information.
 Initial setup:
 ```bash
 git clone https://github.com/dbblumenthal/gedlib.git
@@ -129,7 +129,7 @@ make
 
 My repostory called **[mixup](https://github.com/michaelflppv/mixup.git)** contains a backup copy of GEDLIB with the source code, required to compile this project.
 
-### **📌 External Dependencies**
+### **3️⃣ Set Up External Dependencies**
 This project also relies on the **[Graph Edit Distance (GED) repository by Lijun Chang](https://github.com/LijunChang/Graph_Edit_Distance.git)** for **exact GED computation**.  
 
 To use this repository:
