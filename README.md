@@ -142,7 +142,7 @@ To use this repository:
 ---
 
 ## **🧪 Run Experiments**
-### Data Conversion
+### 1️⃣ Data Conversion
 To convert datasets into the required formats, follow these steps:
 - Navigate to the [src/converters](https://github.com/michaelflppv/ged-approximation/tree/main/src/converters) directory.
 - Run the appropriate conversion script for your dataset. For example, to convert the AIDS dataset to GXL:
@@ -152,7 +152,7 @@ To convert datasets into the required formats, follow these steps:
   ```bash
    python preprocess_aids.py
    ```
-### Lower Bound Estimation
+### 2️⃣ Lower Bound Estimation
 To estimate lower bounds for the graph pairs:
 - Navigate to [heuristics](https://github.com/michaelflppv/ged-approximation/tree/main/heuristics) and run:
    ```bash
@@ -160,7 +160,7 @@ To estimate lower bounds for the graph pairs:
    ```
 - The results will be saved in the `results/lower_bound` directory.
 
-### Exact GED Computation
+### 3️⃣ Exact GED Computation
 To compute the exact GED using the AStar-BMao algorithm:
 - Set up the environment as described in the **Installation & Setup** section.
 - Navigate to [src/c++_parsers](https://github.com/michaelflppv/ged-approximation/blob/main/src/c%2B%2B_parsers).
@@ -171,7 +171,7 @@ To compute the exact GED using the AStar-BMao algorithm:
 - If you want, you can adjust the amount of threads and graph pairs used for the computation in the script.
 - The results will be saved in the `results/exact_ged` directory.
 
-### GEDLIB Computation
+### 4️⃣ GEDLIB Computation
 To compute an approximate GED using any algorithm available in the GEDLIB:
 - Set up the environment as described in the **Installation & Setup** section.
 - Navigate to [src/c++_parsers](https://github.com/michaelflppv/ged-approximation/blob/main/src/c%2B%2B_parsers).
@@ -182,7 +182,7 @@ To compute an approximate GED using any algorithm available in the GEDLIB:
    python gedlib_parser.py
    ```
 
-### SimGNN Training & Evaluation
+### 5️⃣ SimGNN Training & Evaluation
 To train the model, navigate to [SimGNN/src](https://github.com/michaelflppv/ged-approximation/tree/main/SimGNN/src) and run `main.py`:
 ```bash 
 python main.py
@@ -195,14 +195,17 @@ python simgnn_evaluate.py
 ```
 To test the model on a specific dataset, you can modify the paths in the script. The results will be saved in the `results/simgnn` directory.
 
-### Edit Path Extraction & Validation
+### 6️⃣ Edit Path Extraction & Validation
 The repository includes tools for extracting and validating edit paths using GEDLIB algorithms and SimGNN. To extract edit paths:
 - To extract edit path for a pair of graphs, navigate either to [src/c++_parsers](https://github.com/michaelflppv/ged-approximation/blob/main/src/c%2B%2B_parsers) or [SimGNN/src](https://github.com/michaelflppv/ged-approximation/tree/main/SimGNN/src) for GEDLIB and SimGNN respectively.
   - Run the appropriate script (e.g., `gedlib_edit_path.py` or `simgnn_extract_edit_path.py`) and specify the graph pair and dataset path.
 - To validate or apply edit paths, navigate to [src/edit_path_test](https://github.com/michaelflppv/ged-approximation/tree/main/src/edit_path_test) and choose an appropriate script (e.g., `gedlib_validate_edit_path.py` or `apply_edit_path.py`). Modify the paths in the script to point to the edit path files and dataset.
 - To validate the edit paths for SimGNN, navigate to [simgnn_validate_edit_path.py](https://github.com/michaelflppv/ged-approximation/blob/main/SimGNN/src/simgnn_validate_edit_path.py) and follow the same steps.
 
-
+### 7️⃣ Results Analysis & Visualization
+This repository includes Jupyter Notebooks for analyzing and visualizing the results of the experiments. To explore the results:
+- Navigate to [notebooks](https://github.com/michaelflppv/ged-approximation/tree/main/src/analysis/notebooks).
+- Open the desired notebook (e.g., `lower_bound_analysis.ipynb`, `plot_analysis.ipynb`, or `statistics_analysis.ipynb`) and run the cells to visualize the results.
 ---
 ## **📜 Citation & References**
 If you use this code in your work, please cite:
