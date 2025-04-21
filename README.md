@@ -141,7 +141,69 @@ To use this repository:
 2. **Follow the build instructions** provided in the [repository]((https://github.com/LijunChang/Graph_Edit_Distance.git)) to compile and set up the exact GED computation framework.
 ---
 
+## **🧪 Run Experiments**
+### Data Conversion
+To convert datasets into the required formats, follow these steps:
+- Navigate to the [src/converters](https://github.com/michaelflppv/ged-approximation/tree/main/src/converters) directory.
+- Run the appropriate conversion script for your dataset. For example, to convert the AIDS dataset to GXL:
+  - Choose [gxl_xml]() directory.
+  - Select the appropriate script (e.g., `preprocess_aids.py`) or specify the dataset name in the script (e.g., `preprocess_all.py`).
+  - Run the script:
+  ```bash
+   python preprocess_aids.py
+   ```
+### Lower Bound Estimation
+To estimate lower bounds for the graph pairs:
+- Navigate to [heuristics](https://github.com/michaelflppv/ged-approximation/tree/main/heuristics) and run:
+   ```bash
+   python estimate_lower_bound.py
+   ```
+- The results will be saved in the `results/lower_bound` directory.
 
+### Exact GED Computation
+To compute the exact GED using the AStar-BMao algorithm:
+- Set up the environment as described in the **Installation & Setup** section.
+- Navigate to [src/c++_parsers](https://github.com/michaelflppv/ged-approximation/blob/main/src/c%2B%2B_parsers).
+- Run the AStar-BMao script:
+   ```bash
+   python astar_exact_ged.py
+   ```
+- If you want, you can adjust the amount of threads and graph pairs used for the computation in the script.
+- The results will be saved in the `results/exact_ged` directory.
+
+### GEDLIB Computation
+To compute an approximate GED using any algorithm available in the GEDLIB:
+- Set up the environment as described in the **Installation & Setup** section.
+- Navigate to [src/c++_parsers](https://github.com/michaelflppv/ged-approximation/blob/main/src/c%2B%2B_parsers).
+- Select the appropriate script (e.g., `gedlib_parser.py`) and the algorithm you want to use.
+- For changing the algorithm, you can modify the `command = [GED_EXECUTABLE, dataset_path, preprocessed_xml, "IPFP"]` line in the script.
+- Run the script:
+   ```bash
+   python gedlib_parser.py
+   ```
+
+### SimGNN Training & Evaluation
+To train the model, navigate to [SimGNN/src](https://github.com/michaelflppv/ged-approximation/tree/main/SimGNN/src) and run `main.py`:
+```bash 
+python main.py
+```
+For more information and hyperparameter settings, refer to original [SimGNN repository](https://github.com/benedekrozemberczki/SimGNN).
+
+To test the model, navigate to [SimGNN/src](https://github.com/michaelflppv/ged-approximation/tree/main/SimGNN/src) and run:
+```bash
+python simgnn_evaluate.py
+```
+To test the model on a specific dataset, you can modify the paths in the script. The results will be saved in the `results/simgnn` directory.
+
+### Edit Path Extraction & Validation
+The repository includes tools for extracting and validating edit paths using GEDLIB algorithms and SimGNN. To extract edit paths:
+- To extract edit path for a pair of graphs, navigate either to [src/c++_parsers](https://github.com/michaelflppv/ged-approximation/blob/main/src/c%2B%2B_parsers) or [SimGNN/src](https://github.com/michaelflppv/ged-approximation/tree/main/SimGNN/src) for GEDLIB and SimGNN respectively.
+  - Run the appropriate script (e.g., `gedlib_edit_path.py` or `simgnn_extract_edit_path.py`) and specify the graph pair and dataset path.
+- To validate or apply edit paths, navigate to [src/edit_path_test](https://github.com/michaelflppv/ged-approximation/tree/main/src/edit_path_test) and choose an appropriate script (e.g., `gedlib_validate_edit_path.py` or `apply_edit_path.py`). Modify the paths in the script to point to the edit path files and dataset.
+- To validate the edit paths for SimGNN, navigate to [simgnn_validate_edit_path.py](https://github.com/michaelflppv/ged-approximation/blob/main/SimGNN/src/simgnn_validate_edit_path.py) and follow the same steps.
+
+
+---
 ## **📜 Citation & References**
 If you use this code in your work, please cite:
 ```
