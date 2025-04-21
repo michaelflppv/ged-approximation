@@ -115,8 +115,8 @@ def load_pair_json(file_path):
 
 def main():
     # Parent directory containing dataset directories.
-    parent_dir = r"C:\project_data\processed_data\json_pairs"
-    output_dir = r"C:\project_data\results\lower_bound\v2"
+    parent_dir = "../processed_data/json_pairs"
+    output_dir = "../results/lower_bound"
     os.makedirs(output_dir, exist_ok=True)
     max_rows = 1048574
 

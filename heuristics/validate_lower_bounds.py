@@ -247,16 +247,16 @@ def signal_handler(signum, frame):
 
 def parse_command_line():
     parser = argparse.ArgumentParser(description="Run heuristic GED experiments.")
-    parser.add_argument("--txt_dir", type=str, required=True,
-                        help="Directory containing .txt graph files (e.g. /mnt/c/project_data/processed_data/txt/PROTEINS).")
-    parser.add_argument("--ged_executable", type=str, required=True,
-                        help="Path to the GED executable (e.g. /mnt/c/Users/mikef/CLionProjects/Graph_Edit_Distance/ged).")
-    parser.add_argument("--output_excel", type=str, required=True,
-                        help="Output Excel file path (e.g. /mnt/c/project_data/results/heuristic_comparison_all_AIDS.xlsx).")
-    parser.add_argument("--dataset", type=str, required=True,
-                        help="Dataset name (e.g. PROTEINS).")
-    parser.add_argument("--lb_folder", type=str, required=True,
-                        help="Folder containing heuristic Excel files (e.g. /mnt/c/project_data/results/lower_bound/PROTEINS).")
+    parser.add_argument("--txt_dir", type=str, default="../processed_data/txt/AIDS",
+                        help="Directory containing .txt graph files (default: ../processed_data/txt/AIDS).")
+    parser.add_argument("--ged_executable", type=str, default="../Graph_Edit_Distance/ged",
+                        help="Path to the GED executable (default: ../Graph_Edit_Distance/ged).")
+    parser.add_argument("--output_excel", type=str, default="../results/lower_bound/AIDS/heuristic_comparison.xlsx",
+                        help="Output Excel file path (default: ../results/lower_bound/AIDS/heuristic_comparison.xlsx).")
+    parser.add_argument("--dataset", type=str, default="AIDS",
+                        help="Dataset name (e.g. AIDS).")
+    parser.add_argument("--lb_folder", type=str, default="../results/lower_bound/AIDS",
+                        help="Folder containing heuristic Excel files (default: ../results/lower_bound/AIDS).")
     parser.add_argument("--workers", type=int, default=8,
                         help="Number of workers for multiprocessing (default: 8).")
     parser.add_argument("--threshold", type=int, default=150,
