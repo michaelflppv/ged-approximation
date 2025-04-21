@@ -105,12 +105,18 @@ def main():
     # Create a dummy args namespace required for model instantiation.
     args = parameter_parser()
     args.load_path = model_path
-    args.histogram = False
+    args.histogram = True
 
     # Create device and move model to device.
     #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = SimGNNTrainer(args).model
-    state_dict = torch.load(model_path, map_location=torch.device("cpu"), weights_only=False)
+    checkpoint = torch.load(model_path, map_location=torch.device("cpu"), weights_only=False)
+    if "model_state_dict" in checkpoint:
+        # The model state is nested inside the checkpoint
+        state_dict = checkpoint["model_state_dict"]
+    else:
+        # Use the checkpoint directly as state_dict
+        state_dict = checkpoint
     model.load_state_dict(state_dict)
     #model.to(device)
     model.eval()
@@ -142,7 +148,7 @@ def main():
 
         # Convert raw data to torch tensors.
         try:
-            torch_data = model.transfer_to_torch(data)
+            torch_data = SimGNNTrainer(args).transfer_to_torch(data)
         except Exception as e:
             print(f"Skipping pair due to error in transfer_to_torch: {e}")
             continue
