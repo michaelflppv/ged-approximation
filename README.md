@@ -20,8 +20,7 @@ cd ged-approximation
 ```
 
 ## **📌 Important Notice: Using Precompiled Data**
-This repository includes **precompiled datasets** and large files (e.g., GXL/XML files, JSON graph pairs, and pre-trained models).  
-To ensure these files are correctly downloaded, [Git LFS (Large File Storage)](https://git-lfs.github.com/) must be installed.
+This repository includes **precompiled datasets** and large files (e.g., GXL/XML files, JSON graph pairs, and pre-trained models). To ensure these files are correctly downloaded, [Git LFS (Large File Storage)](https://git-lfs.github.com/) must be installed.
 1. Download and install [Git LFS](https://git-lfs.github.com/).
 2. Run the setup command:
 ```bash
