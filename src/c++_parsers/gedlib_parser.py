@@ -244,21 +244,38 @@ def get_first_two_graph_properties(dataset_path: str, collection_xml: str):
     props2 = get_graph_properties(path2)
     return props1, props2
 
-def run_ged(dataset_path: str, collection_xml: str):
+def run_ged(dataset_path: str, collection_xml: str, method: str = "IPFP"):
     """
     Run the GEDLIB executable with the given dataset and collection XML.
     Parse its output line-by-line and flush intermediate results every few pairs.
     On termination or error, results are saved and temporary files are cleaned up.
     """
-    global global_ged_process, global_preprocessed_xml
+    global global_ged_process, global_preprocessed_xml, global_results
+
+    # Check if executable exists
+    if not os.path.exists(GED_EXECUTABLE):
+        print(f"Error: GED executable not found at {GED_EXECUTABLE}")
+        return [{"error": "GED executable not found"}]
+
+    # Check if dataset path exists
+    if not os.path.exists(dataset_path):
+        print(f"Error: Dataset path not found at {dataset_path}")
+        return [{"error": "Dataset path not found"}]
+
+    # Check if collection XML exists
+    if not os.path.exists(collection_xml):
+        print(f"Error: Collection XML not found at {collection_xml}")
+        return [{"error": "Collection XML not found"}]
+
     try:
         preprocessed_xml = preprocess_xml_file(collection_xml)
         global_preprocessed_xml = preprocessed_xml
+        print(f"Preprocessed XML file created at {preprocessed_xml}")
     except Exception as e:
         print("Failed to preprocess collection XML:", e)
         return [{"error": "Preprocessing XML failed"}]
 
-    command = [GED_EXECUTABLE, dataset_path, preprocessed_xml, "IPFP"]
+    command = [GED_EXECUTABLE, dataset_path, preprocessed_xml, method]
     print("Running command:", " ".join(command))
     try:
         process = subprocess.Popen(
@@ -271,7 +288,7 @@ def run_ged(dataset_path: str, collection_xml: str):
         )
         global_ged_process = process
     except Exception as e:
-        print("Error starting GED subprocess:", e)
+        print(f"Error starting GED subprocess: {e}")
         os.remove(preprocessed_xml)
         global_preprocessed_xml = None
         return [{"error": str(e)}]
@@ -279,7 +296,7 @@ def run_ged(dataset_path: str, collection_xml: str):
     try:
         ged_proc = psutil.Process(process.pid)
     except Exception as e:
-        print("Error creating psutil.Process for GEDLIB:", e)
+        print(f"Error creating psutil.Process for GEDLIB: {e}")
         ged_proc = None
 
     props = get_first_two_graph_properties(dataset_path, collection_xml)
@@ -299,16 +316,23 @@ def run_ged(dataset_path: str, collection_xml: str):
 
     line_count = 0       # Total lines read.
     processed_count = 0  # Count of graph pairs processed (after skipping).
-    flush_interval = 10   # Flush intermediate results every 5 processed pairs.
+    flush_interval = 10   # Flush intermediate results every 10 processed pairs.
+
+    global_results = []  # Reset global results
+
     try:
-        for line in process.stdout:
+        while True:
+            line = process.stdout.readline()
+            if not line and process.poll() is not None:
+                break
+
             line = line.strip()
             if not line:
                 continue
+
             line_count += 1
-            # Skip the first SKIP_PAIRS graph pairs.
-            #if line_count <= SKIP_PAIRS:
-            #    continue
+            print(f"Debug - Line {line_count}: {line}")  # Debug output
+
             match = regex.search(line)
             if match:
                 processed_count += 1
@@ -323,6 +347,9 @@ def run_ged(dataset_path: str, collection_xml: str):
                 except Exception:
                     memory_usage_mb = "N/A"
                 method_name = METHOD_NAMES.get(method_id, f"Unknown Method {method_id}")
+
+                print(f"Processed pair {processed_count}: {graph1}-{graph2} with GED={pred_ged}")
+
                 result_entry = {
                     "method": method_name,
                     "graph1": graph1,
@@ -340,37 +367,55 @@ def run_ged(dataset_path: str, collection_xml: str):
                     "scalability": scalability if scalability is not None else "N/A"
                 }
                 global_results.append(result_entry)
-            else:
-                print("Warning: Unmatched line:", line)
 
-            if processed_count % flush_interval == 0 and processed_count != 0:
-                save_results(RESULTS_FILE, global_results)
-                print(f"{processed_count} lines processed and saved.")
+                if processed_count % flush_interval == 0:
+                    save_results(RESULTS_FILE, global_results)
+                    print(f"{processed_count} lines processed and saved.")
+            else:
+                print(f"Warning: Unmatched line: {line}")
+
     except Exception as e:
-        print("Error while processing GED output:", e)
+        print(f"Error while processing GED output: {e}")
     finally:
+        # Capture stderr before closing streams
+        stderr_output = ""
+        try:
+            stderr_output = process.stderr.read()
+        except Exception as e:
+            print(f"Error reading stderr: {e}")
+
+        # Close streams and wait for process
         try:
             process.stdout.close()
-        except Exception:
-            pass
-        process.wait()
-        try:
-            stderr = process.stderr.read()
-            if stderr:
-                print("GEDLIB stderr:", stderr)
-        except Exception:
-            pass
-        try:
             process.stderr.close()
-        except Exception:
-            pass
-        save_results(RESULTS_FILE, global_results)
-        if global_preprocessed_xml is not None and os.path.exists(global_preprocessed_xml):
+        except Exception as e:
+            print(f"Error closing streams: {e}")
+
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            print("Process did not terminate, attempting to kill")
+            process.kill()
+
+        # Print stderr if any
+        if stderr_output:
+            print(f"GEDLIB stderr: {stderr_output}")
+
+        # Save results and cleanup
+        if global_results:
+            save_results(RESULTS_FILE, global_results)
+            print(f"Final save: {len(global_results)} results saved.")
+        else:
+            print("Warning: No results were collected")
+
+        if global_preprocessed_xml and os.path.exists(global_preprocessed_xml):
             try:
                 os.remove(global_preprocessed_xml)
                 global_preprocessed_xml = None
+                print("Temporary XML file removed")
             except Exception as e:
-                print("Error removing temporary XML file:", e)
+                print(f"Error removing temporary XML file: {e}")
+
     return global_results
 
 if __name__ == "__main__":

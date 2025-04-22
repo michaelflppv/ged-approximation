@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
     ged_env.init_method();
 
     // Loop over all pairs of graphs (i < j)
-    for (size_t i = 1010; i < new_ids.size(); i++) {
+    for (size_t i = 0; i < new_ids.size(); i++) {
         for (size_t j = i + 1; j < new_ids.size(); j++) {
             // Measure time before running the GED method.
             auto start_time = std::chrono::high_resolution_clock::now();
