@@ -110,17 +110,33 @@ git lfs pull
 
 ## **🚀 Installation & Setup**
 ### **1️⃣ Install Dependencies**
-Ensure you have Python 3 installed, then install the required packages:
+
+#### 1.1 System & OS Dependencies
+- **Linux**: Ubuntu 18.04+ / Debian / Fedora (recommended)
+- **Windows**: Windows 10+ (WSL recommended)
+- **macOS**: macOS 10.14+ (M1/M2 compatible)
+
+#### 1.2 Language & Runtime Versions
+
+- Python ≥ 3.8 (recommended 3.9)
+- C++17‑compatible compiler (e.g. GCC ≥ 7, Clang ≥ 5, MSVC ≥ 2017)
+
+The required Python packages are listed in the `requirements.txt` file. You can install them using the following command:
 ```bash
 pip install -r requirements.txt
 ```
 
+#### 1.3 Build Tools
+
+- **CMake**: Required for building the C++ components. Install it from [CMake](https://cmake.org/download/).
+- **Doxygen**: Required for generating documentation. Install it from [Doxygen](https://www.doxygen.nl/download.html).
+- **OpenMP**: Required for parallel processing. Ensure your compiler supports [OpenMP](https://www.openmp.org/).
+
+Find more information on how to install these tools in [GEDLIB](https://github.com/dbblumenthal/gedlib).
+
 ### **2️⃣ Clone & Compile GEDLIB**
 This repository partially relies on GEDLIB for GED computation. The required repository and its external libraries should already be installed within this project. If not, refer to the [GEDLIB](https://github.com/dbblumenthal/gedlib) for more information.
-Initial setup:
-```bash
-git clone https://github.com/dbblumenthal/gedlib.git
-```
+
 To compile the C++ code, navigate to the `gedlib` directory and run:
 ```bash
 cd gedlib
@@ -210,6 +226,18 @@ This repository includes Jupyter Notebooks for analyzing and visualizing the res
 - Navigate to [notebooks](https://github.com/michaelflppv/ged-approximation/tree/main/src/analysis/notebooks).
 - Open the desired notebook (e.g., `lower_bound_analysis.ipynb`, `plot_analysis.ipynb`, or `statistics_analysis.ipynb`) and run the cells to visualize the results.
 ---
+
+## **🗃️ Datasets**
+
+The repository includes several datasets for benchmarking the GED algorithms. The datasets are stored in the `data` directory and include:
+- **AIDS**: A dataset of molecular graphs.
+- **IMDB-BINARY**: A dataset of binary graphs representing movie co-appearances.
+- **PROTEINS**: A dataset of protein structures represented as graphs.
+
+These datasets were taken from TUDataset, which is a collection of benchmark datasets for graph machine learning. For more information on the datasets, refer to the [TUDataset](https://chrsmrrs.github.io/datasets/docs/datasets/) website.
+
+---
+
 ## **📜 Citation & References**
 If you use this code in your work, please cite:
 ```
