@@ -120,7 +120,11 @@ This repository partially relies on GEDLIB for GED computation. The required rep
 Initial setup:
 ```bash
 git clone https://github.com/dbblumenthal/gedlib.git
+```
+To compile the C++ code, navigate to the `gedlib` directory and run:
+```bash
 cd gedlib
+python install.py --clean --doc --lib gxl
 mkdir build && cd build
 cmake ..
 make
