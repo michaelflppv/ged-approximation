@@ -249,19 +249,16 @@ If you use this code in your work, please cite:
   note = {Bachelor Thesis, University of Mannheim}
 }
 ```
+
 For GEDLIB, refer to the [official repository](https://github.com/dbblumenthal/gedlib). The source code of GEDLIB is distributed under the [GNU Lesser General Public License](https://www.gnu.org/licenses/lgpl-3.0.en.html).
 
-- D. B. Blumenthal, S. Bougleux, J. Gamper, and L. Brun. &ldquo;GEDLIB: A C++ library for graph edit distance computation&rdquo;, GbRPR 2019, [https://doi.org/10.1007/978-3-030-20081-7_2](https://doi.org/10.1007/978-3-030-20081-7_2)
-- D. B. Blumenthal, N. Boria, J. Gamper, S. Bougleux, and L. Brun. &ldquo;Comparing heuristics for graph edit distance computation&rdquo;, VLDB J. 29(1), pp. 419-458, 2020, [https://doi.org/10.1007/s00778-019-00544-1](https://doi.org/10.1007/s00778-019-00544-1)
+- Blumenthal, D. B., Bougleux, S., Gamper, J., & Brun, L. (2019). GEDLIB: A C++ library for graph edit distance computation. In Graph-Based Representations in Pattern Recognition (GbRPR 2019). [Paper](https://doi.org/10.1007/978-3-030-20081-7_2).
+- Blumenthal, D. B., Boria, N., Gamper, J., Bougleux, S., & Brun, L. (2020). Comparing heuristics for graph edit distance computation. VLDB Journal, 29(1), 419-458. [Paper](https://doi.org/10.1007/s00778-019-00544-1).
+- Chang, L., Feng, X., Lin, X., Qin, L., Zhang, W., & Ouyang, D. (2020). Speeding Up GED Verification for Graph Similarity Search. In Proceedings of the 36th International Conference on Data Engineering (ICDE'20). [Paper](https://ieeexplore.ieee.org/document/9101700).
+- Chang, L., Feng, X., Yao, K., Qin, L., & Zhang, W. (2022). Accelerating Graph Similarity Search via Efficient GED Computation. IEEE Transactions on Knowledge and Data Engineering (TKDE). [Paper](https://ieeexplore.ieee.org/document/9720081).
+- Bai, Y., Ding, H., Bian, S., Chen, T., Sun, Y., & Wang, W. (2019). SimGNN: A Neural Network Approach to Fast Graph Similarity Computation. In Proceedings of the 12th ACM International Conference on Web Search and Data Mining (WSDM 2019). [Paper](http://web.cs.ucla.edu/~yzsun/papers/2019_WSDM_SimGNN.pdf).
 
-This repository provides a PyTorch implementation of SimGNN as described in the paper:
-
-> SimGNN: A Neural Network Approach to Fast Graph Similarity Computation.
-> Yunsheng Bai, Hao Ding, Song Bian, Ting Chen, Yizhou Sun, Wei Wang.
-> WSDM, 2019.
-> [[Paper]](http://web.cs.ucla.edu/~yzsun/papers/2019_WSDM_SimGNN.pdf)
-
-and provided in [https://github.com/benedekrozemberczki/SimGNN](https://github.com/benedekrozemberczki/SimGNN).
+The SimGNN implementation is based on the [original repository](https://github.com/benedekrozemberczki/SimGNN) by Benedek Rozemberczki.
 
 ---
 
