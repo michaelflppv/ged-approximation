@@ -118,19 +118,26 @@ git lfs pull
 
 #### 1.2 Language & Runtime Versions
 
-- Python ≥ 3.8 (recommended 3.9)
+- Python 3.9–3.11 (dependencies pinned via Poetry)
 - C++17‑compatible compiler (e.g. GCC ≥ 7, Clang ≥ 5, MSVC ≥ 2017)
 
-The required Python packages are listed in the `requirements.txt` file. You can install them using the following command:
+Python dependencies are managed with Poetry. After installing [Poetry](https://python-poetry.org/) and Git LFS, set up the environment with:
 ```bash
-pip install -r requirements.txt
+poetry install
+# optional: enter the virtualenv
+poetry shell
 ```
+Use `poetry run <command>` when executing project scripts.
 
 #### 1.3 Build Tools
 
 - **CMake**: Required for building the C++ components. Install it from [CMake](https://cmake.org/download/).
 - **Doxygen**: Required for generating documentation. Install it from [Doxygen](https://www.doxygen.nl/download.html).
 - **OpenMP**: Required for parallel processing. Ensure your compiler supports [OpenMP](https://www.openmp.org/).
+- **macOS**: Install `libomp` so headers and libs are available to CMake:
+```bash
+brew install libomp
+```
 
 Find more information on how to install these tools in [GEDLIB](https://github.com/dbblumenthal/gedlib).
 

@@ -188,7 +188,7 @@ def build_gedlib(args):
 		if args.gurobi:
 			commands = commands + " -DGUROBI_ROOT=" + args.gurobi + " -DGUROBI_DYLIB=" + determine_gurobi_dylib(args.gurobi) + " -DGUROBI_STATLIB=" + determine_gurobi_statlib(args.gurobi)
 		if platform.system() == "Darwin":
-			commands = commands + " -DOMP_HOME=" + check_output("brew --prefix", shell=True).decode("utf-8")
+			commands = commands + " -DOMP_HOME=" + check_output("brew --prefix libomp", shell=True).decode("utf-8")
 		call(commands, shell=True)
 
 	if args.doc:
