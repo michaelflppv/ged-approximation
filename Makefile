@@ -10,12 +10,15 @@ GEDLIB_BUILD_DIR ?= gedlib/build
 GEDLIB_LIB ?= gxl
 GXL_DATASET ?= aids
 GXL_OPTIONS := aids imdb proteins
+DATA_ROOT ?= data
+TUD_ROOT ?= $(DATA_ROOT)/_tud
+DATASETS ?= AIDS IMDB-BINARY PROTEINS
 
 .PHONY: help gedlib-install gedlib-configure gedlib-build gedlib-all gedlib-test \
 	convert-gxl convert-json convert-txt lower-bound lower-bound-validate \
 	exact-ged gedlib-run gedlib-edit-path simgnn-edit-path apply-edit-path \
 	gedlib-validate-path simgnn-validate-path generate-gxl-collection \
-	generate-json-pairs simgnn-train simgnn-eval test-python
+	generate-json-pairs simgnn-train simgnn-eval test-python install-datasets
 
 help: ## Show available make targets
 	@printf "Available targets:\\n"
@@ -92,3 +95,6 @@ simgnn-eval: ## Evaluate SimGNN model
 
 test-python: ## Run pytest suite
 	$(RUN_PY) -m pytest
+
+install-datasets: ## Download TU datasets (any torch_geometric TUDataset name) into data/<dataset>
+	$(RUN_PY) scripts/install_datasets.py --datasets $(DATASETS) --download-root $(TUD_ROOT) --target-root $(DATA_ROOT)

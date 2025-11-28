@@ -163,6 +163,12 @@ To use this repository:
    cd Graph_Edit_Distance
    ```
 2. **Follow the build instructions** provided in the [repository]((https://github.com/LijunChang/Graph_Edit_Distance.git)) to compile and set up the exact GED computation framework.
+### **4. Download TU datasets**
+Use the make target to download TU-format datasets (any name supported by `torch_geometric.datasets.TUDataset`) and stage the raw files under `data/<dataset>`:
+```bash
+make install-datasets DATASETS="AIDS IMDB-BINARY PROTEINS MUTAG ENZYMES NCI1"
+```
+Set `DATASETS` to any compatible TU dataset names; `DATA_ROOT` and `TUD_ROOT` can be overridden if you want custom locations. If the list is long, pass them space-separated as shown above.
 ---
 
 ## **Run Experiments**
