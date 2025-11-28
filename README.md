@@ -19,7 +19,7 @@ git clone https://github.com/michaelflppv/ged-approximation.git
 cd ged-approximation
 ```
 
-## **📌 Important Notice: Using Precompiled Data**
+## **Important Notice: Using Precompiled Data**
 This repository includes **precompiled datasets** and large files (e.g., GXL/XML files, JSON graph pairs, and pre-trained models). To ensure these files are correctly downloaded, [Git LFS (Large File Storage)](https://git-lfs.github.com/) must be installed.
 1. Download and install [Git LFS](https://git-lfs.github.com/).
 2. Run the setup command:
@@ -36,7 +36,7 @@ git lfs pull
 ## **📂 Project Structure**
 ```
 📦 ged-approximation
-├── 📜 README.md                       # Project documentation
+├── README.md                       # Project documentation
 ├── 📂 data/                           # Raw graph datasets (AIDS, IMDB, etc.)
 │   ├── 📂 AIDS/
 │   ├── 📂 IMDB-BINARY/
@@ -57,8 +57,8 @@ git lfs pull
 │   └── 📂 label_diversity/         # Label diversity stats
 ├── 📂 heuristics/                   # Heuristic lower bound estimations
 │   ├── 📂 plots/                    # Visualizations of lower bounds
-│   ├── 📜 estimate_lower_bound.py
-│   └── 📜 validate_lower_bounds.py
+│   ├── estimate_lower_bound.py
+│   └── validate_lower_bounds.py
 ├── 📂 SimGNN/                       # Neural GED model (SimGNN)
 │   ├── 📂 assets/                   
 │   ├── 📂 dataset/                 # Train/test data in JSON format
@@ -92,24 +92,24 @@ git lfs pull
 │   │   └── generate_json_pairs.py         
 │   ├── 📂 test/                       # Edit path validation utilities
 │   │   └── gedlib_validate_edit_path.py   # Validate GEDLIB paths
-│   └── 📜 apply_edit_path.py         # Apply and simulate edit path execution
+│   └── apply_edit_path.py         # Apply and simulate edit path execution
 ├── 📂 helper_functions/              # Miscellaneous utility scripts
-│   └── 📜 label_diversity_calculator.py   # Computes label diversity in datasets
+│   └── label_diversity_calculator.py   # Computes label diversity in datasets
 ├── 📂 gedlib/                      # GEDLIB C++ source and interface
 │   ├── 📂 src/, include/, lib/     # C++ logic and libraries
-│   ├── 📜 main.cpp, CMakeLists.txt # Entry and build files
-│   └── 📜 install.py               # Installation script
+│   ├── main.cpp, CMakeLists.txt # Entry and build files
+│   └── install.py               # Installation script
 ├── 📂 median/                      # Placeholder (possibly for GED median)
 ├── 📂 tests/                       # Unit and functional tests
 ├── 📂 venv/                        # Python virtual environment (optional)
-└── 📜 LICENSE, .gitignore, ...     # Meta files
+└── LICENSE, .gitignore, ...     # Meta files
 
 ```
 
 ---
 
-## **🚀 Installation & Setup**
-### **1️⃣ Install Dependencies**
+## **Installation & Setup**
+### **1. Install Dependencies**
 
 #### 1.1 System & OS Dependencies
 - **Linux**: Ubuntu 18.04+ / Debian / Fedora (recommended)
@@ -127,7 +127,7 @@ poetry install
 # optional: enter the virtualenv
 poetry shell
 ```
-Use `poetry run <command>` when executing project scripts.
+All project commands can be run from the repository root via the `Makefile`; see `make help` for a full list. The make targets already wrap `poetry run`, so install dependencies once and then use `make <target>` for workflows.
 
 #### 1.3 Build Tools
 
@@ -141,21 +141,19 @@ brew install libomp
 
 Find more information on how to install these tools in [GEDLIB](https://github.com/dbblumenthal/gedlib).
 
-### **2️⃣ Clone & Compile GEDLIB**
+### **2. Clone & Compile GEDLIB**
 This repository partially relies on GEDLIB for GED computation. The required repository and its external libraries should already be installed within this project. If not, refer to the [GEDLIB](https://github.com/dbblumenthal/gedlib) for more information.
 
-To compile the C++ code, navigate to the `gedlib` directory and run:
+To compile the C++ code from the project root, use:
 ```bash
-cd gedlib
-python install.py --clean --doc --lib gxl
-mkdir build && cd build
-cmake ..
-make
+make gedlib-all           # install GEDLIB deps and build via CMake
+make gedlib-test          # optional: run ctest after build
 ```
+Set `GEDLIB_LIB` if you need a different GEDLIB library target (default: `gxl`).
 
 My repostory called **[mixup](https://github.com/michaelflppv/mixup.git)** contains a backup copy of GEDLIB with the source code, required to compile this project.
 
-### **3️⃣ Set Up External Dependencies**
+### **3. Set Up External Dependencies**
 This project also relies on the **[Graph Edit Distance (GED) repository by Lijun Chang](https://github.com/LijunChang/Graph_Edit_Distance.git)** for **exact GED computation**.  
 
 To use this repository:
@@ -167,74 +165,93 @@ To use this repository:
 2. **Follow the build instructions** provided in the [repository]((https://github.com/LijunChang/Graph_Edit_Distance.git)) to compile and set up the exact GED computation framework.
 ---
 
-## **🧪 Run Experiments**
-### 1️⃣ Data Conversion
-To convert datasets into the required formats, follow these steps:
-- Navigate to the [src/converters](https://github.com/michaelflppv/ged-approximation/tree/main/src/converters) directory.
-- Run the appropriate conversion script for your dataset. For example, to convert the AIDS dataset to GXL:
-  - Choose [gxl_xml]() directory.
-  - Select the appropriate script (e.g., `preprocess_aids.py`) or specify the dataset name in the script (e.g., `preprocess_all.py`).
-  - Run the script:
+## **Run Experiments**
+All commands below run from the repository root via `make`.
+
+### 1. Data Conversion
+- Convert to GXL/XML for GEDLIB (choose dataset with `GXL_DATASET=aids|imdb|proteins`):
   ```bash
-   python preprocess_aids.py
-   ```
-### 2️⃣ Lower Bound Estimation
-To estimate lower bounds for the graph pairs:
-- Navigate to [heuristics](https://github.com/michaelflppv/ged-approximation/tree/main/heuristics) and run:
-   ```bash
-   python estimate_lower_bound.py
-   ```
-- The results will be saved in the `results/lower_bound` directory.
+  make convert-gxl GXL_DATASET=aids
+  ```
+- Convert all datasets to JSON pairs for SimGNN:
+  ```bash
+  make convert-json
+  ```
+- Convert datasets to TXT graph pairs:
+  ```bash
+  make convert-txt
+  ```
 
-### 3️⃣ Exact GED Computation
-To compute the exact GED using the AStar-BMao algorithm:
-- Set up the environment as described in the **Installation & Setup** section.
-- Navigate to [src/c++_parsers](https://github.com/michaelflppv/ged-approximation/blob/main/src/c%2B%2B_parsers).
-- Run the AStar-BMao script:
-   ```bash
-   python astar_exact_ged.py
-   ```
-- If you want, you can adjust the amount of threads and graph pairs used for the computation in the script.
-- The results will be saved in the `results/exact_ged` directory.
+### 2. Lower Bound Estimation
+- Estimate lower bounds:
+  ```bash
+  make lower-bound
+  ```
+- Validate lower bound estimations:
+  ```bash
+  make lower-bound-validate
+  ```
+Results are written to `results/lower_bound`.
 
-### 4️⃣ GEDLIB Computation
-To compute an approximate GED using any algorithm available in the GEDLIB:
-- Set up the environment as described in the **Installation & Setup** section.
-- Navigate to [src/c++_parsers](https://github.com/michaelflppv/ged-approximation/blob/main/src/c%2B%2B_parsers).
-- Select the appropriate script (e.g., `gedlib_parser.py`) and the algorithm you want to use.
-- For changing the algorithm, you can modify the `command = [GED_EXECUTABLE, dataset_path, preprocessed_xml, "IPFP"]` line in the script.
-- Run the script:
-   ```bash
-   python gedlib_parser.py
-   ```
+### 3. Exact GED Computation
+- Run the AStar-BMao exact GED computation:
+  ```bash
+  make exact-ged
+  ```
+Adjust threads/pair counts inside `src/c++_parsers/astar_exact_ged.py` if needed. Outputs land in `results/exact_ged`.
 
-### 5️⃣ SimGNN Training & Evaluation
-To train the model, navigate to [SimGNN/src](https://github.com/michaelflppv/ged-approximation/tree/main/SimGNN/src) and run `main.py`:
-```bash 
-python main.py
-```
-For more information and hyperparameter settings, refer to original [SimGNN repository](https://github.com/benedekrozemberczki/SimGNN).
+### 4. GEDLIB Computation
+- Run GEDLIB parser for approximate GED (ensure GEDLIB is built first):
+  ```bash
+  make gedlib-run
+  ```
+Modify the algorithm in `src/c++_parsers/gedlib_parser.py` (the `command` list) to switch methods.
 
-To test the model, navigate to [SimGNN/src](https://github.com/michaelflppv/ged-approximation/tree/main/SimGNN/src) and run:
-```bash
-python simgnn_evaluate.py
-```
-To test the model on a specific dataset, you can modify the paths in the script. The results will be saved in the `results/simgnn` directory.
+### 5. SimGNN Training & Evaluation
+- Train SimGNN:
+  ```bash
+  make simgnn-train
+  ```
+- Evaluate SimGNN:
+  ```bash
+  make simgnn-eval
+  ```
+Adjust dataset/model paths inside `SimGNN/src` scripts as needed. Results are saved under `results/simgnn`.
 
-### 6️⃣ Edit Path Extraction & Validation
-The repository includes tools for extracting and validating edit paths using GEDLIB algorithms and SimGNN. To extract edit paths:
-- To extract edit path for a pair of graphs, navigate either to [src/c++_parsers](https://github.com/michaelflppv/ged-approximation/blob/main/src/c%2B%2B_parsers) or [SimGNN/src](https://github.com/michaelflppv/ged-approximation/tree/main/SimGNN/src) for GEDLIB and SimGNN respectively.
-  - Run the appropriate script (e.g., `gedlib_edit_path.py` or `simgnn_extract_edit_path.py`) and specify the graph pair and dataset path.
-- To validate or apply edit paths, navigate to [src/edit_path_test](https://github.com/michaelflppv/ged-approximation/tree/main/src/edit_path_test) and choose an appropriate script (e.g., `gedlib_validate_edit_path.py` or `apply_edit_path.py`). Modify the paths in the script to point to the edit path files and dataset.
-- To validate the edit paths for SimGNN, navigate to [simgnn_validate_edit_path.py](https://github.com/michaelflppv/ged-approximation/blob/main/SimGNN/src/simgnn_validate_edit_path.py) and follow the same steps.
+### 6. Edit Path Extraction & Validation
+- Extract GEDLIB edit paths:
+  ```bash
+  make gedlib-edit-path
+  ```
+- Extract SimGNN edit paths:
+  ```bash
+  make simgnn-edit-path
+  ```
+- Apply edit paths to simulate edits:
+  ```bash
+  make apply-edit-path
+  ```
+- Validate GEDLIB edit paths:
+  ```bash
+  make gedlib-validate-path
+  ```
+- Validate SimGNN edit paths:
+  ```bash
+  make simgnn-validate-path
+  ```
+- Generate synthetic data for edit-path testing (optional):
+  ```bash
+  make generate-gxl-collection
+  make generate-json-pairs
+  ```
 
-### 7️⃣ Results Analysis & Visualization
+### 7. Results Analysis & Visualization
 This repository includes Jupyter Notebooks for analyzing and visualizing the results of the experiments. To explore the results:
 - Navigate to [notebooks](https://github.com/michaelflppv/ged-approximation/tree/main/src/analysis/notebooks).
 - Open the desired notebook (e.g., `lower_bound_analysis.ipynb`, `plot_analysis.ipynb`, or `statistics_analysis.ipynb`) and run the cells to visualize the results.
 ---
 
-## **🗃️ Datasets**
+## **Datasets**
 
 The repository includes several datasets for benchmarking the GED algorithms. The datasets are stored in the `data` directory and include:
 - **AIDS**: A dataset of molecular graphs.
@@ -245,7 +262,7 @@ These datasets were taken from TUDataset, which is a collection of benchmark dat
 
 ---
 
-## **📜 Citation & References**
+## **Citation & References**
 If you use this code in your work, please cite:
 ```
 @misc{Filippov2025,
@@ -269,5 +286,5 @@ The SimGNN implementation is based on the [original repository](https://github.c
 
 ---
 
-## **📬 Contact**
+## **Contact**
 For questions, create an issue or reach out via email.
