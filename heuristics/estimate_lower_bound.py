@@ -1,3 +1,4 @@
+import argparse
 import os
 import re
 import json
@@ -13,13 +14,16 @@ from json.decoder import JSONDecodeError
 # Heuristic functions definitions
 # -------------------------------
 
+
 def heuristic_node_count(G1, G2):
     """Lower bound: absolute difference in number of nodes."""
     return abs(G1.number_of_nodes() - G2.number_of_nodes())
 
+
 def heuristic_edge_count(G1, G2):
     """Lower bound: absolute difference in number of edges."""
     return abs(G1.number_of_edges() - G2.number_of_edges())
+
 
 def heuristic_degree_distribution(G1, G2):
     """
@@ -39,6 +43,7 @@ def heuristic_degree_distribution(G1, G2):
         diff += abs(deg_counts1.get(d, 0) - deg_counts2.get(d, 0))
     return diff / 2
 
+
 def heuristic_edge_overlap(G1, G2):
     """
     Lower bound based on edge overlap.
@@ -48,13 +53,15 @@ def heuristic_edge_overlap(G1, G2):
     edges1 = {frozenset(e) for e in G1.edges()}
     edges2 = {frozenset(e) for e in G2.edges()}
     intersection = len(edges1.intersection(edges2))
-    return (G1.number_of_edges() + G2.number_of_edges() - 2 * intersection)
+    return G1.number_of_edges() + G2.number_of_edges() - 2 * intersection
+
 
 def heuristic_basic_combined(G1, G2):
     """
     A simple combined heuristic that adds the node count difference and edge count difference.
     """
     return heuristic_node_count(G1, G2) + heuristic_edge_count(G1, G2)
+
 
 def heuristic_node_label_mismatch(labels1, labels2):
     """
@@ -75,9 +82,11 @@ def heuristic_node_label_mismatch(labels1, labels2):
         diff += abs(count1.get(lab, 0) - count2.get(lab, 0))
     return diff / 2
 
+
 # -------------------------------
 # JSON loading for a pair file
 # -------------------------------
+
 
 def load_pair_json(file_path):
     """
@@ -92,7 +101,7 @@ def load_pair_json(file_path):
     Raises:
        JSONDecodeError if the file cannot be parsed as valid JSON.
     """
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         data = json.load(f)
 
     G1 = nx.Graph()
@@ -109,11 +118,40 @@ def load_pair_json(file_path):
     labels2 = data.get("labels_2")
     return G1, G2, labels1, labels2
 
+
+# -------------------------------
+# Argument parsing
+# -------------------------------
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Estimate lower bounds for graph pairs in processed_data/json_pairs.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--datasets",
+        nargs="+",
+        help="Datasets to process (default: all subfolders in processed_data/json_pairs)",
+    )
+    parser.add_argument(
+        "--max-pairs",
+        type=int,
+        default=None,
+        help="Maximum number of pairs to process per dataset (for quick smoke runs).",
+    )
+    return parser.parse_args()
+
+
 # -------------------------------
 # Main processing function
 # -------------------------------
 
+
 def main():
+    args = parse_args()
+    dataset_filter = set(args.datasets) if args.datasets else None
+
     # Parent directory containing dataset directories.
     parent_dir = "../processed_data/json_pairs"
     output_dir = "../results/lower_bound"
@@ -128,6 +166,8 @@ def main():
         dataset_path = os.path.join(parent_dir, dataset_name)
         if not os.path.isdir(dataset_path):
             continue
+        if dataset_filter and dataset_name not in dataset_filter:
+            continue
 
         print(f"Processing dataset: {dataset_name}")
         performance_metrics[dataset_name] = {}
@@ -138,7 +178,7 @@ def main():
             "Degree Distribution Difference": [],
             "Edge Overlap Difference": [],
             "Combined Basic (Node+Edge Count Difference)": [],
-            "Node Label Mismatch": []
+            "Node Label Mismatch": [],
         }
 
         degrees = []
@@ -149,6 +189,9 @@ def main():
         overall_start_time = time.time()
 
         json_files = glob(os.path.join(dataset_path, "pair_*.json"))
+        json_files.sort()
+        if args.max_pairs:
+            json_files = json_files[:args.max_pairs]
 
         # Initialize tracking dictionaries
         heuristic_timers = {heur: 0 for heur in heuristic_results}
@@ -195,13 +238,15 @@ def main():
             heuristic_runtime_values["Node Count Difference"].append(runtime)
             heuristic_memory_values["Node Count Difference"].append(memory_used)
 
-            heuristic_results["Node Count Difference"].append({
-                "Dataset": dataset_name,
-                "graph_id1": id1,
-                "graph_id2": id2,
-                "Heuristic": "Node Count Difference",
-                "Lower Bound": h1
-            })
+            heuristic_results["Node Count Difference"].append(
+                {
+                    "Dataset": dataset_name,
+                    "graph_id1": id1,
+                    "graph_id2": id2,
+                    "Heuristic": "Node Count Difference",
+                    "Lower Bound": h1,
+                }
+            )
 
             # Compute Edge Count Difference
             start_time = time.time()
@@ -216,13 +261,15 @@ def main():
             heuristic_runtime_values["Edge Count Difference"].append(runtime)
             heuristic_memory_values["Edge Count Difference"].append(memory_used)
 
-            heuristic_results["Edge Count Difference"].append({
-                "Dataset": dataset_name,
-                "graph_id1": id1,
-                "graph_id2": id2,
-                "Heuristic": "Edge Count Difference",
-                "Lower Bound": h2
-            })
+            heuristic_results["Edge Count Difference"].append(
+                {
+                    "Dataset": dataset_name,
+                    "graph_id1": id1,
+                    "graph_id2": id2,
+                    "Heuristic": "Edge Count Difference",
+                    "Lower Bound": h2,
+                }
+            )
 
             # Compute Degree Distribution Difference
             start_time = time.time()
@@ -235,15 +282,19 @@ def main():
             heuristic_memory["Degree Distribution Difference"] += memory_used
             heuristic_counts["Degree Distribution Difference"] += 1
             heuristic_runtime_values["Degree Distribution Difference"].append(runtime)
-            heuristic_memory_values["Degree Distribution Difference"].append(memory_used)
+            heuristic_memory_values["Degree Distribution Difference"].append(
+                memory_used
+            )
 
-            heuristic_results["Degree Distribution Difference"].append({
-                "Dataset": dataset_name,
-                "graph_id1": id1,
-                "graph_id2": id2,
-                "Heuristic": "Degree Distribution Difference",
-                "Lower Bound": h3
-            })
+            heuristic_results["Degree Distribution Difference"].append(
+                {
+                    "Dataset": dataset_name,
+                    "graph_id1": id1,
+                    "graph_id2": id2,
+                    "Heuristic": "Degree Distribution Difference",
+                    "Lower Bound": h3,
+                }
+            )
 
             # Compute Edge Overlap Difference
             start_time = time.time()
@@ -258,13 +309,15 @@ def main():
             heuristic_runtime_values["Edge Overlap Difference"].append(runtime)
             heuristic_memory_values["Edge Overlap Difference"].append(memory_used)
 
-            heuristic_results["Edge Overlap Difference"].append({
-                "Dataset": dataset_name,
-                "graph_id1": id1,
-                "graph_id2": id2,
-                "Heuristic": "Edge Overlap Difference",
-                "Lower Bound": h4
-            })
+            heuristic_results["Edge Overlap Difference"].append(
+                {
+                    "Dataset": dataset_name,
+                    "graph_id1": id1,
+                    "graph_id2": id2,
+                    "Heuristic": "Edge Overlap Difference",
+                    "Lower Bound": h4,
+                }
+            )
 
             # Compute Combined Basic heuristic
             start_time = time.time()
@@ -274,18 +327,26 @@ def main():
             memory_used = process.memory_info().rss / 1024 / 1024 - start_memory
 
             heuristic_timers["Combined Basic (Node+Edge Count Difference)"] += runtime
-            heuristic_memory["Combined Basic (Node+Edge Count Difference)"] += memory_used
+            heuristic_memory["Combined Basic (Node+Edge Count Difference)"] += (
+                memory_used
+            )
             heuristic_counts["Combined Basic (Node+Edge Count Difference)"] += 1
-            heuristic_runtime_values["Combined Basic (Node+Edge Count Difference)"].append(runtime)
-            heuristic_memory_values["Combined Basic (Node+Edge Count Difference)"].append(memory_used)
+            heuristic_runtime_values[
+                "Combined Basic (Node+Edge Count Difference)"
+            ].append(runtime)
+            heuristic_memory_values[
+                "Combined Basic (Node+Edge Count Difference)"
+            ].append(memory_used)
 
-            heuristic_results["Combined Basic (Node+Edge Count Difference)"].append({
-                "Dataset": dataset_name,
-                "graph_id1": id1,
-                "graph_id2": id2,
-                "Heuristic": "Combined Basic (Node+Edge Count Difference)",
-                "Lower Bound": h5
-            })
+            heuristic_results["Combined Basic (Node+Edge Count Difference)"].append(
+                {
+                    "Dataset": dataset_name,
+                    "graph_id1": id1,
+                    "graph_id2": id2,
+                    "Heuristic": "Combined Basic (Node+Edge Count Difference)",
+                    "Lower Bound": h5,
+                }
+            )
 
             # Optional: Only compute node label mismatch if both label lists exist
             if labels1 is not None and labels2 is not None:
@@ -301,24 +362,28 @@ def main():
                 heuristic_runtime_values["Node Label Mismatch"].append(runtime)
                 heuristic_memory_values["Node Label Mismatch"].append(memory_used)
 
-                heuristic_results["Node Label Mismatch"].append({
-                    "Dataset": dataset_name,
-                    "graph_id1": id1,
-                    "graph_id2": id2,
-                    "Heuristic": "Node Label Mismatch",
-                    "Lower Bound": h6
-                })
+                heuristic_results["Node Label Mismatch"].append(
+                    {
+                        "Dataset": dataset_name,
+                        "graph_id1": id1,
+                        "graph_id2": id2,
+                        "Heuristic": "Node Label Mismatch",
+                        "Lower Bound": h6,
+                    }
+                )
 
         # Calculate overall dataset runtime and memory usage
         overall_runtime = time.time() - overall_start_time
         overall_memory = process.memory_info().rss / 1024 / 1024 - overall_start_memory
-        processed_pairs = len(json_files) - len([f for f, _ in skipped_files if dataset_name in f])
+        processed_pairs = len(json_files) - len(
+            [f for f, _ in skipped_files if dataset_name in f]
+        )
 
         # Store dataset performance metrics
         performance_metrics[dataset_name]["overall"] = {
             "runtime": overall_runtime,
             "memory_usage_mb": overall_memory,
-            "processed_pairs": processed_pairs
+            "processed_pairs": processed_pairs,
         }
 
         # Calculate statistics per heuristic
@@ -328,8 +393,16 @@ def main():
                 avg_memory = heuristic_memory[heuristic] / heuristic_counts[heuristic]
 
                 # Calculate standard deviation
-                runtime_std = np.std(heuristic_runtime_values[heuristic]) if heuristic_runtime_values[heuristic] else 0
-                memory_std = np.std(heuristic_memory_values[heuristic]) if heuristic_memory_values[heuristic] else 0
+                runtime_std = (
+                    np.std(heuristic_runtime_values[heuristic])
+                    if heuristic_runtime_values[heuristic]
+                    else 0
+                )
+                memory_std = (
+                    np.std(heuristic_memory_values[heuristic])
+                    if heuristic_memory_values[heuristic]
+                    else 0
+                )
 
                 performance_metrics[dataset_name][heuristic] = {
                     "total_runtime": heuristic_timers[heuristic],
@@ -338,7 +411,7 @@ def main():
                     "total_memory_mb": heuristic_memory[heuristic],
                     "avg_memory_mb": avg_memory,
                     "std_memory_mb": memory_std,
-                    "count": heuristic_counts[heuristic]
+                    "count": heuristic_counts[heuristic],
                 }
 
         # Calculate and store degree information
@@ -346,32 +419,43 @@ def main():
             max_degree = max(degrees)
             avg_degree = sum(degrees) / len(degrees)
             degree_info[dataset_name] = (max_degree, avg_degree)
-            print(f"Dataset: {dataset_name}, Max Degree: {max_degree}, Avg Degree: {avg_degree:.2f}")
+            print(
+                f"Dataset: {dataset_name}, Max Degree: {max_degree}, Avg Degree: {avg_degree:.2f}"
+            )
 
         # Print performance metrics
-        print(f"Dataset: {dataset_name}, Overall Runtime: {overall_runtime:.2f}s, Memory: {overall_memory:.2f}MB")
+        print(
+            f"Dataset: {dataset_name}, Overall Runtime: {overall_runtime:.2f}s, Memory: {overall_memory:.2f}MB"
+        )
         for heuristic, metrics in performance_metrics[dataset_name].items():
             if heuristic != "overall":
-                print(f"  - {heuristic}: {metrics['avg_runtime']:.6f}s ± {metrics['std_runtime']:.6f}s, "
-                      f"Memory: {metrics['avg_memory_mb']:.2f}MB ± {metrics['std_memory_mb']:.2f}MB")
+                print(
+                    f"  - {heuristic}: {metrics['avg_runtime']:.6f}s ± {metrics['std_runtime']:.6f}s, "
+                    f"Memory: {metrics['avg_memory_mb']:.2f}MB ± {metrics['std_memory_mb']:.2f}MB"
+                )
 
         # Save results to Excel files
         for heuristic, results_list in heuristic_results.items():
             if not results_list:
                 continue
             df = pd.DataFrame(results_list)
-            heuristic_clean = re.sub(r'\W+', '_', heuristic).strip('_')
+            heuristic_clean = re.sub(r"\W+", "_", heuristic).strip("_")
             n_rows = len(df)
 
             if n_rows > max_rows:
                 num_parts = (n_rows - 1) // max_rows + 1
                 for part in range(num_parts):
                     chunk = df.iloc[part * max_rows : (part + 1) * max_rows]
-                    out_file = os.path.join(output_dir, f"{dataset_name}_{heuristic_clean}_part{part+1}.xlsx")
+                    out_file = os.path.join(
+                        output_dir,
+                        f"{dataset_name}_{heuristic_clean}_part{part + 1}.xlsx",
+                    )
                     chunk.to_excel(out_file, index=False)
                     print(f"Saved {len(chunk)} rows to '{out_file}'.")
             else:
-                out_file = os.path.join(output_dir, f"{dataset_name}_{heuristic_clean}.xlsx")
+                out_file = os.path.join(
+                    output_dir, f"{dataset_name}_{heuristic_clean}.xlsx"
+                )
                 df.to_excel(out_file, index=False)
                 print(f"Saved {n_rows} rows to '{out_file}'.")
 
@@ -379,32 +463,42 @@ def main():
     performance_data = []
     for dataset, metrics in performance_metrics.items():
         # Overall dataset metrics
-        performance_data.append({
-            "Dataset": dataset,
-            "Heuristic": "Overall",
-            "Total Runtime (s)": metrics["overall"]["runtime"],
-            "Avg Runtime (s)": metrics["overall"]["runtime"] / metrics["overall"]["processed_pairs"] if metrics["overall"]["processed_pairs"] > 0 else 0,
-            "Std Runtime (s)": "N/A",  # No std for overall
-            "Total Memory (MB)": metrics["overall"]["memory_usage_mb"],
-            "Avg Memory (MB)": metrics["overall"]["memory_usage_mb"] / metrics["overall"]["processed_pairs"] if metrics["overall"]["processed_pairs"] > 0 else 0,
-            "Std Memory (MB)": "N/A",  # No std for overall
-            "Processed Pairs": metrics["overall"]["processed_pairs"]
-        })
+        performance_data.append(
+            {
+                "Dataset": dataset,
+                "Heuristic": "Overall",
+                "Total Runtime (s)": metrics["overall"]["runtime"],
+                "Avg Runtime (s)": metrics["overall"]["runtime"]
+                / metrics["overall"]["processed_pairs"]
+                if metrics["overall"]["processed_pairs"] > 0
+                else 0,
+                "Std Runtime (s)": "N/A",  # No std for overall
+                "Total Memory (MB)": metrics["overall"]["memory_usage_mb"],
+                "Avg Memory (MB)": metrics["overall"]["memory_usage_mb"]
+                / metrics["overall"]["processed_pairs"]
+                if metrics["overall"]["processed_pairs"] > 0
+                else 0,
+                "Std Memory (MB)": "N/A",  # No std for overall
+                "Processed Pairs": metrics["overall"]["processed_pairs"],
+            }
+        )
 
         # Per-heuristic metrics
         for heuristic, heur_metrics in metrics.items():
             if heuristic != "overall":
-                performance_data.append({
-                    "Dataset": dataset,
-                    "Heuristic": heuristic,
-                    "Total Runtime (s)": heur_metrics["total_runtime"],
-                    "Avg Runtime (s)": heur_metrics["avg_runtime"],
-                    "Std Runtime (s)": heur_metrics["std_runtime"],
-                    "Total Memory (MB)": heur_metrics["total_memory_mb"],
-                    "Avg Memory (MB)": heur_metrics["avg_memory_mb"],
-                    "Std Memory (MB)": heur_metrics["std_memory_mb"],
-                    "Processed Pairs": heur_metrics["count"]
-                })
+                performance_data.append(
+                    {
+                        "Dataset": dataset,
+                        "Heuristic": heuristic,
+                        "Total Runtime (s)": heur_metrics["total_runtime"],
+                        "Avg Runtime (s)": heur_metrics["avg_runtime"],
+                        "Std Runtime (s)": heur_metrics["std_runtime"],
+                        "Total Memory (MB)": heur_metrics["total_memory_mb"],
+                        "Avg Memory (MB)": heur_metrics["avg_memory_mb"],
+                        "Std Memory (MB)": heur_metrics["std_memory_mb"],
+                        "Processed Pairs": heur_metrics["count"],
+                    }
+                )
 
     # Save performance metrics
     perf_df = pd.DataFrame(performance_data)
@@ -415,16 +509,19 @@ def main():
     # Print degree information summary
     print("\n--- Degree Information for All Datasets ---")
     for dataset_name, (max_degree, avg_degree) in degree_info.items():
-        print(f"Dataset: {dataset_name}, Max Degree: {max_degree}, Avg Degree: {avg_degree:.2f}")
+        print(
+            f"Dataset: {dataset_name}, Max Degree: {max_degree}, Avg Degree: {avg_degree:.2f}"
+        )
 
     # Report skipped files
     if skipped_files:
         print(f"\n--- Skipped {len(skipped_files)} files due to parsing errors ---")
         skipped_log_path = os.path.join(output_dir, "skipped_files.txt")
-        with open(skipped_log_path, 'w') as f:
+        with open(skipped_log_path, "w") as f:
             for file_path, error in skipped_files:
                 f.write(f"{file_path}: {error}\n")
         print(f"List of skipped files saved to {skipped_log_path}")
+
 
 if __name__ == "__main__":
     main()

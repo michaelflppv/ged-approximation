@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 
 MAX_EXCEL_ROWS = 1048576  # Max rows per Excel sheet
 
+
 def parse_gxl_labels(gxl_file):
     """
     Parse a single .gxl file named like "12.gxl" and return two sets:
@@ -50,6 +51,7 @@ def parse_gxl_labels(gxl_file):
 
     return node_labels, edge_labels
 
+
 def custom_pairwise_median(count1, count2):
     """
     Special median rule for two distinct counts:
@@ -65,6 +67,7 @@ def custom_pairwise_median(count1, count2):
         return count1
     else:
         return (count1 + count2) / 2.0
+
 
 def compute_node_edge_label_diversities(dataset_dir):
     """
@@ -90,20 +93,20 @@ def compute_node_edge_label_diversities(dataset_dir):
     # 2) Parse each file => store distinct label counts
     label_info = {}
     for gxl_path in gxl_files:
-        base_name = os.path.basename(gxl_path)           # e.g. "12.gxl"
-        graph_id = os.path.splitext(base_name)[0]        # e.g. "12"
+        base_name = os.path.basename(gxl_path)  # e.g. "12.gxl"
+        graph_id = os.path.splitext(base_name)[0]  # e.g. "12"
 
         node_labels, edge_labels = parse_gxl_labels(gxl_path)
         label_info[graph_id] = {
             "node_count": len(node_labels),
-            "edge_count": len(edge_labels)
+            "edge_count": len(edge_labels),
         }
 
     # 3) Build a list of records for each pair (i, j), i < j
     graph_ids = sorted(label_info.keys(), key=lambda x: str(x))
     records = []
     for i in range(len(graph_ids)):
-        for j in range(i+1, len(graph_ids)):
+        for j in range(i + 1, len(graph_ids)):
             g1 = graph_ids[i]
             g2 = graph_ids[j]
 
@@ -115,12 +118,14 @@ def compute_node_edge_label_diversities(dataset_dir):
             node_median = custom_pairwise_median(n1, n2)
             edge_median = custom_pairwise_median(e1, e2)
 
-            records.append({
-                "graph_id_1": str(g1),
-                "graph_id_2": str(g2),
-                "node_labels": node_median,
-                "edge_labels": edge_median
-            })
+            records.append(
+                {
+                    "graph_id_1": str(g1),
+                    "graph_id_2": str(g2),
+                    "node_labels": node_median,
+                    "edge_labels": edge_median,
+                }
+            )
 
     df = pd.DataFrame(records)
 
@@ -134,7 +139,9 @@ def compute_node_edge_label_diversities(dataset_dir):
     # If the DataFrame fits into one sheet, save directly.
     # Otherwise, split into multiple files.
     if len(df) <= MAX_EXCEL_ROWS:
-        output_file = os.path.join(output_dir, f"{dataset_name}_node_edge_label_diversities.xlsx")
+        output_file = os.path.join(
+            output_dir, f"{dataset_name}_node_edge_label_diversities.xlsx"
+        )
         df.to_excel(output_file, index=False)
         print(f"Saved results to: {output_file}")
     else:
@@ -149,10 +156,10 @@ def compute_node_edge_label_diversities(dataset_dir):
             chunk_df = df.iloc[start:end]
             chunk_file = os.path.join(
                 output_dir,
-                f"{dataset_name}_node_edge_label_diversities_part{part_num}.xlsx"
+                f"{dataset_name}_node_edge_label_diversities_part{part_num}.xlsx",
             )
             chunk_df.to_excel(chunk_file, index=False)
-            print(f"Saved chunk {part_num} (rows {start}–{end-1}) to {chunk_file}")
+            print(f"Saved chunk {part_num} (rows {start}–{end - 1}) to {chunk_file}")
             part_num += 1
             start = end
 

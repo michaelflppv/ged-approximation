@@ -3,6 +3,7 @@ from utils import tab_printer
 from simgnn import SimGNNTrainer
 from param_parser import parameter_parser
 
+
 def main():
     """
     Parsing command line parameters, reading data.
@@ -27,6 +28,7 @@ def main():
         args.save_path = os.path.join(models_dir, "simgnn_model.h5")
 
     trainer.save()
+
 
 if __name__ == "__main__":
     main()

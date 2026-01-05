@@ -2,32 +2,22 @@
 import subprocess
 import json
 
+
 def main():
     # Specify your parameters here:
     dataset = "PROTEINS"
-    dataset_path = f"../../processed_data/gxl/{dataset}"          # Update as needed
-    collection_xml = f"../../processed_data/xml/{dataset}.xml"      # Update as needed
-    idx1 = 0                                   # Graph index 1 (zero-based)
-    idx2 = 305                                 # Graph index 2 (zero-based)
-    executable = "../../gedlib/build/edit_path_exec"         # Path to the executable
+    dataset_path = f"../../processed_data/gxl/{dataset}"  # Update as needed
+    collection_xml = f"../../processed_data/xml/{dataset}.xml"  # Update as needed
+    idx1 = 0  # Graph index 1 (zero-based)
+    idx2 = 305  # Graph index 2 (zero-based)
+    executable = "../../gedlib/build/edit_path_exec"  # Path to the executable
     output_file = f"../../results/extracted_paths/ipfp_{dataset}_edit_path_for_{idx1}_{idx2}.json"  # Output JSON file
 
     # Build the command with required arguments.
-    command = [
-        executable,
-        dataset_path,
-        collection_xml,
-        str(idx1),
-        str(idx2)
-    ]
+    command = [executable, dataset_path, collection_xml, str(idx1), str(idx2)]
 
     try:
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
     except subprocess.CalledProcessError as e:
         print("Error running the executable:", e)
         print("stderr:", e.stderr)
@@ -48,6 +38,7 @@ def main():
         print(f"Results saved to {output_file}")
     except Exception as e:
         print("Error saving results:", e)
+
 
 if __name__ == "__main__":
     main()

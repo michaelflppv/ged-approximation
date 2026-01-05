@@ -21,7 +21,9 @@ from torch.serialization import safe_globals
 from torch.nn.parameter import UninitializedParameter
 
 # Import SimGNN modules
-from param_parser import parameter_parser  # Provided param_parser.py (does not accept argument list)
+from param_parser import (
+    parameter_parser,
+)  # Provided param_parser.py (does not accept argument list)
 from simgnn import SimGNNTrainer
 from utils import process_pair, calculate_normalized_ged
 
@@ -35,11 +37,14 @@ graph_id_2 = 1003
 # ============================================================================
 # Specify your file paths here:
 # ============================================================================
-JSON_PATH   = "../../processed_data/json_pairs/PROTEINS/pair_{}_{}.json".format(graph_id_1, graph_id_2)
-MODEL_PATH  = "../models/simgnn_model.h5"
-OUTPUT_DIR  = "../../results/extracted_paths"
-DUMMY_COST  = 1.0
+JSON_PATH = "../../processed_data/json_pairs/PROTEINS/pair_{}_{}.json".format(
+    graph_id_1, graph_id_2
+)
+MODEL_PATH = "../models/simgnn_model.h5"
+OUTPUT_DIR = "../../results/extracted_paths"
+DUMMY_COST = 1.0
 # ============================================================================
+
 
 # Define a custom JSON encoder to handle NumPy types.
 class NumpyEncoder(json.JSONEncoder):
@@ -51,6 +56,7 @@ class NumpyEncoder(json.JSONEncoder):
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
         return super(NumpyEncoder, self).default(obj)
+
 
 def load_model(simgnn_args):
     """
@@ -66,6 +72,7 @@ def load_model(simgnn_args):
         trainer.load()
     return trainer
 
+
 def get_node_embeddings(trainer, data):
     """
     Given a data dictionary (with keys "edge_index_1", "features_1", etc.)
@@ -73,9 +80,14 @@ def get_node_embeddings(trainer, data):
     convolutional layers.
     """
     data_torch = trainer.transfer_to_torch(data)
-    emb1 = trainer.model.convolutional_pass(data_torch["edge_index_1"], data_torch["features_1"])
-    emb2 = trainer.model.convolutional_pass(data_torch["edge_index_2"], data_torch["features_2"])
+    emb1 = trainer.model.convolutional_pass(
+        data_torch["edge_index_1"], data_torch["features_1"]
+    )
+    emb2 = trainer.model.convolutional_pass(
+        data_torch["edge_index_2"], data_torch["features_2"]
+    )
     return emb1, emb2
+
 
 def pad_cost_matrix(cost_matrix, n_rows, n_cols, dummy_cost):
     """
@@ -86,6 +98,7 @@ def pad_cost_matrix(cost_matrix, n_rows, n_cols, dummy_cost):
     padded = np.full((n, n), dummy_cost)
     padded[:n_rows, :n_cols] = cost_matrix
     return padded
+
 
 def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
     """
@@ -116,7 +129,7 @@ def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
                     "op": "match",
                     "graph1_node": int(i),
                     "graph2_node": int(j),
-                    "label": labels1[i]
+                    "label": labels1[i],
                 }
             else:
                 op = {
@@ -124,24 +137,17 @@ def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
                     "graph1_node": int(i),
                     "graph1_label": labels1[i],
                     "graph2_node": int(j),
-                    "graph2_label": labels2[j]
+                    "graph2_label": labels2[j],
                 }
             edit_operations.append(op)
         elif i < n1 and j >= n2:
-            op = {
-                "op": "delete",
-                "graph1_node": int(i),
-                "graph1_label": labels1[i]
-            }
+            op = {"op": "delete", "graph1_node": int(i), "graph1_label": labels1[i]}
             edit_operations.append(op)
         elif i >= n1 and j < n2:
-            op = {
-                "op": "insert",
-                "graph2_node": int(j),
-                "graph2_label": labels2[j]
-            }
+            op = {"op": "insert", "graph2_node": int(j), "graph2_label": labels2[j]}
             edit_operations.append(op)
     return edit_operations
+
 
 def validate_and_order_edit_path(edit_ops, labels1, labels2):
     """
@@ -198,25 +204,35 @@ def validate_and_order_edit_path(edit_ops, labels1, labels2):
         if op["op"] == "match":
             node_id = f"n{op['graph1_node']}"
             if node_id not in current_state:
-                raise ValueError(f"Match op error: node {node_id} does not exist in current state.")
+                raise ValueError(
+                    f"Match op error: node {node_id} does not exist in current state."
+                )
             # For a match, we expect the label to be correct.
             if current_state[node_id] != op["label"]:
-                raise ValueError(f"Match op error: label mismatch for node {node_id} (expected {op['label']}, got {current_state[node_id]}).")
+                raise ValueError(
+                    f"Match op error: label mismatch for node {node_id} (expected {op['label']}, got {current_state[node_id]})."
+                )
         elif op["op"] == "substitute":
             node_id = f"n{op['graph1_node']}"
             if node_id not in current_state:
-                raise ValueError(f"Substitute op error: node {node_id} does not exist in current state.")
+                raise ValueError(
+                    f"Substitute op error: node {node_id} does not exist in current state."
+                )
             # Update the node's label.
             current_state[node_id] = op["graph2_label"]
         elif op["op"] == "delete":
             node_id = f"n{op['graph1_node']}"
             if node_id not in current_state:
-                raise ValueError(f"Delete op error: node {node_id} does not exist in current state.")
+                raise ValueError(
+                    f"Delete op error: node {node_id} does not exist in current state."
+                )
             del current_state[node_id]
         elif op["op"] == "insert":
             node_id = f"t{op['graph2_node']}"
             if node_id in current_state:
-                raise ValueError(f"Insert op error: node {node_id} already exists in current state.")
+                raise ValueError(
+                    f"Insert op error: node {node_id} already exists in current state."
+                )
             current_state[node_id] = op["graph2_label"]
 
     # Build the target state from the edit operations:
@@ -234,9 +250,12 @@ def validate_and_order_edit_path(edit_ops, labels1, labels2):
 
     # Verify that the final state (current_state) has the same multiset of labels as the target state.
     if sorted(list(current_state.values())) != sorted(list(target_state.values())):
-        raise ValueError(f"Final state does not match target graph.\nCurrent state: {current_state}\nTarget state: {target_state}")
+        raise ValueError(
+            f"Final state does not match target graph.\nCurrent state: {current_state}\nTarget state: {target_state}"
+        )
 
     return ordered_ops
+
 
 def main():
     # Parse SimGNN parameters (from the command line or defaults)
@@ -257,7 +276,9 @@ def main():
     # Extract raw edit operations in machine-readable format.
     labels1 = data["labels_1"]
     labels2 = data["labels_2"]
-    edit_ops = extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=DUMMY_COST)
+    edit_ops = extract_edit_operations(
+        emb1, emb2, labels1, labels2, dummy_cost=DUMMY_COST
+    )
 
     # Validate and order the edit operations to produce an optimal (sequential) edit path.
     try:
@@ -292,15 +313,18 @@ def main():
 
     # Prepare the results directory.
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    output_file = os.path.join(OUTPUT_DIR, f'simgnn_edit_path_pair_{graph_id_1}_{graph_id_2}.json')
+    output_file = os.path.join(
+        OUTPUT_DIR, f"simgnn_edit_path_pair_{graph_id_1}_{graph_id_2}.json"
+    )
     # Write the machine-readable (and validated) edit path as JSON using the custom encoder.
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump({"edit_path": ordered_edit_ops}, f, indent=2, cls=NumpyEncoder)
 
     print("Extracted and validated machine-readable edit path saved to:")
     print(output_file)
     # Optionally, also print the JSON to the console.
     print(json.dumps({"edit_path": ordered_edit_ops}, indent=2, cls=NumpyEncoder))
+
 
 if __name__ == "__main__":
     main()

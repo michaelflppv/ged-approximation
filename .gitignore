@@ -187,3 +187,6 @@ gedlib/ext/**/lib/*.dylib
 gedlib/ext/**/lib/*.so
 gedlib/ext/**/bin/
 gedlib/ext/libsvm.3.22/*.o
+
+# Local dataset cache
+data/_tud/

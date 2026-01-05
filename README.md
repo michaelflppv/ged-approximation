@@ -174,6 +174,18 @@ Set `DATASETS` to any compatible TU dataset names; `DATA_ROOT` and `TUD_ROOT` ca
 
 ---
 
+## Quickstart (smoke test)
+- Use the bundled tiny sample pair to verify the pipeline without large downloads:
+  ```bash
+  make lower-bound DATASETS=SAMPLE MAX_PAIRS=5
+  ```
+  This processes the sample JSON pair under `processed_data/json_pairs/SAMPLE` and writes results to `results/lower_bound`.
+- Run the heuristic unit tests:
+  ```bash
+  make test-python
+  ```
+---
+
 ## **Run Experiments**
 All commands below run from the repository root via `make`.
 
@@ -195,6 +207,10 @@ All commands below run from the repository root via `make`.
 - Estimate lower bounds:
   ```bash
   make lower-bound
+  ```
+- Limit to specific datasets or a small number of pairs for quick checks:
+  ```bash
+  make lower-bound DATASETS="AIDS SAMPLE" MAX_PAIRS=100
   ```
 - Validate lower bound estimations:
   ```bash

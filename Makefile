@@ -55,7 +55,7 @@ convert-txt: ## Convert datasets to TXT graph pairs
 	cd src/converters/txt && $(RUN_PY) preprocess_all.py
 
 lower-bound: ## Estimate lower bounds for graph pairs
-	cd heuristics && $(RUN_PY) estimate_lower_bound.py
+	cd heuristics && $(RUN_PY) estimate_lower_bound.py $(if $(DATASETS),--datasets $(DATASETS),) $(if $(MAX_PAIRS),--max-pairs $(MAX_PAIRS),)
 
 lower-bound-validate: ## Validate lower bound estimations
 	cd heuristics && $(RUN_PY) validate_lower_bounds.py

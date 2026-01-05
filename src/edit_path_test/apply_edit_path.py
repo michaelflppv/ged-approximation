@@ -5,6 +5,7 @@ import os
 import networkx as nx
 import matplotlib.pyplot as plt
 
+
 def load_pair_graph(pair_file):
     """
     Load the graph pair from a JSON file.
@@ -27,6 +28,7 @@ def load_pair_graph(pair_file):
             u, v = edge[0], edge[1]
             G.add_edge(u, v)
     return G
+
 
 def apply_edit_operation(G, op, next_node_id):
     """
@@ -92,6 +94,7 @@ def apply_edit_operation(G, op, next_node_id):
                 G.add_edge(u, v)
     return G, next_node_id
 
+
 def update_layout(G, layout):
     """
     Update the layout dictionary with positions for any new nodes added to G.
@@ -106,6 +109,7 @@ def update_layout(G, layout):
     new_layout = nx.spring_layout(G, pos=layout, fixed=fixed_nodes, seed=42)
     layout.update(new_layout)
     return layout
+
 
 def visualize_graph(G, title, pos, output_path=None):
     """
@@ -125,15 +129,22 @@ def visualize_graph(G, title, pos, output_path=None):
     plt.show()
     plt.close()
 
+
 def main():
     # Specify the graph IDs for the pair of graphs you want to process.
     graph_id_1 = 1000
     graph_id_2 = 1003
 
     # Specify your file paths here:
-    pair_file = '../../processed_data/json_pairs/PROTEINS/pair_{}_{}.json'.format(graph_id_1, graph_id_2)
-    edit_path = '../../results/extracted_paths/simgnn_edit_path.json'.format(graph_id_1, graph_id_2)
-    output_dir = '../../results/extracted_paths/recreated_graphs/pair_{}_{}'.format(graph_id_1, graph_id_2)
+    pair_file = "../../processed_data/json_pairs/PROTEINS/pair_{}_{}.json".format(
+        graph_id_1, graph_id_2
+    )
+    edit_path = "../../results/extracted_paths/simgnn_edit_path.json".format(
+        graph_id_1, graph_id_2
+    )
+    output_dir = "../../results/extracted_paths/recreated_graphs/pair_{}_{}".format(
+        graph_id_1, graph_id_2
+    )
     os.makedirs(output_dir, exist_ok=True)
 
     # Load the query graph from the JSON pair file.
@@ -160,7 +171,9 @@ def main():
     # The edit operations might be under "edit_operations" or "edit_path"
     edit_ops = edit_data.get("edit_operations") or edit_data.get("edit_path")
     if edit_ops is None:
-        print("Error: The edit path JSON must contain an 'edit_operations' or 'edit_path' key.")
+        print(
+            "Error: The edit path JSON must contain an 'edit_operations' or 'edit_path' key."
+        )
         return
 
     # Apply each edit operation in sequence and visualize the intermediate graph.
@@ -176,12 +189,13 @@ def main():
     # Optionally, save the final graph structure to a JSON file.
     final_graph = {
         "nodes": [{"id": n, "label": G.nodes[n].get("label")} for n in G.nodes],
-        "edges": list(G.edges())
+        "edges": list(G.edges()),
     }
     final_file = os.path.join(output_dir, "final_graph.json")
     with open(final_file, "w") as f:
         json.dump(final_graph, f, indent=4)
     print("Transformation complete. Final graph saved to", final_file)
+
 
 if __name__ == "__main__":
     main()

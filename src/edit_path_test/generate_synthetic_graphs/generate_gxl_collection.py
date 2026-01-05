@@ -21,7 +21,7 @@ def generate_base_graph():
     graph["edges"] = [
         {"from": "n1", "to": "n2"},
         {"from": "n2", "to": "n3"},
-        {"from": "n3", "to": "n4"}
+        {"from": "n3", "to": "n4"},
     ]
     return graph
 
@@ -85,24 +85,26 @@ def save_gxl(graph, filename, graph_id):
     with open(filename, "w") as f:
         f.write('<?xml version="1.0"?>\n')
         f.write('<!DOCTYPE gxl SYSTEM "http://www.gupro.de/GXL/gxl-1.0.dtd">\n')
-        f.write('<gxl>\n')
+        f.write("<gxl>\n")
         f.write(f'  <graph id="{graph_id}" edgeids="false" edgemode="undirected">\n')
         # Write nodes
         for node in graph["nodes"]:
             f.write(f'    <node id="{node["id"]}">\n')
-            f.write(f'      <attr name="symbol"><string>{node["symbol"]}</string></attr>\n')
+            f.write(
+                f'      <attr name="symbol"><string>{node["symbol"]}</string></attr>\n'
+            )
             f.write(f'      <attr name="chem"><int>{node["chem"]}</int></attr>\n')
             f.write(f'      <attr name="charge"><int>{node["charge"]}</int></attr>\n')
             f.write(f'      <attr name="x"><float>{node["x"]}</float></attr>\n')
             f.write(f'      <attr name="y"><float>{node["y"]}</float></attr>\n')
-            f.write('    </node>\n')
+            f.write("    </node>\n")
         # Write edges
         for edge in graph["edges"]:
             f.write(f'    <edge from="{edge["from"]}" to="{edge["to"]}">\n')
             f.write('      <attr name="valence"><int>0</int></attr>\n')
-            f.write('    </edge>\n')
-        f.write('  </graph>\n')
-        f.write('</gxl>\n')
+            f.write("    </edge>\n")
+        f.write("  </graph>\n")
+        f.write("</gxl>\n")
 
 
 def save_xml_collection(graph_files, collection_filename):
@@ -112,11 +114,13 @@ def save_xml_collection(graph_files, collection_filename):
     """
     with open(collection_filename, "w") as f:
         f.write('<?xml version="1.0"?>\n')
-        f.write('<!DOCTYPE GraphCollection SYSTEM "http://www.inf.unibz.it/~blumenthal/dtd/GraphCollection.dtd">\n')
-        f.write('<GraphCollection>\n')
+        f.write(
+            '<!DOCTYPE GraphCollection SYSTEM "http://www.inf.unibz.it/~blumenthal/dtd/GraphCollection.dtd">\n'
+        )
+        f.write("<GraphCollection>\n")
         for file, cls in graph_files:
             f.write(f'  <graph file="{file}" class="{cls}" />\n')
-        f.write('</GraphCollection>\n')
+        f.write("</GraphCollection>\n")
 
 
 def main():
@@ -143,7 +147,9 @@ def main():
 
     collection_filename = "../../../processed_data/synthetic_graphs/xml/collection.xml"
     save_xml_collection(graph_files_info, collection_filename)
-    print(f"Generated {num_graphs} GXL graph files in '{output_dir}' and collection file '{collection_filename}'.")
+    print(
+        f"Generated {num_graphs} GXL graph files in '{output_dir}' and collection file '{collection_filename}'."
+    )
 
 
 if __name__ == "__main__":

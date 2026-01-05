@@ -1,4 +1,4 @@
-#//////////////////////////////////////////////////////////////////////////#
+# //////////////////////////////////////////////////////////////////////////#
 #                                                                          #
 #   Copyright (C) 2020 by David B. Blumenthal                              #
 #                                                                          #
@@ -17,7 +17,7 @@
 #   You should have received a copy of the GNU Lesser General Public       #
 #   License along with GEDLIB. If not, see <http://www.gnu.org/licenses/>. #
 #                                                                          #
-#//////////////////////////////////////////////////////////////////////////#
+# //////////////////////////////////////////////////////////////////////////#
 
 from subprocess import call
 import argparse
@@ -27,10 +27,26 @@ parser.add_argument("dataset", help="name of dataset collection XML file")
 args = parser.parse_args()
 
 sample_script = "../../data/collections/sample.py"
-size_ratios = [.1, .2, .3, .4, .5, .6, .7, .8, .9]
+size_ratios = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 sample_ids = range(5)
 for size_ratio in size_ratios:
     for sample_id in sample_ids:
-        sample_name = args.dataset.split('.')[0] + "-" + str(int(size_ratio * 100)) + "-" + str(sample_id) + ".xml"
-        command = "python " + sample_script + " " + args.dataset + " " + sample_name + " --size_ratio " + str(size_ratio)
+        sample_name = (
+            args.dataset.split(".")[0]
+            + "-"
+            + str(int(size_ratio * 100))
+            + "-"
+            + str(sample_id)
+            + ".xml"
+        )
+        command = (
+            "python "
+            + sample_script
+            + " "
+            + args.dataset
+            + " "
+            + sample_name
+            + " --size_ratio "
+            + str(size_ratio)
+        )
         call(command, shell=True)

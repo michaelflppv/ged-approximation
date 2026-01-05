@@ -16,6 +16,7 @@ from multiprocessing import Process
 results = []
 output_excel = None
 
+
 def process_dataset(dataset_name):
     """
     Process a single dataset completely.
@@ -26,7 +27,9 @@ def process_dataset(dataset_name):
     txt_dir = f"../../processed_data/txt/{dataset_name}"
     ged_executable = "../../Graph_Edit_Distance/ged"
     output_excel = f"../../results/exact_ged/{dataset_name}/results.xlsx"
-    workers = max(1, multiprocessing.cpu_count() // 3)  # Divide CPU cores between 3 datasets
+    workers = max(
+        1, multiprocessing.cpu_count() // 3
+    )  # Divide CPU cores between 3 datasets
     lb_folder = f"../../results/lower_bound/{dataset_name}"
     test_heuristics = False
 
@@ -34,20 +37,48 @@ def process_dataset(dataset_name):
     os.makedirs(os.path.dirname(output_excel), exist_ok=True)
 
     # Call the main function with dataset-specific parameters
-    main(txt_dir, ged_executable, output_excel, workers, dataset_name, lb_folder, test_heuristics)
+    main(
+        txt_dir,
+        ged_executable,
+        output_excel,
+        workers,
+        dataset_name,
+        lb_folder,
+        test_heuristics,
+    )
 
 
-def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_folder, test_heuristics):
+def main(
+    txt_dir,
+    ged_executable,
+    output_excel_param,
+    num_workers,
+    dataset,
+    lb_folder,
+    test_heuristics,
+):
     # Global variables for this process
     results = []
     output_excel = output_excel_param
 
     # Set up signal handlers
-    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler_local(signum, frame, output_excel, results))
-    signal.signal(signal.SIGTERM, lambda signum, frame: signal_handler_local(signum, frame, output_excel, results))
+    signal.signal(
+        signal.SIGINT,
+        lambda signum, frame: signal_handler_local(
+            signum, frame, output_excel, results
+        ),
+    )
+    signal.signal(
+        signal.SIGTERM,
+        lambda signum, frame: signal_handler_local(
+            signum, frame, output_excel, results
+        ),
+    )
 
     # --- Load the filtering file(s) ---
-    filtering_file = os.path.join(lb_folder, f"{dataset}_Combined_Basic_Node_Edge_Count_Difference.xlsx")
+    filtering_file = os.path.join(
+        lb_folder, f"{dataset}_Combined_Basic_Node_Edge_Count_Difference.xlsx"
+    )
     if os.path.exists(filtering_file):
         try:
             lb_df_filter = pd.read_excel(filtering_file)
@@ -58,8 +89,12 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
             return
     else:
         # Check for part1 and part2 files
-        part1_file = os.path.join(lb_folder, f"{dataset}_Combined_Basic_Node_Edge_Count_Difference_part1.xlsx")
-        part2_file = os.path.join(lb_folder, f"{dataset}_Combined_Basic_Node_Edge_Count_Difference_part2.xlsx")
+        part1_file = os.path.join(
+            lb_folder, f"{dataset}_Combined_Basic_Node_Edge_Count_Difference_part1.xlsx"
+        )
+        part2_file = os.path.join(
+            lb_folder, f"{dataset}_Combined_Basic_Node_Edge_Count_Difference_part2.xlsx"
+        )
         if os.path.exists(part1_file) and os.path.exists(part2_file):
             try:
                 lb_df_part1 = pd.read_excel(part1_file)
@@ -82,7 +117,9 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
         print(f"Text directory {txt_dir} not found. Skipping dataset {dataset}.")
         return
 
-    txt_files = [os.path.join(txt_dir, f) for f in os.listdir(txt_dir) if f.endswith('.txt')]
+    txt_files = [
+        os.path.join(txt_dir, f) for f in os.listdir(txt_dir) if f.endswith(".txt")
+    ]
     if not txt_files:
         print(f"No text files found in {txt_dir}. Skipping dataset {dataset}.")
         return
@@ -102,6 +139,7 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
     max_pairs = 100000
     if len(graph_pairs) > max_pairs:
         import random
+
         random.seed(42)  # For reproducibility
         graph_pairs = random.sample(graph_pairs, max_pairs)
         print(f"{dataset}: Limited to {max_pairs} randomly selected pairs")
@@ -130,6 +168,7 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
 
     # Create a worker pool for this dataset
     from multiprocessing import Pool
+
     pool = Pool(processes=num_workers)
     try:
         for count, res in enumerate(pool.imap(process_pair, valid_pairs()), 1):
@@ -137,8 +176,15 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
 
             # Skip rows with all "N/A"
             if all(
-                    res[field] == "N/A"
-                    for field in ["min_ged", "max_ged", "runtime", "candidates", "matches", "memory_usage_mb"]
+                res[field] == "N/A"
+                for field in [
+                    "min_ged",
+                    "max_ged",
+                    "runtime",
+                    "candidates",
+                    "matches",
+                    "memory_usage_mb",
+                ]
             ):
                 continue
 
@@ -163,7 +209,9 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
                 break
 
     except KeyboardInterrupt:
-        print(f"{dataset}: KeyboardInterrupt caught. Terminating pool and saving partial results.")
+        print(
+            f"{dataset}: KeyboardInterrupt caught. Terminating pool and saving partial results."
+        )
         pool.terminate()
         pool.join()
         save_results(output_excel, results)
@@ -193,14 +241,18 @@ def main(txt_dir, ged_executable, output_excel_param, num_workers, dataset, lb_f
 
             print(f"\n--- {dataset} Performance Statistics ---")
             print(f"Total runtime: {total_runtime:.2f} seconds")
-            print(f"Average runtime: {avg_runtime:.4f} seconds (std: {std_runtime:.4f})")
+            print(
+                f"Average runtime: {avg_runtime:.4f} seconds (std: {std_runtime:.4f})"
+            )
             print(f"Total memory usage: {total_memory:.2f} MB")
             print(f"Average memory usage: {avg_memory:.2f} MB (std: {std_memory:.2f})")
             print("----------------------------")
 
     overall_pairs = min(total_pairs_initial, max_pairs)
-    print(f"{dataset}: Final ratio of LB-skipped pairs to total pairs: {skipped_count}/{overall_pairs} "
-          f"({(skipped_count / overall_pairs) if overall_pairs > 0 else 0:.2%} skipped, {total_valid} processed)")
+    print(
+        f"{dataset}: Final ratio of LB-skipped pairs to total pairs: {skipped_count}/{overall_pairs} "
+        f"({(skipped_count / overall_pairs) if overall_pairs > 0 else 0:.2%} skipped, {total_valid} processed)"
+    )
 
 
 def parse_executable_output(output):
@@ -236,32 +288,44 @@ def run_ged_executable_with_memory(graph_file1, graph_file2, ged_executable):
 
     def set_unlimited():
         try:
-            resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+            resource.setrlimit(
+                resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY)
+            )
         except Exception as e:
             print("Warning: could not set RLIMIT_AS unlimited:", e)
         try:
-            resource.setrlimit(resource.RLIMIT_CPU, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+            resource.setrlimit(
+                resource.RLIMIT_CPU, (resource.RLIM_INFINITY, resource.RLIM_INFINITY)
+            )
         except Exception as e:
             print("Warning: could not set RLIMIT_CPU unlimited:", e)
 
     cmd = [
         ged_executable,
-        "-d", graph_file1,
-        "-q", graph_file2,
-        "-m", "pair",
-        "-p", "astar",
-        "-l", "BMao",  # Filtering heuristic
-        "-t", "-1",
-        "-g"
+        "-d",
+        graph_file1,
+        "-q",
+        graph_file2,
+        "-m",
+        "pair",
+        "-p",
+        "astar",
+        "-l",
+        "BMao",  # Filtering heuristic
+        "-t",
+        "-1",
+        "-g",
     ]
 
     try:
         start_time = time.time()
-        process = subprocess.Popen(cmd,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT,
-                                text=True,
-                                preexec_fn=set_unlimited)
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            preexec_fn=set_unlimited,
+        )
 
         # Monitor memory usage
         max_memory_mb = 0
@@ -326,9 +390,12 @@ def should_skip_pair(dataset, graph_id1, graph_id2, lb_df, threshold=150):
         for df in lb_df:
             df_filtered = df[df["Dataset"] == dataset]
             matching_rows = df_filtered[
-                ((df_filtered["graph_id1"] == id1) & (df_filtered["graph_id2"] == id2)) |
-                ((df_filtered["graph_id1"] == id2) & (df_filtered["graph_id2"] == id1))
-                ]
+                ((df_filtered["graph_id1"] == id1) & (df_filtered["graph_id2"] == id2))
+                | (
+                    (df_filtered["graph_id1"] == id2)
+                    & (df_filtered["graph_id2"] == id1)
+                )
+            ]
             if not matching_rows.empty:
                 lb_value = matching_rows.iloc[0]["Lower Bound"]
                 if lb_value > threshold:
@@ -337,9 +404,9 @@ def should_skip_pair(dataset, graph_id1, graph_id2, lb_df, threshold=150):
     else:
         df_filtered = lb_df[lb_df["Dataset"] == dataset]
         matching_rows = df_filtered[
-            ((df_filtered["graph_id1"] == id1) & (df_filtered["graph_id2"] == id2)) |
-            ((df_filtered["graph_id1"] == id2) & (df_filtered["graph_id2"] == id1))
-            ]
+            ((df_filtered["graph_id1"] == id1) & (df_filtered["graph_id2"] == id2))
+            | ((df_filtered["graph_id1"] == id2) & (df_filtered["graph_id2"] == id1))
+        ]
         if not matching_rows.empty:
             lb_value = matching_rows.iloc[0]["Lower Bound"]
             if lb_value > threshold:
@@ -364,7 +431,7 @@ def test_all_heuristics_in_folder(dataset, lb_folder, graph_pairs, threshold=150
                 print(f"Error loading {file_path}: {e}")
                 continue
 
-            heuristic = filename[len(dataset) + 1:-5]
+            heuristic = filename[len(dataset) + 1 : -5]
             skip_count = 0
             evaluated_count = 0
             for pair in graph_pairs:
@@ -379,9 +446,15 @@ def test_all_heuristics_in_folder(dataset, lb_folder, graph_pairs, threshold=150
 
                 df_filtered = df.copy()
                 matching_rows = df_filtered[
-                    ((df_filtered["graph_id1"] == id1_int) & (df_filtered["graph_id2"] == id2_int)) |
-                    ((df_filtered["graph_id1"] == id2_int) & (df_filtered["graph_id2"] == id1_int))
-                    ]
+                    (
+                        (df_filtered["graph_id1"] == id1_int)
+                        & (df_filtered["graph_id2"] == id2_int)
+                    )
+                    | (
+                        (df_filtered["graph_id1"] == id2_int)
+                        & (df_filtered["graph_id2"] == id1_int)
+                    )
+                ]
 
                 if not matching_rows.empty:
                     evaluated_count += 1
@@ -392,9 +465,12 @@ def test_all_heuristics_in_folder(dataset, lb_folder, graph_pairs, threshold=150
             if evaluated_count > 0:
                 ratio = skip_count / evaluated_count
                 print(
-                    f"Heuristic '{heuristic}': Would skip {skip_count} out of {evaluated_count} evaluated pairs ({ratio:.2%}).")
+                    f"Heuristic '{heuristic}': Would skip {skip_count} out of {evaluated_count} evaluated pairs ({ratio:.2%})."
+                )
             else:
-                print(f"Heuristic '{heuristic}': No matching pairs found for evaluation.")
+                print(
+                    f"Heuristic '{heuristic}': No matching pairs found for evaluation."
+                )
     print(f"--- End of Heuristic Testing for {dataset} ---\n")
 
 
@@ -405,7 +481,9 @@ def process_pair(args):
     file1, file2, ged_executable = args
     id1, id2 = get_graph_id_from_filename(file1), get_graph_id_from_filename(file2)
 
-    output, runtime_measured, memory_mb = run_ged_executable_with_memory(file1, file2, ged_executable)
+    output, runtime_measured, memory_mb = run_ged_executable_with_memory(
+        file1, file2, ged_executable
+    )
     if output is None:
         # Return all N/A for this pair
         return {
@@ -416,7 +494,7 @@ def process_pair(args):
             "runtime": "N/A",
             "candidates": "N/A",
             "matches": "N/A",
-            "memory_usage_mb": "N/A"
+            "memory_usage_mb": "N/A",
         }
 
     min_ged, max_ged, parsed_time, candidates, matches = parse_executable_output(output)
@@ -429,7 +507,7 @@ def process_pair(args):
         "runtime": runtime_measured,  # Use the directly measured runtime
         "candidates": candidates,
         "matches": matches,
-        "memory_usage_mb": memory_mb
+        "memory_usage_mb": memory_mb,
     }
 
 
@@ -437,10 +515,19 @@ def save_results(excel_file, results_list):
     """
     Save the results list to an Excel file.
     """
-    df = pd.DataFrame(results_list, columns=["graph_id_1", "graph_id_2",
-                                            "min_ged", "max_ged",
-                                            "runtime", "candidates", "matches",
-                                            "memory_usage_mb"])
+    df = pd.DataFrame(
+        results_list,
+        columns=[
+            "graph_id_1",
+            "graph_id_2",
+            "min_ged",
+            "max_ged",
+            "runtime",
+            "candidates",
+            "matches",
+            "memory_usage_mb",
+        ],
+    )
     with pd.ExcelWriter(excel_file, engine="openpyxl") as writer:
         df.to_excel(writer, index=False)
 

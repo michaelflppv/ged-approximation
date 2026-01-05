@@ -27,7 +27,7 @@ def process_gxl_file(filepath, output_dir):
 
     root = tree.getroot()
     # Find the <graph> element. (Assuming one per file.)
-    graph_element = root.find('graph')
+    graph_element = root.find("graph")
     if graph_element is None:
         print(f"No <graph> element found in {filepath}")
         return
@@ -35,7 +35,7 @@ def process_gxl_file(filepath, output_dir):
     # Extract graph id from the filename: "graph_{id}.gxl" → id.
     filename = os.path.basename(filepath)
     try:
-        graph_id = filename.split('.')[0].split('_')[-1]
+        graph_id = filename.split(".")[0].split("_")[-1]
     except IndexError:
         print(f"Filename {filename} does not match expected format 'graph_<id>.gxl'")
         return
@@ -45,16 +45,16 @@ def process_gxl_file(filepath, output_dir):
     vertex_lines = []
 
     # Process each node element.
-    nodes = graph_element.findall('node')
+    nodes = graph_element.findall("node")
     for new_id, node in enumerate(nodes):
-        orig_id = node.attrib.get('id')
+        orig_id = node.attrib.get("id")
         node_mapping[orig_id] = new_id
 
         # Prefer using the "attr1" attribute as vertex label.
         vertex_label = None
-        for attr in node.findall('attr'):
-            if attr.attrib.get('name') == 'attr1':
-                float_elem = attr.find('float')
+        for attr in node.findall("attr"):
+            if attr.attrib.get("name") == "attr1":
+                float_elem = attr.find("float")
                 if float_elem is not None and float_elem.text is not None:
                     try:
                         vertex_label = int(float(float_elem.text))
@@ -63,9 +63,9 @@ def process_gxl_file(filepath, output_dir):
                 break
         # Fallback: if no "attr1", use the "label" attribute.
         if vertex_label is None:
-            for attr in node.findall('attr'):
-                if attr.attrib.get('name') == 'label':
-                    str_elem = attr.find('string')
+            for attr in node.findall("attr"):
+                if attr.attrib.get("name") == "label":
+                    str_elem = attr.find("string")
                     if str_elem is not None and str_elem.text is not None:
                         vertex_label = str_elem.text
                     break
@@ -79,10 +79,10 @@ def process_gxl_file(filepath, output_dir):
     edge_lines = []
     # Since the GXL graphs are undirected but may list both directions, we use a set to avoid duplicates.
     seen_edges = set()
-    edges = graph_element.findall('edge')
+    edges = graph_element.findall("edge")
     for edge in edges:
-        src_orig = edge.attrib.get('from')
-        tgt_orig = edge.attrib.get('to')
+        src_orig = edge.attrib.get("from")
+        tgt_orig = edge.attrib.get("to")
         if src_orig is None or tgt_orig is None:
             continue
 
@@ -106,7 +106,7 @@ def process_gxl_file(filepath, output_dir):
 
     # Write to an output txt file named "graph_<id>.txt"
     output_filepath = os.path.join(output_dir, f"graph_{graph_id}.txt")
-    with open(output_filepath, 'w') as outfile:
+    with open(output_filepath, "w") as outfile:
         outfile.write(output_content)
     print(f"Processed {filepath} into {output_filepath}")
 
@@ -118,7 +118,7 @@ def main(input_dir, output_dir):
 
     # Process all .gxl files in the input directory.
     for filename in os.listdir(input_dir):
-        if filename.endswith('.gxl'):
+        if filename.endswith(".gxl"):
             filepath = os.path.join(input_dir, filename)
             process_gxl_file(filepath, output_dir)
 
@@ -126,9 +126,9 @@ def main(input_dir, output_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Convert each GXL graph in a directory to a txt file with format:\n"
-                    "t # <graph_id>\n"
-                    "v <vertex_id> <vertex_label>\n"
-                    "e <vertex_id1> <vertex_id2> <edge_label>"
+        "t # <graph_id>\n"
+        "v <vertex_id> <vertex_label>\n"
+        "e <vertex_id1> <vertex_id2> <edge_label>"
     )
     parser.add_argument("input_dir", help="Directory containing GXL files")
     parser.add_argument("output_dir", help="Directory to store the resulting txt files")

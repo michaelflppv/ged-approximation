@@ -58,11 +58,20 @@ def read_node_attributes(filename):
     return attributes
 
 
-def create_gxl_for_graph_proteins(g_id, node_ids, local_ids, graph_edges,
-                                  node_labels, graph_label, node_attributes=None):
+def create_gxl_for_graph_proteins(
+    g_id,
+    node_ids,
+    local_ids,
+    graph_edges,
+    node_labels,
+    graph_label,
+    node_attributes=None,
+):
     """Creates a GXL XML element for a single graph."""
     gxl = ET.Element("gxl")
-    graph_elem = ET.SubElement(gxl, "graph", id=f"G{g_id}", edgeids="true", edgemode="undirected")
+    graph_elem = ET.SubElement(
+        gxl, "graph", id=f"G{g_id}", edgeids="true", edgemode="undirected"
+    )
 
     for global_id in node_ids:
         node_elem = ET.SubElement(graph_elem, "node", id=local_ids[global_id])
@@ -85,7 +94,9 @@ def create_gxl_for_graph_proteins(g_id, node_ids, local_ids, graph_edges,
 
     if graph_edges is not None:
         for edge_index, (u, v) in enumerate(graph_edges, start=1):
-            edge_elem = ET.SubElement(graph_elem, "edge", id=f"e{edge_index}", to=local_ids[v])
+            edge_elem = ET.SubElement(
+                graph_elem, "edge", id=f"e{edge_index}", to=local_ids[v]
+            )
             edge_elem.attrib["from"] = local_ids[u]
 
     return gxl
@@ -104,8 +115,12 @@ def main():
     parser = argparse.ArgumentParser(
         description="Convert PROTEINS dataset text files into GXL graph files and a collection XML file."
     )
-    parser.add_argument("prefix", nargs="?", default="PROTEINS",
-                        help="Prefix for the dataset files (default: 'PROTEINS')")
+    parser.add_argument(
+        "prefix",
+        nargs="?",
+        default="PROTEINS",
+        help="Prefix for the dataset files (default: 'PROTEINS')",
+    )
     args = parser.parse_args()
 
     input_dir = "../../../data/PROTEINS/"
@@ -125,14 +140,22 @@ def main():
     graph_labels_list = read_graph_labels(file_graph_labels)
     node_labels = read_node_labels(file_node_labels)
 
-    node_attributes = read_node_attributes(file_node_attributes) if os.path.exists(file_node_attributes) else None
+    node_attributes = (
+        read_node_attributes(file_node_attributes)
+        if os.path.exists(file_node_attributes)
+        else None
+    )
 
     n_nodes = len(graph_indicator)
     if len(node_labels) != n_nodes:
-        print("Error: Mismatch in the number of nodes in node_labels vs graph_indicator.")
+        print(
+            "Error: Mismatch in the number of nodes in node_labels vs graph_indicator."
+        )
         return
     if node_attributes is not None and len(node_attributes) != n_nodes:
-        print("Error: Mismatch in the number of nodes in node_attributes vs graph_indicator.")
+        print(
+            "Error: Mismatch in the number of nodes in node_attributes vs graph_indicator."
+        )
         return
 
     graphs = {}
@@ -140,24 +163,36 @@ def main():
         graphs.setdefault(g, []).append(i)
 
     graph_edges = {}
-    for (u, v) in edges:
+    for u, v in edges:
         g_u = graph_indicator[u - 1]
         g_v = graph_indicator[v - 1]
         if g_u != g_v:
-            print(f"Warning: Edge ({u}, {v}) connects nodes from different graphs ({g_u} vs {g_v}). Skipping.")
+            print(
+                f"Warning: Edge ({u}, {v}) connects nodes from different graphs ({g_u} vs {g_v}). Skipping."
+            )
             continue
         graph_edges.setdefault(g_u, []).append((u, v))
 
     collection_entries = []
     for g_id, nodes in graphs.items():
         nodes_sorted = sorted(nodes)
-        local_ids = {global_id: f"_{i}" for i, global_id in enumerate(nodes_sorted, start=1)}
-        gl = graph_labels_list[g_id - 1] if g_id <= len(graph_labels_list) else "unknown"
+        local_ids = {
+            global_id: f"_{i}" for i, global_id in enumerate(nodes_sorted, start=1)
+        }
+        gl = (
+            graph_labels_list[g_id - 1] if g_id <= len(graph_labels_list) else "unknown"
+        )
 
         edges_for_graph = graph_edges.get(g_id, None)
-        gxl_tree = create_gxl_for_graph_proteins(g_id, nodes_sorted, local_ids,
-                                                 edges_for_graph, node_labels, gl,
-                                                 node_attributes)
+        gxl_tree = create_gxl_for_graph_proteins(
+            g_id,
+            nodes_sorted,
+            local_ids,
+            edges_for_graph,
+            node_labels,
+            gl,
+            node_attributes,
+        )
 
         graph_filename = f"{g_id}.gxl"
         graph_filepath = os.path.join(output_dir, graph_filename)
@@ -168,12 +203,16 @@ def main():
 
     collection_root = ET.Element("GraphCollection")
     for file_name, class_label in collection_entries:
-        ET.SubElement(collection_root, "graph", file=file_name, **{"class": class_label})
+        ET.SubElement(
+            collection_root, "graph", file=file_name, **{"class": class_label}
+        )
 
     doctype_collection = '<!DOCTYPE GraphCollection SYSTEM "http://www.inf.unibz.it/~blumenthal/dtd/GraphCollection.dtd">'
     write_xml_with_doctype(collection_root, collection_file, doctype_collection)
 
-    print(f"Conversion complete. {len(collection_entries)} graphs written to '{output_dir}'.")
+    print(
+        f"Conversion complete. {len(collection_entries)} graphs written to '{output_dir}'."
+    )
     print(f"Collection file created: '{collection_file}'.")
 
 
