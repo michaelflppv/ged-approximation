@@ -20,6 +20,7 @@ EXCEL_PATH = "../../results/exact_ged/PROTEINS/results.xlsx"  # Path to the Exce
 DUMMY_COST = 1.0
 THRESHOLD = 0.05  # 5% tolerance
 
+
 # Define a custom JSON encoder to handle NumPy types.
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -31,6 +32,7 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return super(NumpyEncoder, self).default(obj)
 
+
 def load_model(simgnn_args):
     simgnn_args.load_path = MODEL_PATH
     trainer = SimGNNTrainer(simgnn_args)
@@ -38,17 +40,24 @@ def load_model(simgnn_args):
         trainer.load()
     return trainer
 
+
 def get_node_embeddings(trainer, data):
     data_torch = trainer.transfer_to_torch(data)
-    emb1 = trainer.model.convolutional_pass(data_torch["edge_index_1"], data_torch["features_1"])
-    emb2 = trainer.model.convolutional_pass(data_torch["edge_index_2"], data_torch["features_2"])
+    emb1 = trainer.model.convolutional_pass(
+        data_torch["edge_index_1"], data_torch["features_1"]
+    )
+    emb2 = trainer.model.convolutional_pass(
+        data_torch["edge_index_2"], data_torch["features_2"]
+    )
     return emb1, emb2
+
 
 def pad_cost_matrix(cost_matrix, n_rows, n_cols, dummy_cost):
     n = max(n_rows, n_cols)
     padded = np.full((n, n), dummy_cost)
     padded[:n_rows, :n_cols] = cost_matrix
     return padded
+
 
 def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
     emb1_np = emb1.detach().cpu().numpy()
@@ -62,10 +71,20 @@ def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
     for i, j in zip(row_ind, col_ind):
         if i < n1 and j < n2:
             if labels1[i] == labels2[j]:
-                op = {"op": "match", "graph1_node": int(i), "graph2_node": int(j), "label": labels1[i]}
+                op = {
+                    "op": "match",
+                    "graph1_node": int(i),
+                    "graph2_node": int(j),
+                    "label": labels1[i],
+                }
             else:
-                op = {"op": "substitute", "graph1_node": int(i), "graph1_label": labels1[i],
-                      "graph2_node": int(j), "graph2_label": labels2[j]}
+                op = {
+                    "op": "substitute",
+                    "graph1_node": int(i),
+                    "graph1_label": labels1[i],
+                    "graph2_node": int(j),
+                    "graph2_label": labels2[j],
+                }
             edit_operations.append(op)
         elif i < n1 and j >= n2:
             op = {"op": "delete", "graph1_node": int(i), "graph1_label": labels1[i]}
@@ -74,6 +93,7 @@ def extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=1.0):
             op = {"op": "insert", "graph2_node": int(j), "graph2_label": labels2[j]}
             edit_operations.append(op)
     return edit_operations
+
 
 def validate_and_order_edit_path(edit_ops, labels1, labels2):
     modifications = []
@@ -137,6 +157,7 @@ def validate_and_order_edit_path(edit_ops, labels1, labels2):
         raise ValueError("Final state does not match target state.")
     return ordered_ops
 
+
 def load_exact_ged_data():
     """
     Load the exact GED values from the Excel file
@@ -146,21 +167,22 @@ def load_exact_ged_data():
         # Create a dictionary with pair keys and min_ged values
         ged_dict = {}
         for _, row in df.iterrows():
-            g1 = int(row['graph_id_1'])
-            g2 = int(row['graph_id_2'])
+            g1 = int(row["graph_id_1"])
+            g2 = int(row["graph_id_2"])
             if g1 > g2:  # Ensure consistent ordering
                 g1, g2 = g2, g1
             pair_key = f"{g1}_{g2}"
-            ged_dict[pair_key] = int(row['min_ged'])
+            ged_dict[pair_key] = int(row["min_ged"])
         return ged_dict
     except Exception as e:
         print(f"Error loading exact GED data from Excel: {e}")
         return {}
 
+
 def process_pair_json(json_path, trainer, exact_ged_dict):
     # Extract graph indices from filename
     filename = os.path.basename(json_path)
-    g1, g2 = map(int, filename.replace("pair_", "").replace(".json", "").split('_'))
+    g1, g2 = map(int, filename.replace("pair_", "").replace(".json", "").split("_"))
     pair_key = f"{g1}_{g2}"
 
     # Load data from json file
@@ -168,7 +190,9 @@ def process_pair_json(json_path, trainer, exact_ged_dict):
     labels1 = data["labels_1"]
     labels2 = data["labels_2"]
     emb1, emb2 = get_node_embeddings(trainer, data)
-    edit_ops = extract_edit_operations(emb1, emb2, labels1, labels2, dummy_cost=DUMMY_COST)
+    edit_ops = extract_edit_operations(
+        emb1, emb2, labels1, labels2, dummy_cost=DUMMY_COST
+    )
     # Validate and order the edit path (will raise an error if invalid)
     ordered_edit_ops = validate_and_order_edit_path(edit_ops, labels1, labels2)
     final_number_ops = len(ordered_edit_ops)
@@ -178,9 +202,10 @@ def process_pair_json(json_path, trainer, exact_ged_dict):
     if true_ged is None:
         # Fallback to JSON value if not found in Excel
         true_ged = data["ged"]
-        #print(f"Warning: Exact GED not found in Excel for pair {pair_key}, using JSON value: {true_ged}")
+        # print(f"Warning: Exact GED not found in Excel for pair {pair_key}, using JSON value: {true_ged}")
 
     return final_number_ops, true_ged
+
 
 def main():
     simgnn_args = parameter_parser()
@@ -236,7 +261,9 @@ def main():
             sample_processed += 1
 
             try:
-                final_ops, true_ged = process_pair_json(json_file, trainer, exact_ged_dict)
+                final_ops, true_ged = process_pair_json(
+                    json_file, trainer, exact_ged_dict
+                )
                 # If we reached here, the edit path is valid.
                 valid_pairs += 1
                 sample_valid += 1
@@ -251,9 +278,9 @@ def main():
 
                 # Check optimality: if the edit path cost is within THRESHOLD tolerance of true GED.
                 if final_ops == 0:
-                    is_optimal = (true_ged == 0)
+                    is_optimal = true_ged == 0
                 else:
-                    is_optimal = (diff / final_ops <= THRESHOLD)
+                    is_optimal = diff / final_ops <= THRESHOLD
                 if is_optimal:
                     optimal_pairs += 1
                     sample_optimal += 1
@@ -267,14 +294,16 @@ def main():
             avg_diff_sample = sample_total_diff / sample_valid
             exact_percentage_sample = 100.0 * sample_exact / sample_valid
         else:
-            avg_diff_sample = float('nan')
+            avg_diff_sample = float("nan")
             exact_percentage_sample = 0.0
 
-        print(f"Sample {sample + 1}: Processed {sample_processed} pairs; "
-              f"Valid: {sample_valid}; Invalid: {sample_processed - sample_valid}; "
-              f"Optimal (within {THRESHOLD*100:.1f}%): {sample_optimal}; "
-              f"Exactly Optimal: {sample_exact} ({exact_percentage_sample:.2f}%); "
-              f"Average absolute difference: {avg_diff_sample:.2f}")
+        print(
+            f"Sample {sample + 1}: Processed {sample_processed} pairs; "
+            f"Valid: {sample_valid}; Invalid: {sample_processed - sample_valid}; "
+            f"Optimal (within {THRESHOLD * 100:.1f}%): {sample_optimal}; "
+            f"Exactly Optimal: {sample_exact} ({exact_percentage_sample:.2f}%); "
+            f"Average absolute difference: {avg_diff_sample:.2f}"
+        )
 
         # Check if we've reached the overall target
         if valid_pairs >= target_valid_pairs:
@@ -286,7 +315,7 @@ def main():
         optimal_percentage = 100.0 * optimal_pairs / valid_pairs
         exact_match_percentage = 100.0 * exact_match_pairs / valid_pairs
     else:
-        avg_diff = float('nan')
+        avg_diff = float("nan")
         optimal_percentage = 0.0
         exact_match_percentage = 0.0
 
@@ -294,10 +323,18 @@ def main():
     print(f"Total pairs processed: {total_pairs}")
     print(f"Valid edit paths: {valid_pairs} (target: {target_valid_pairs})")
     print(f"Invalid edit paths: {invalid_pairs}")
-    print(f"Optimal edit paths (within {THRESHOLD*100:.1f}% tolerance): {optimal_pairs}")
+    print(
+        f"Optimal edit paths (within {THRESHOLD * 100:.1f}% tolerance): {optimal_pairs}"
+    )
     print(f"Optimality percentage (among valid pairs): {optimal_percentage:.2f}%")
     print(f"Truly optimal edit paths (exact GED match): {exact_match_pairs}")
-    print(f"Truly optimal percentage (among valid pairs): {exact_match_percentage:.2f}%")
-    print(f"Average absolute difference between edit path cost and true GED: {avg_diff:.2f}")
+    print(
+        f"Truly optimal percentage (among valid pairs): {exact_match_percentage:.2f}%"
+    )
+    print(
+        f"Average absolute difference between edit path cost and true GED: {avg_diff:.2f}"
+    )
+
+
 if __name__ == "__main__":
     main()

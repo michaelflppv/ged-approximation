@@ -41,6 +41,7 @@ import pandas as pd
 # Set the dataset name (manually specify the dataset)
 DATASET = "AIDS"
 
+
 def main():
     # Determine the directory of this script.
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -68,7 +69,9 @@ def main():
             print(f"Error reading GED values from Excel: {e}")
             ged_dict = {}
     else:
-        print(f"Warning: GED Excel file '{ged_excel_path}' not found. Defaulting GED values to 0.")
+        print(
+            f"Warning: GED Excel file '{ged_excel_path}' not found. Defaulting GED values to 0."
+        )
         ged_dict = {}
 
     # Check if the input dataset folder exists.
@@ -94,7 +97,7 @@ def main():
     graph_nodes = defaultdict(list)
     global_indicator = []
 
-    with open(file_graph_indicator, 'r') as f:
+    with open(file_graph_indicator, "r") as f:
         for i, line in enumerate(f):
             line = line.strip()
             if not line:
@@ -109,14 +112,16 @@ def main():
             graph_nodes[graph_id].append(global_node_id)
 
     # Build a mapping for each graph: global node id -> local node id (0-indexed).
-    graph_node_mapping = {graph_id: {global_id: idx for idx, global_id in enumerate(nodes)}
-                          for graph_id, nodes in graph_nodes.items()}
+    graph_node_mapping = {
+        graph_id: {global_id: idx for idx, global_id in enumerate(nodes)}
+        for graph_id, nodes in graph_nodes.items()
+    }
 
     # --- Step 2: Parse DS_node_labels.txt (optional) ---
     # If the optional file is not found, fill with dummy labels (here, 0) for each node.
     if os.path.exists(file_node_labels):
         node_labels = []
-        with open(file_node_labels, 'r') as f:
+        with open(file_node_labels, "r") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -130,20 +135,22 @@ def main():
                         label = line  # Keep as string if neither int nor float.
                 node_labels.append(label)
     else:
-        print(f"Optional file '{file_node_labels}' not found. Filling node labels with dummy values.")
+        print(
+            f"Optional file '{file_node_labels}' not found. Filling node labels with dummy values."
+        )
         # Use dummy label 0 for each node; number of nodes equals length of global_indicator.
         node_labels = [0] * len(global_indicator)
 
     # --- Step 3: Parse DS_A.txt and build edge lists for each graph ---
     graph_edges = {graph_id: [] for graph_id in graph_nodes.keys()}
 
-    with open(file_A, 'r') as f:
+    with open(file_A, "r") as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
             # Split by comma and remove any empty strings (this handles potential trailing commas).
-            parts = [p.strip() for p in line.split(',') if p.strip()]
+            parts = [p.strip() for p in line.split(",") if p.strip()]
             if len(parts) < 2:
                 continue
             try:
@@ -166,8 +173,10 @@ def main():
             graph_edges[graph_id].append([local_u, local_v])
 
     # --- Step 4: Build local node label lists for each graph ---
-    graph_local_node_labels = {graph_id: [node_labels[global_id - 1] for global_id in nodes]
-                               for graph_id, nodes in graph_nodes.items()}
+    graph_local_node_labels = {
+        graph_id: [node_labels[global_id - 1] for global_id in nodes]
+        for graph_id, nodes in graph_nodes.items()
+    }
 
     # --- Step 5: Produce JSON files for every unordered pair of graphs ---
     sorted_graph_ids = sorted(graph_nodes.keys())
@@ -196,7 +205,7 @@ def main():
             json_filepath = os.path.join(output_dir, json_filename)
 
             # Write JSON file with indentation for readability.
-            with open(json_filepath, 'w') as json_file:
+            with open(json_filepath, "w") as json_file:
                 json.dump(json_data, json_file, indent=4)
             pair_count += 1
 
@@ -205,5 +214,6 @@ def main():
 
     print(f"Finished processing {pair_count} graph pairs.")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

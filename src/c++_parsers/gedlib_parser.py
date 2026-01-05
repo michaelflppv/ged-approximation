@@ -26,9 +26,11 @@ if platform.system() != "Windows":
 # --------------------------
 # Global variables and settings
 # --------------------------
-global_results = []            # Intermediate results list.
-global_ged_process: Optional[subprocess.Popen] = None  # Handle to the GEDLIB subprocess.
-global_preprocessed_xml: Optional[str] = None          # Path to the temporary preprocessed XML.
+global_results = []  # Intermediate results list.
+global_ged_process: Optional[subprocess.Popen] = (
+    None  # Handle to the GEDLIB subprocess.
+)
+global_preprocessed_xml: Optional[str] = None  # Path to the temporary preprocessed XML.
 
 # Modify these paths as needed:
 GED_EXECUTABLE = "../../gedlib/build/main_exec"
@@ -39,18 +41,19 @@ EXACT_GED_FILE = ""
 
 # Mapping of method ID to method names.
 METHOD_NAMES = {
-    8:  "Anchor Aware",
+    8: "Anchor Aware",
     10: "IPFP",
     11: "BIPARTITE",
     16: "REFINE",
     19: "HED",
-    20: "STAR (Exact)"
+    20: "STAR (Exact)",
 }
 # Maximum number of rows per Excel file.
 EXCEL_MAX_ROWS = 1048573
 
 # Number of graph pairs to skip.
 SKIP_PAIRS = 0
+
 
 # --------------------------
 # Utility Functions
@@ -59,13 +62,18 @@ def set_unlimited():
     """Set resource limits to unlimited (if supported)."""
     if platform.system() != "Windows":
         try:
-            resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+            resource.setrlimit(
+                resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY)
+            )
         except Exception as e:
             print("Warning: could not set RLIMIT_AS unlimited:", e)
         try:
-            resource.setrlimit(resource.RLIMIT_CPU, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+            resource.setrlimit(
+                resource.RLIMIT_CPU, (resource.RLIM_INFINITY, resource.RLIM_INFINITY)
+            )
         except Exception as e:
             print("Warning: could not set RLIMIT_CPU unlimited:", e)
+
 
 def save_results(excel_file, results_list):
     """
@@ -81,9 +89,20 @@ def save_results(excel_file, results_list):
         df["graph_id_1"] = df["graph1"]
         df["graph_id_2"] = df["graph2"]
         desired_columns = [
-            "method", "graph_id_1", "graph_id_2", "ged", "accuracy",
-            "absolute_error", "squared_error", "runtime", "memory_usage_mb",
-            "graph1_n", "graph1_density", "graph2_n", "graph2_density", "scalability"
+            "method",
+            "graph_id_1",
+            "graph_id_2",
+            "ged",
+            "accuracy",
+            "absolute_error",
+            "squared_error",
+            "runtime",
+            "memory_usage_mb",
+            "graph1_n",
+            "graph1_density",
+            "graph2_n",
+            "graph2_density",
+            "scalability",
         ]
         df = df[desired_columns]
         os.makedirs(os.path.dirname(excel_file), exist_ok=True)
@@ -96,7 +115,7 @@ def save_results(excel_file, results_list):
         try:
             df.to_excel(temp_file, index=False, engine=engine)
             os.replace(temp_file, file_path)
-            #print(f"Results saved to {file_path} using {engine}.")
+            # print(f"Results saved to {file_path} using {engine}.")
             return True
         except Exception as ex:
             print(f"Error saving with {engine}: {ex}")
@@ -116,13 +135,16 @@ def save_results(excel_file, results_list):
                 file_path = excel_file
             else:
                 base, ext = os.path.splitext(excel_file)
-                file_path = f"{base}_part{part+1}{ext}"
+                file_path = f"{base}_part{part + 1}{ext}"
             if os.path.exists(file_path):
                 try:
                     from openpyxl import load_workbook
+
                     load_workbook(file_path)
                 except Exception as ex:
-                    print(f"Existing file {file_path} is corrupted ({ex}). Removing it.")
+                    print(
+                        f"Existing file {file_path} is corrupted ({ex}). Removing it."
+                    )
                     os.remove(file_path)
             if not attempt_save("openpyxl", file_path):
                 if not attempt_save("xlsxwriter", file_path):
@@ -133,19 +155,23 @@ def save_results(excel_file, results_list):
         if os.path.exists(file_path):
             try:
                 from openpyxl import load_workbook
+
                 load_workbook(file_path)
             except Exception as e:
                 print(f"Existing file {file_path} is corrupted ({e}). Removing it.")
                 os.remove(file_path)
         if not attempt_save("openpyxl", file_path):
             if not attempt_save("xlsxwriter", file_path):
-                print("Failed to save Excel file using both engines. Attempting to save as CSV.")
+                print(
+                    "Failed to save Excel file using both engines. Attempting to save as CSV."
+                )
                 try:
                     csv_file = os.path.splitext(file_path)[0] + ".csv"
                     df.to_csv(csv_file, index=False)
                     print(f"Results saved to {csv_file} as CSV fallback.")
                 except Exception as ex:
                     print(f"Failed to save results as CSV: {ex}")
+
 
 def signal_handler(signum, frame):
     """Handle termination signals by cleaning up and saving partial results."""
@@ -165,11 +191,13 @@ def signal_handler(signum, frame):
     save_results(RESULTS_FILE, global_results)
     sys.exit(1)
 
+
 # Register signal handlers for graceful termination.
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 if hasattr(signal, "SIGHUP"):
     signal.signal(signal.SIGHUP, signal_handler)
+
 
 def preprocess_xml_file(xml_path: str) -> str:
     """
@@ -182,11 +210,14 @@ def preprocess_xml_file(xml_path: str) -> str:
     except Exception as e:
         print(f"Error reading XML file '{xml_path}': {e}")
         raise
-    filtered_lines = [line for line in lines if not line.lstrip().startswith("<!DOCTYPE")]
+    filtered_lines = [
+        line for line in lines if not line.lstrip().startswith("<!DOCTYPE")
+    ]
     temp_fd, temp_path = tempfile.mkstemp(suffix=".xml")
     with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
         f.writelines(filtered_lines)
     return temp_path
+
 
 def get_graph_properties(gxl_file: str):
     """
@@ -204,16 +235,17 @@ def get_graph_properties(gxl_file: str):
         return None, None, None
 
     root = tree.getroot()
-    graph_elem = root.find('graph')
+    graph_elem = root.find("graph")
     if graph_elem is None:
         print(f"No <graph> element found in {gxl_file}.")
         return None, None, None
-    nodes = graph_elem.findall('node')
-    edges = graph_elem.findall('edge')
+    nodes = graph_elem.findall("node")
+    edges = graph_elem.findall("edge")
     n = len(nodes)
     e = len(edges)
     density = (2 * e) / (n * (n - 1)) if n > 1 else 0
     return n, e, density
+
 
 def get_first_two_graph_properties(dataset_path: str, collection_xml: str):
     """
@@ -229,12 +261,12 @@ def get_first_two_graph_properties(dataset_path: str, collection_xml: str):
         return None, None
 
     root = tree.getroot()
-    graphs = root.findall('graph')
+    graphs = root.findall("graph")
     if len(graphs) < 2:
         print("Not enough graphs found in collection XML.")
         return None, None
-    file1 = graphs[0].get('file')
-    file2 = graphs[1].get('file')
+    file1 = graphs[0].get("file")
+    file2 = graphs[1].get("file")
     if not file1 or not file2:
         print("Graph file names missing in collection XML.")
         return None, None
@@ -243,6 +275,7 @@ def get_first_two_graph_properties(dataset_path: str, collection_xml: str):
     props1 = get_graph_properties(path1)
     props2 = get_graph_properties(path2)
     return props1, props2
+
 
 def run_ged(dataset_path: str, collection_xml: str, method: str = "IPFP"):
     """
@@ -284,7 +317,7 @@ def run_ged(dataset_path: str, collection_xml: str, method: str = "IPFP"):
             stderr=subprocess.PIPE,
             text=True,
             bufsize=1,
-            preexec_fn=set_unlimited if platform.system() != "Windows" else None
+            preexec_fn=set_unlimited if platform.system() != "Windows" else None,
         )
         global_ged_process = process
     except Exception as e:
@@ -314,9 +347,9 @@ def run_ged(dataset_path: str, collection_xml: str, method: str = "IPFP"):
         rf"METHOD=(\d+)\s+GRAPH1=(\d+)\s+GRAPH2=(\d+)\s+PREDGED={float_re}\s+GTGED=N/A\s+RUNTIME={float_re}(?:\s+MEM=\S+)?"
     )
 
-    line_count = 0       # Total lines read.
+    line_count = 0  # Total lines read.
     processed_count = 0  # Count of graph pairs processed (after skipping).
-    flush_interval = 10   # Flush intermediate results every 10 processed pairs.
+    flush_interval = 10  # Flush intermediate results every 10 processed pairs.
 
     global_results = []  # Reset global results
 
@@ -343,19 +376,25 @@ def run_ged(dataset_path: str, collection_xml: str, method: str = "IPFP"):
                 runtime = float(match.group(5))
                 try:
                     # Calculate memory usage internally using psutil.
-                    memory_usage_mb = ged_proc.memory_info().rss / (1024 * 1024) if ged_proc else "N/A"
+                    memory_usage_mb = (
+                        ged_proc.memory_info().rss / (1024 * 1024)
+                        if ged_proc
+                        else "N/A"
+                    )
                 except Exception:
                     memory_usage_mb = "N/A"
                 method_name = METHOD_NAMES.get(method_id, f"Unknown Method {method_id}")
 
-                print(f"Processed pair {processed_count}: {graph1}-{graph2} with GED={pred_ged}")
+                print(
+                    f"Processed pair {processed_count}: {graph1}-{graph2} with GED={pred_ged}"
+                )
 
                 result_entry = {
                     "method": method_name,
                     "graph1": graph1,
                     "graph2": graph2,
                     "ged": pred_ged,
-                    "accuracy": "N/A",         # Optionally compute later using exact GED lookup.
+                    "accuracy": "N/A",  # Optionally compute later using exact GED lookup.
                     "absolute_error": "N/A",
                     "squared_error": "N/A",
                     "runtime": runtime,
@@ -364,7 +403,7 @@ def run_ged(dataset_path: str, collection_xml: str, method: str = "IPFP"):
                     "graph1_density": round(d1, 4) if d1 is not None else "N/A",
                     "graph2_n": n2 if n2 is not None else "N/A",
                     "graph2_density": round(d2, 4) if d2 is not None else "N/A",
-                    "scalability": scalability if scalability is not None else "N/A"
+                    "scalability": scalability if scalability is not None else "N/A",
                 }
                 global_results.append(result_entry)
 
@@ -417,6 +456,7 @@ def run_ged(dataset_path: str, collection_xml: str, method: str = "IPFP"):
                 print(f"Error removing temporary XML file: {e}")
 
     return global_results
+
 
 if __name__ == "__main__":
     try:

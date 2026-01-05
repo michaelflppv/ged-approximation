@@ -51,6 +51,7 @@ def compute_density(edge_list, num_nodes):
         return 0.0
     return (2 * len(unique_edges)) / (num_nodes * (num_nodes - 1))
 
+
 def calculate_accuracy(predicted, exact):
     """
     Calculate accuracy for a pair based on the predicted GED and the exact GED (min_ged).
@@ -74,9 +75,9 @@ def split_and_save_dataframe(df, base_save_path, max_rows=1048576):
             start = part * max_rows
             end = start + max_rows
             chunk = df.iloc[start:end]
-            part_path = os.path.splitext(base_save_path)[0] + f"_part{part+1}.xlsx"
+            part_path = os.path.splitext(base_save_path)[0] + f"_part{part + 1}.xlsx"
             chunk.to_excel(part_path, index=False)
-            print(f"Part {part+1}: Performance saved to: {part_path}")
+            print(f"Part {part + 1}: Performance saved to: {part_path}")
 
 
 # -------------------------------
@@ -100,7 +101,9 @@ def main():
     # Load the exact GED Excel file.
     df_exact = pd.read_excel(exact_ged_path)
     if df_exact.shape[0] != len(json_files):
-        print("Warning: Number of rows in exact GED Excel file does not match number of JSON files.")
+        print(
+            "Warning: Number of rows in exact GED Excel file does not match number of JSON files."
+        )
 
     # Create a dummy args namespace required for model instantiation.
     args = parameter_parser()
@@ -108,9 +111,11 @@ def main():
     args.histogram = True
 
     # Create device and move model to device.
-    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = SimGNNTrainer(args).model
-    checkpoint = torch.load(model_path, map_location=torch.device("cpu"), weights_only=False)
+    checkpoint = torch.load(
+        model_path, map_location=torch.device("cpu"), weights_only=False
+    )
     if "model_state_dict" in checkpoint:
         # The model state is nested inside the checkpoint
         state_dict = checkpoint["model_state_dict"]
@@ -118,7 +123,7 @@ def main():
         # Use the checkpoint directly as state_dict
         state_dict = checkpoint
     model.load_state_dict(state_dict)
-    #model.to(device)
+    # model.to(device)
     model.eval()
 
     # List to store per-pair results.
@@ -173,7 +178,7 @@ def main():
 
         # Parse graph IDs from filename (expects format: "pair_id1_id2.json")
         base_name = os.path.splitext(os.path.basename(graph_pair))[0]
-        parts = base_name.split('_')
+        parts = base_name.split("_")
         if len(parts) >= 3 and parts[0] == "pair":
             graph_id_1 = parts[1]
             graph_id_2 = parts[2]
@@ -189,22 +194,24 @@ def main():
 
         print("Pair: " + graph_id_1 + " " + graph_id_2)
 
-        pair_results.append({
-            "method": "SimGNN",
-            "ged": pred_ged,
-            "runtime": runtime_pair,
-            "graph_id_1": graph_id_1,
-            "graph_id_2": graph_id_2,
-            "accuracy": "",
-            "absolute_error": "",
-            "squared_error": "",
-            "memory_usage_mb": mem_delta,
-            "graph1_n": n1,
-            "graph1_density": density1,
-            "graph2_n": n2,
-            "graph2_density": density2,
-            "scalability": scalability
-        })
+        pair_results.append(
+            {
+                "method": "SimGNN",
+                "ged": pred_ged,
+                "runtime": runtime_pair,
+                "graph_id_1": graph_id_1,
+                "graph_id_2": graph_id_2,
+                "accuracy": "",
+                "absolute_error": "",
+                "squared_error": "",
+                "memory_usage_mb": mem_delta,
+                "graph1_n": n1,
+                "graph1_density": density1,
+                "graph2_n": n2,
+                "graph2_density": density2,
+                "scalability": scalability,
+            }
+        )
 
     # Define the required column order.
     ordered_columns = [
@@ -221,7 +228,7 @@ def main():
         "graph1_density",
         "graph2_n",
         "graph2_density",
-        "scalability"
+        "scalability",
     ]
     df_pairs = pd.DataFrame(pair_results)[ordered_columns]
 
@@ -234,6 +241,7 @@ def main():
     split_and_save_dataframe(df_pairs, save_path)
 
     print(f"\nPerformance saved to: {save_path}")
+
 
 if __name__ == "__main__":
     main()

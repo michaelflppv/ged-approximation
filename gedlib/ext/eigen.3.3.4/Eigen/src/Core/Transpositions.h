@@ -384,7 +384,9 @@ class Transpose<TranspositionsBase<TranspositionsDerived> >
     const Product<OtherDerived, Transpose, AliasFreeProduct>
     operator*(const MatrixBase<OtherDerived>& matrix, const Transpose& trt)
     {
-      return Product<OtherDerived, Transpose, AliasFreeProduct>(matrix.derived(), trt.derived());
+      // The transposed transposition specialization does not expose derived(),
+      // so forward the object itself instead of calling a non-existent member.
+      return Product<OtherDerived, Transpose, AliasFreeProduct>(matrix.derived(), trt);
     }
 
     /** \returns the \a matrix with the inverse transpositions applied to the rows.

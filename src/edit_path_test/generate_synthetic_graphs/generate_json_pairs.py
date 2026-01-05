@@ -29,7 +29,7 @@ def create_base_graph():
     graph = {
         "edges": [list(edge) for edge in sorted(BASE_EDGES)],
         "labels": [BASE_LABEL for _ in range(NUM_NODES)],
-        "mods": set()  # each modification will be a tuple, e.g., ("label", node, new_label)
+        "mods": set(),  # each modification will be a tuple, e.g., ("label", node, new_label)
     }
     return graph
 
@@ -117,7 +117,7 @@ def compute_ged(mods1, mods2):
     between their modification sets.
     """
     common = mods1.intersection(mods2)
-    return (len(mods1) + len(mods2) - 2 * len(common))
+    return len(mods1) + len(mods2) - 2 * len(common)
 
 
 # ----- Main Script: Generate pairs in JSON -----
@@ -150,7 +150,7 @@ def main():
             "graph_2": graph2["edges"],
             "labels_1": graph1["labels"],
             "labels_2": graph2["labels"],
-            "ged": ged
+            "ged": ged,
         }
         # File name: pair_i_j.json (we use 0-indexing in file names, but you could add 1)
         filename = os.path.join(output_dir, f"pair_{i}_{j}.json")
